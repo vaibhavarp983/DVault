@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.db import SessionLocal
 from app.models import ApiContractVersion, Document, FixtureManifest, Source, Workspace
+from app.policy import ensure_default_policy
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 MANIFEST_PATH = FIXTURE_DIR / "manifest.json"
@@ -93,6 +94,7 @@ def seed_database(session: Session) -> dict[str, int | str]:
         {"version": "v1", "compatibility_status": "active", "notes": "Phase 1 read contract"},
     )
     session.add(contract)
+    ensure_default_policy(session, workspace.id)
     session.commit()
     return {"workspace_id": workspace.id, "sources": len(source_ids), "documents": len(manifest["documents"])}
 

@@ -1,5 +1,7 @@
 from typing import Any
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, File, Query, Response, UploadFile
 from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,17 +10,25 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.db import engine, get_db
 from app.ingestion import IngestionProblem, ingest_file, mask_value, normalize_field
-from app.models import DataQualityFinding, DataRecordRef, DatasetImport, Document, DocumentExtraction, FixtureManifest, ImportFieldProfile, MatchCandidate, Source, Workspace
+from app.models import (
+    AuthorizationRecord, Campaign, CampaignRecipient, DataQualityFinding, DataRecordRef, DatasetImport, Document,
+    DocumentExtraction, FixtureManifest, ImportFieldProfile, MatchCandidate, MockOutbox, Policy, Source,
+    PolicyDecision, SuppressionRecord, Workspace,
+)
+from app.policy import PolicyProblem, ensure_default_policy, evaluate_marketing, masked_subject_ref
 from app.schemas import (
+    AuthorizationCreateRequest, AuthorizationResponse, CampaignCreateRequest, CampaignRecipientPageResponse,
+    CampaignRecipientResponse, CampaignResponse,
     DashboardResponse, DataQualityFindingResponse, DataQualityPageResponse, DocumentExtractionResponse, DocumentResponse,
     FieldProfileResponse, HealthResponse, ImportPageResponse, ImportResponse, MatchCandidatePageResponse,
-    MatchCandidateResponse, PageResponse, RecordPageResponse, RecordResponse, SchemaPreviewResponse, SourceResponse,
-    WorkspaceResponse,
+    MatchCandidateResponse, OutboxPageResponse, OutboxResponse, PageResponse, PolicyDecisionResponse,
+    PolicyEvaluationRequest, PolicyResponse, RecordPageResponse, RecordResponse, SchemaPreviewResponse,
+    SourceResponse, WithdrawalRequest, WorkspaceResponse,
 )
 from app.source_store import SourceStore
 
 router = APIRouter(prefix="/api/v1")
-REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "alembic_version"}
+REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "alembic_version"}
 
 
 class NotFoundError(Exception):
@@ -28,6 +38,12 @@ class NotFoundError(Exception):
 
 class ServiceUnavailableError(Exception):
     def __init__(self, message: str) -> None:
+        self.message = message
+
+
+class ConflictError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
         self.message = message
 
 
@@ -84,6 +100,42 @@ def record_response(record: DataRecordRef) -> RecordResponse:
     )
 
 
+def authorization_response(item: AuthorizationRecord) -> AuthorizationResponse:
+    return AuthorizationResponse(
+        id=item.id, subject_ref=item.subject_ref, purpose=item.purpose, channel=item.channel, status=item.status,
+        evidence_document_id=item.evidence_document_id, evidence_source=item.evidence_source, notice_version=item.notice_version,
+        captured_at=item.captured_at, expires_at=item.expires_at, withdrawn_at=item.withdrawn_at,
+    )
+
+
+def campaign_response(db: Session, campaign: Campaign) -> CampaignResponse:
+    recipients = list(db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id)))
+    summary: dict[str, int] = {}
+    for recipient in recipients:
+        decision = recipient.execution_decision or recipient.preview_decision
+        if decision:
+            summary[decision] = summary.get(decision, 0) + 1
+    return CampaignResponse(
+        id=campaign.id, name=campaign.name, purpose=campaign.purpose, channel=campaign.channel,
+        message_template_id=campaign.message_template_id, dataset_import_id=campaign.dataset_import_id, status=campaign.status,
+        synthetic_label=campaign.synthetic_label, created_at=campaign.created_at, previewed_at=campaign.previewed_at,
+        executed_at=campaign.executed_at, recipient_total=len(recipients), decision_summary=summary,
+    )
+
+
+def recipient_response(item: CampaignRecipient) -> CampaignRecipientResponse:
+    return CampaignRecipientResponse(
+        id=item.id, record_ref_id=item.record_ref_id, subject_ref=item.subject_ref, preview_decision=item.preview_decision,
+        preview_reason_codes=item.preview_reason_codes_json, previewed_at=item.previewed_at,
+        execution_decision=item.execution_decision, execution_reason_codes=item.execution_reason_codes_json,
+        executed_at=item.executed_at,
+    )
+
+
+def decision_response(result) -> PolicyDecisionResponse:
+    return PolicyDecisionResponse(decision=result.decision, reason_codes=result.reason_codes, evaluated_rules=result.evaluated_rules, policy_id=result.policy_id, policy_version=result.policy_version, correlation_id=result.correlation_id, evaluated_at=result.evaluated_at)
+
+
 @router.get("/health", response_model=HealthResponse, tags=["system"])
 def health(db: Session = Depends(get_db)) -> HealthResponse:
     try:
@@ -117,6 +169,185 @@ def get_source(workspace_ref: str, source_id: str, db: Session = Depends(get_db)
     if source is None:
         raise NotFoundError("source")
     return source
+
+
+@router.get("/workspaces/{workspace_ref}/policies", response_model=list[PolicyResponse], tags=["policy"])
+def list_policies(workspace_ref: str, db: Session = Depends(get_db)) -> list[PolicyResponse]:
+    workspace = resolve_workspace(workspace_ref, db)
+    return [PolicyResponse(id=item.id, policy_key=item.policy_key, version=item.version, name=item.name, status=item.status, effective_at=item.effective_at, rules=item.rules_json, synthetic_label=item.synthetic_label) for item in db.scalars(select(Policy).where(Policy.workspace_id == workspace.id).order_by(Policy.policy_key, Policy.version.desc()))]
+
+
+@router.get("/workspaces/{workspace_ref}/policies/{policy_id}", response_model=PolicyResponse, tags=["policy"])
+def get_policy(workspace_ref: str, policy_id: str, db: Session = Depends(get_db)) -> PolicyResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    item = db.scalar(select(Policy).where(Policy.workspace_id == workspace.id, Policy.id == policy_id))
+    if item is None:
+        raise NotFoundError("policy")
+    return PolicyResponse(id=item.id, policy_key=item.policy_key, version=item.version, name=item.name, status=item.status, effective_at=item.effective_at, rules=item.rules_json, synthetic_label=item.synthetic_label)
+
+
+@router.post("/workspaces/{workspace_ref}/policy-decisions/evaluate", response_model=PolicyDecisionResponse, tags=["policy"])
+def evaluate_policy(workspace_ref: str, payload: PolicyEvaluationRequest, db: Session = Depends(get_db)) -> PolicyDecisionResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    result = evaluate_marketing(db, workspace, payload.subject_ref, payload.purpose, payload.channel, payload.operation)
+    db.commit()
+    return decision_response(result)
+
+
+def validate_subject(workspace: Workspace, subject_ref: str, db: Session) -> None:
+    known = db.scalar(select(DataRecordRef.id).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.subject_ref == subject_ref))
+    if known is None:
+        raise PolicyProblem("SUBJECT_REFERENCE_UNKNOWN", "subject_ref must resolve to an inventoried record")
+
+
+@router.post("/workspaces/{workspace_ref}/authorizations", response_model=AuthorizationResponse, status_code=201, tags=["policy"])
+def capture_authorization(workspace_ref: str, payload: AuthorizationCreateRequest, db: Session = Depends(get_db)) -> AuthorizationResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    validate_subject(workspace, payload.subject_ref, db)
+    if payload.evidence_document_id and db.scalar(select(Document.id).where(Document.workspace_id == workspace.id, Document.id == payload.evidence_document_id)) is None:
+        raise NotFoundError("document")
+    if payload.expires_at is not None and payload.expires_at <= payload.captured_at:
+        raise PolicyProblem("INVALID_AUTHORIZATION_EXPIRY", "expires_at must be later than captured_at")
+    item = AuthorizationRecord(workspace_id=workspace.id, subject_ref=payload.subject_ref, purpose=payload.purpose, channel=payload.channel, status="ACTIVE", evidence_document_id=payload.evidence_document_id, evidence_source=payload.evidence_source, notice_version=payload.notice_version, captured_at=payload.captured_at, expires_at=payload.expires_at)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return authorization_response(item)
+
+
+@router.get("/workspaces/{workspace_ref}/authorizations", response_model=list[AuthorizationResponse], tags=["policy"])
+def list_authorizations(workspace_ref: str, subject_ref: str | None = None, purpose: str | None = None, channel: str | None = None, status: str | None = None, db: Session = Depends(get_db)) -> list[AuthorizationResponse]:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [AuthorizationRecord.workspace_id == workspace.id]
+    for column, value in ((AuthorizationRecord.subject_ref, subject_ref), (AuthorizationRecord.purpose, purpose), (AuthorizationRecord.channel, channel), (AuthorizationRecord.status, status)):
+        if value:
+            filters.append(column == value)
+    return [authorization_response(item) for item in db.scalars(select(AuthorizationRecord).where(*filters).order_by(AuthorizationRecord.created_at.desc()))]
+
+
+@router.post("/workspaces/{workspace_ref}/authorizations/{authorization_id}/withdraw", response_model=AuthorizationResponse, tags=["policy"])
+def withdraw_authorization(workspace_ref: str, authorization_id: str, payload: WithdrawalRequest, db: Session = Depends(get_db)) -> AuthorizationResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    item = db.scalar(select(AuthorizationRecord).where(AuthorizationRecord.workspace_id == workspace.id, AuthorizationRecord.id == authorization_id))
+    if item is None:
+        raise NotFoundError("authorization")
+    if item.status != "WITHDRAWN":
+        now = datetime.now(timezone.utc)
+        item.status = "WITHDRAWN"
+        item.withdrawn_at = now
+        db.add(SuppressionRecord(workspace_id=workspace.id, subject_ref=item.subject_ref, purpose=item.purpose, channel=item.channel, status="ACTIVE", source=payload.source, effective_at=now))
+        db.commit()
+    db.refresh(item)
+    return authorization_response(item)
+
+
+def resolve_campaign(workspace: Workspace, campaign_id: str, db: Session) -> Campaign:
+    campaign = db.scalar(select(Campaign).where(Campaign.workspace_id == workspace.id, Campaign.id == campaign_id))
+    if campaign is None:
+        raise NotFoundError("campaign")
+    return campaign
+
+
+@router.post("/workspaces/{workspace_ref}/campaigns", response_model=CampaignResponse, status_code=201, tags=["message-gate"])
+def create_campaign(workspace_ref: str, payload: CampaignCreateRequest, db: Session = Depends(get_db)) -> CampaignResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    if bool(payload.dataset_import_id) == bool(payload.record_ids):
+        raise PolicyProblem("INVALID_CAMPAIGN_RECIPIENTS", "Provide exactly one of dataset_import_id or record_ids.")
+    if payload.dataset_import_id:
+        imported = resolve_import(workspace, payload.dataset_import_id, db)
+        if imported.status != "COMPLETE":
+            raise PolicyProblem("IMPORT_NOT_READY", "Campaign recipients must come from a completed import.")
+        records = list(db.scalars(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.dataset_import_id == imported.id)))
+    else:
+        records = list(db.scalars(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id.in_(payload.record_ids))))
+        if len(records) != len(set(payload.record_ids)):
+            raise PolicyProblem("RECORD_NOT_FOUND", "One or more campaign recipients were not found.")
+    if not records:
+        raise PolicyProblem("CAMPAIGN_RECIPIENTS_EMPTY", "The selected campaign has no recipients.")
+    campaign = Campaign(workspace_id=workspace.id, name=payload.name, purpose=payload.purpose, channel=payload.channel, message_template_id=payload.message_template_id, dataset_import_id=payload.dataset_import_id, status="DRAFT")
+    db.add(campaign)
+    db.flush()
+    for record in records:
+        db.add(CampaignRecipient(campaign_id=campaign.id, record_ref_id=record.id, subject_ref=record.subject_ref))
+    db.commit()
+    db.refresh(campaign)
+    return campaign_response(db, campaign)
+
+
+@router.get("/workspaces/{workspace_ref}/campaigns", response_model=list[CampaignResponse], tags=["message-gate"])
+def list_campaigns(workspace_ref: str, status: str | None = None, db: Session = Depends(get_db)) -> list[CampaignResponse]:
+    workspace = resolve_workspace(workspace_ref, db)
+    statement = select(Campaign).where(Campaign.workspace_id == workspace.id)
+    if status:
+        statement = statement.where(Campaign.status == status)
+    return [campaign_response(db, campaign) for campaign in db.scalars(statement.order_by(Campaign.created_at.desc()))]
+
+
+@router.get("/workspaces/{workspace_ref}/campaigns/{campaign_id}", response_model=CampaignResponse, tags=["message-gate"])
+def get_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get_db)) -> CampaignResponse:
+    return campaign_response(db, resolve_campaign(resolve_workspace(workspace_ref, db), campaign_id, db))
+
+
+@router.post("/workspaces/{workspace_ref}/campaigns/{campaign_id}/preview", response_model=CampaignResponse, tags=["message-gate"])
+def preview_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get_db)) -> CampaignResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    campaign = resolve_campaign(workspace, campaign_id, db)
+    if campaign.status == "EXECUTED":
+        raise ConflictError("CAMPAIGN_ALREADY_EXECUTED", "An executed campaign cannot be previewed again.")
+    recipients = list(db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id)))
+    for recipient in recipients:
+        record = db.scalar(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == recipient.record_ref_id))
+        result = evaluate_marketing(db, workspace, recipient.subject_ref, campaign.purpose, campaign.channel, record=record, correlation_id=f"campaign:{campaign.id}:preview:{recipient.id}")
+        recipient.preview_decision = result.decision
+        recipient.preview_reason_codes_json = result.reason_codes
+        recipient.previewed_at = result.evaluated_at
+    campaign.status = "PREVIEWED"
+    campaign.previewed_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(campaign)
+    return campaign_response(db, campaign)
+
+
+@router.get("/workspaces/{workspace_ref}/campaigns/{campaign_id}/recipients", response_model=CampaignRecipientPageResponse, tags=["message-gate"])
+def list_campaign_recipients(workspace_ref: str, campaign_id: str, page: int = Query(1, ge=1), page_size: int = Query(25, ge=1, le=100), db: Session = Depends(get_db)) -> CampaignRecipientPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    campaign = resolve_campaign(workspace, campaign_id, db)
+    total = db.scalar(select(func.count(CampaignRecipient.id)).where(CampaignRecipient.campaign_id == campaign.id)) or 0
+    recipients = db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id).order_by(CampaignRecipient.id).offset((page - 1) * page_size).limit(page_size))
+    return CampaignRecipientPageResponse(items=[recipient_response(item) for item in recipients], page=page, page_size=page_size, total=total)
+
+
+@router.post("/workspaces/{workspace_ref}/campaigns/{campaign_id}/execute", response_model=CampaignResponse, tags=["message-gate"])
+def execute_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get_db)) -> CampaignResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    campaign = resolve_campaign(workspace, campaign_id, db)
+    if campaign.status != "PREVIEWED":
+        raise ConflictError("CAMPAIGN_PREVIEW_REQUIRED", "Campaign execution requires a completed preview.")
+    recipients = list(db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id)))
+    for recipient in recipients:
+        record = db.scalar(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == recipient.record_ref_id))
+        result = evaluate_marketing(db, workspace, recipient.subject_ref, campaign.purpose, campaign.channel, record=record, correlation_id=f"campaign:{campaign.id}:execute:{recipient.id}")
+        recipient.execution_decision = result.decision
+        recipient.execution_reason_codes_json = result.reason_codes
+        recipient.executed_at = result.evaluated_at
+        if result.decision == "ALLOW" and recipient.subject_ref:
+            db.add(MockOutbox(workspace_id=workspace.id, campaign_id=campaign.id, campaign_recipient_id=recipient.id, subject_ref=recipient.subject_ref, masked_recipient_reference=masked_subject_ref(recipient.subject_ref), message_template_id=campaign.message_template_id, dispatch_status="QUEUED"))
+    campaign.status = "EXECUTED"
+    campaign.executed_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(campaign)
+    return campaign_response(db, campaign)
+
+
+@router.get("/workspaces/{workspace_ref}/outbox", response_model=OutboxPageResponse, tags=["message-gate"])
+def list_outbox(workspace_ref: str, page: int = Query(1, ge=1), page_size: int = Query(25, ge=1, le=100), campaign_id: str | None = None, db: Session = Depends(get_db)) -> OutboxPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [MockOutbox.workspace_id == workspace.id]
+    if campaign_id:
+        filters.append(MockOutbox.campaign_id == campaign_id)
+    total = db.scalar(select(func.count(MockOutbox.id)).where(*filters)) or 0
+    rows = db.scalars(select(MockOutbox).where(*filters).order_by(MockOutbox.queued_at.desc()).offset((page - 1) * page_size).limit(page_size))
+    return OutboxPageResponse(items=[OutboxResponse(id=item.id, campaign_id=item.campaign_id, campaign_recipient_id=item.campaign_recipient_id, subject_ref=item.subject_ref, masked_recipient_reference=item.masked_recipient_reference, message_template_id=item.message_template_id, dispatch_status=item.dispatch_status, queued_at=item.queued_at) for item in rows], page=page, page_size=page_size, total=total)
 
 
 @router.post("/workspaces/{workspace_ref}/sources/{source_id}/imports", response_model=ImportResponse, status_code=201, tags=["imports"])
@@ -303,6 +534,11 @@ def get_dashboard(workspace_ref: str, db: Session = Depends(get_db)) -> Dashboar
     review_total = db.scalar(select(func.count(DataRecordRef.id)).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.match_status.in_(("REVIEW_REQUIRED", "CONFLICT")))) or 0
     finding_total = db.scalar(select(func.count(DataQualityFinding.id)).where(DataQualityFinding.workspace_id == workspace.id, DataQualityFinding.status == "OPEN")) or 0
     covered_source_ids = set(db.scalars(select(DatasetImport.source_id).where(DatasetImport.workspace_id == workspace.id, DatasetImport.status == "COMPLETE")))
+    policy = db.scalar(select(Policy).where(Policy.workspace_id == workspace.id, Policy.status == "ACTIVE").order_by(Policy.version.desc()))
+    decision_rows = db.execute(select(PolicyDecision.decision, func.count(PolicyDecision.id)).where(PolicyDecision.workspace_id == workspace.id).group_by(PolicyDecision.decision))
+    suppression_total = db.scalar(select(func.count(SuppressionRecord.id)).where(SuppressionRecord.workspace_id == workspace.id, SuppressionRecord.status == "ACTIVE")) or 0
+    campaign_total = db.scalar(select(func.count(Campaign.id)).where(Campaign.workspace_id == workspace.id)) or 0
+    outbox_total = db.scalar(select(func.count(MockOutbox.id)).where(MockOutbox.workspace_id == workspace.id)) or 0
     return DashboardResponse(
         workspace_id=workspace.id,
         source_total=source_total,
@@ -315,4 +551,9 @@ def get_dashboard(workspace_ref: str, db: Session = Depends(get_db)) -> Dashboar
         records_requiring_review=review_total,
         unresolved_quality_findings=finding_total,
         source_coverage={"covered": len(covered_source_ids), "not_ingested": source_total - len(covered_source_ids)},
+        active_policy_status=policy.status if policy else None,
+        policy_decision_summary={decision: count for decision, count in decision_rows},
+        active_suppression_total=suppression_total,
+        campaign_total=campaign_total,
+        mock_outbox_total=outbox_total,
     )

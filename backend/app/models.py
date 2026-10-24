@@ -200,3 +200,119 @@ class DocumentExtraction(Base):
     warnings_json: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class Policy(Base):
+    __tablename__ = "policies"
+    __table_args__ = (UniqueConstraint("workspace_id", "policy_key", "version", name="uq_policy_workspace_version"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    policy_key: Mapped[str] = mapped_column(String(100), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(160))
+    status: Mapped[str] = mapped_column(String(32), index=True)
+    effective_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    rules_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    synthetic_label: Mapped[str] = mapped_column(String(64), default="synthetic_demo_policy")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class AuthorizationRecord(Base):
+    __tablename__ = "authorization_records"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80), index=True)
+    purpose: Mapped[str] = mapped_column(String(80), index=True)
+    channel: Mapped[str] = mapped_column(String(48), index=True)
+    status: Mapped[str] = mapped_column(String(32), index=True)
+    evidence_document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id"), nullable=True)
+    evidence_source: Mapped[str] = mapped_column(String(160))
+    notice_version: Mapped[str] = mapped_column(String(80))
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class SuppressionRecord(Base):
+    __tablename__ = "suppression_records"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80), index=True)
+    purpose: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    channel: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), index=True)
+    source: Mapped[str] = mapped_column(String(160))
+    effective_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class PolicyDecision(Base):
+    __tablename__ = "policy_decisions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    operation: Mapped[str] = mapped_column(String(80), index=True)
+    subject_ref: Mapped[str | None] = mapped_column(String(80), index=True, nullable=True)
+    purpose: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    channel: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    decision: Mapped[str] = mapped_column(String(16), index=True)
+    evaluated_rules_json: Mapped[list] = mapped_column(JSON, default=list)
+    reason_codes_json: Mapped[list] = mapped_column(JSON, default=list)
+    policy_id: Mapped[str] = mapped_column(String(36), ForeignKey("policies.id"))
+    policy_version: Mapped[int] = mapped_column(Integer)
+    correlation_id: Mapped[str] = mapped_column(String(80), index=True)
+    context_fingerprint: Mapped[str] = mapped_column(String(64))
+    evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class Campaign(Base):
+    __tablename__ = "campaigns"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    name: Mapped[str] = mapped_column(String(160))
+    purpose: Mapped[str] = mapped_column(String(80))
+    channel: Mapped[str] = mapped_column(String(48))
+    message_template_id: Mapped[str] = mapped_column(String(100))
+    dataset_import_id: Mapped[str | None] = mapped_column(ForeignKey("dataset_imports.id"), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="DRAFT")
+    synthetic_label: Mapped[str] = mapped_column(String(64), default="synthetic_mock_delivery")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    previewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CampaignRecipient(Base):
+    __tablename__ = "campaign_recipients"
+    __table_args__ = (UniqueConstraint("campaign_id", "record_ref_id", name="uq_campaign_record"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
+    record_ref_id: Mapped[str] = mapped_column(ForeignKey("data_record_refs.id"), index=True)
+    subject_ref: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    preview_decision: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    preview_reason_codes_json: Mapped[list] = mapped_column(JSON, default=list)
+    previewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    execution_decision: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    execution_reason_codes_json: Mapped[list] = mapped_column(JSON, default=list)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class MockOutbox(Base):
+    __tablename__ = "mock_outbox"
+    __table_args__ = (UniqueConstraint("campaign_recipient_id", name="uq_outbox_campaign_recipient"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
+    campaign_recipient_id: Mapped[str] = mapped_column(ForeignKey("campaign_recipients.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80))
+    masked_recipient_reference: Mapped[str] = mapped_column(String(120))
+    message_template_id: Mapped[str] = mapped_column(String(100))
+    dispatch_status: Mapped[str] = mapped_column(String(32), default="QUEUED")
+    queued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

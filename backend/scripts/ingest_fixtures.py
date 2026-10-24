@@ -7,6 +7,7 @@ from app.config import get_settings
 from app.db import SessionLocal
 from app.ingestion import ingest_file
 from app.models import Source, Workspace
+from app.policy import ensure_demo_policy_state
 
 FIXTURE_DIR = Path(__file__).parents[1] / "app" / "fixtures"
 
@@ -24,6 +25,8 @@ def main() -> None:
             path = FIXTURE_DIR / document["source_path"]
             imported, reused = ingest_file(session, workspace, sources[document["source_key"]], document["filename"], path.read_bytes())
             results.append({"document_key": document["document_key"], "import_id": imported.id, "reused": reused, "status": imported.status})
+        ensure_demo_policy_state(session, workspace.id)
+        session.commit()
     print(json.dumps(results, sort_keys=True))
 
 

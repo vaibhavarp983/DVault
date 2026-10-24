@@ -5,8 +5,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api import NotFoundError, ServiceUnavailableError, router
+from app.api import ConflictError, NotFoundError, ServiceUnavailableError, router
 from app.ingestion import IngestionProblem
+from app.policy import PolicyProblem
 from app.schemas import ErrorResponse
 
 app = FastAPI(
@@ -35,6 +36,16 @@ async def unavailable_handler(_: Request, exc: ServiceUnavailableError) -> JSONR
 @app.exception_handler(IngestionProblem)
 async def ingestion_handler(_: Request, exc: IngestionProblem) -> JSONResponse:
     return error_response(exc.status_code, exc.code, exc.message, exc.details)
+
+
+@app.exception_handler(PolicyProblem)
+async def policy_handler(_: Request, exc: PolicyProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(ConflictError)
+async def conflict_handler(_: Request, exc: ConflictError) -> JSONResponse:
+    return error_response(409, exc.code, exc.message)
 
 
 @app.exception_handler(RequestValidationError)
