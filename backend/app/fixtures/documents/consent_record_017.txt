@@ -1,0 +1,4 @@
+SYNTHETIC DEMO DATA ONLY
+Authorization record: CON-017
+Subject reference: SUB-0002
+Purpose: course updates

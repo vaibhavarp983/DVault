@@ -1,0 +1,65 @@
+{
+  "fixture_version": "2026.10.24.1",
+  "generator_label": "DVault synthetic SME fixture library",
+  "workspace": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "name": "Aranya Coaching Centre",
+    "slug": "aranya-coaching-centre",
+    "demo_status": "synthetic_demo"
+  },
+  "sources": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "source_key": "crm",
+      "display_name": "Learner CRM",
+      "source_type": "crm_export",
+      "connection_status": "healthy",
+      "health_summary": "Synthetic CRM export is ready for discovery.",
+      "last_synced_at": "2026-10-24T09:00:00Z",
+      "configuration_metadata": {"owner": "Admissions", "synthetic": true}
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "source_key": "enquiries_sheet",
+      "display_name": "Enquiries Workbook",
+      "source_type": "spreadsheet",
+      "connection_status": "attention",
+      "health_summary": "Purpose labels will require review after Phase 2 ingestion.",
+      "last_synced_at": "2026-10-24T08:42:00Z",
+      "configuration_metadata": {"owner": "Operations", "synthetic": true}
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "source_key": "whatsapp_archive",
+      "display_name": "WhatsApp Enquiry Archive",
+      "source_type": "message_export",
+      "connection_status": "imported",
+      "health_summary": "Synthetic archive is available for text discovery.",
+      "last_synced_at": "2026-10-24T08:15:00Z",
+      "configuration_metadata": {"owner": "Counselling", "synthetic": true}
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "source_key": "business_documents",
+      "display_name": "Business Documents",
+      "source_type": "document_library",
+      "connection_status": "healthy",
+      "health_summary": "Synthetic operational documents are catalogued.",
+      "last_synced_at": "2026-10-24T08:30:00Z",
+      "configuration_metadata": {"owner": "Finance", "synthetic": true}
+    }
+  ],
+  "documents": [
+    {"id": "00000000-0000-4000-8000-000000000201", "source_key": "crm", "document_key": "crm-export-oct-2026", "document_type": "crm_export", "filename": "learner_crm_export_oct_2026.csv", "display_title": "Learner CRM export — October 2026", "created_at": "2026-10-24T08:55:00Z", "source_path": "documents/learner_crm_export_oct_2026.csv"},
+    {"id": "00000000-0000-4000-8000-000000000202", "source_key": "enquiries_sheet", "document_key": "enquiries-workbook-oct-2026", "document_type": "spreadsheet", "filename": "enquiries_oct_2026.csv", "display_title": "October enquiries workbook", "created_at": "2026-10-24T08:40:00Z", "source_path": "documents/enquiries_oct_2026.csv"},
+    {"id": "00000000-0000-4000-8000-000000000203", "source_key": "whatsapp_archive", "document_key": "whatsapp-enquiries-oct-2026", "document_type": "message_export", "filename": "whatsapp_enquiries_oct_2026.txt", "display_title": "WhatsApp enquiries — October 2026", "created_at": "2026-10-24T08:12:00Z", "source_path": "documents/whatsapp_enquiries_oct_2026.txt"},
+    {"id": "00000000-0000-4000-8000-000000000204", "source_key": "business_documents", "document_key": "invoice-1007", "document_type": "invoice", "filename": "invoice_1007.txt", "display_title": "Invoice INV-1007", "created_at": "2026-10-22T10:15:00Z", "source_path": "documents/invoice_1007.txt"},
+    {"id": "00000000-0000-4000-8000-000000000205", "source_key": "business_documents", "document_key": "purchase-order-303", "document_type": "purchase_order", "filename": "purchase_order_303.txt", "display_title": "Purchase order PO-303", "created_at": "2026-10-21T09:30:00Z", "source_path": "documents/purchase_order_303.txt"},
+    {"id": "00000000-0000-4000-8000-000000000206", "source_key": "business_documents", "document_key": "admissions-enquiry-204", "document_type": "enquiry_form", "filename": "admissions_enquiry_204.txt", "display_title": "Admissions enquiry ENQ-204", "created_at": "2026-10-20T13:20:00Z", "source_path": "documents/admissions_enquiry_204.txt"},
+    {"id": "00000000-0000-4000-8000-000000000207", "source_key": "business_documents", "document_key": "consent-record-017", "document_type": "consent_record", "filename": "consent_record_017.txt", "display_title": "Marketing authorization record CON-017", "created_at": "2026-10-20T14:10:00Z", "source_path": "documents/consent_record_017.txt"},
+    {"id": "00000000-0000-4000-8000-000000000208", "source_key": "business_documents", "document_key": "withdrawal-request-021", "document_type": "rights_request", "filename": "withdrawal_request_021.txt", "display_title": "Marketing withdrawal request RQ-021", "created_at": "2026-10-23T11:00:00Z", "source_path": "documents/withdrawal_request_021.txt"},
+    {"id": "00000000-0000-4000-8000-000000000209", "source_key": "business_documents", "document_key": "email-thread-scholarship", "document_type": "email", "filename": "email_thread_scholarship.txt", "display_title": "Scholarship enquiry correspondence", "created_at": "2026-10-23T14:00:00Z", "source_path": "documents/email_thread_scholarship.txt"},
+    {"id": "00000000-0000-4000-8000-000000000210", "source_key": "business_documents", "document_key": "operations-note-week-43", "document_type": "internal_note", "filename": "operations_note_week_43.txt", "display_title": "Operations note — week 43", "created_at": "2026-10-24T07:45:00Z", "source_path": "documents/operations_note_week_43.txt"},
+    {"id": "00000000-0000-4000-8000-000000000211", "source_key": "business_documents", "document_key": "audit-summary-oct-2026", "document_type": "operational_report", "filename": "audit_summary_oct_2026.txt", "display_title": "Operational audit summary — October 2026", "created_at": "2026-10-24T07:55:00Z", "source_path": "documents/audit_summary_oct_2026.txt"}
+  ]
+}
