@@ -1,3 +1,19 @@
-enquiry_id,subject_alias,enquiry_channel,purpose_label
-ENQ-204,SUB-0001,website,missing
-ENQ-205,SUB-0003,walk_in,admissions
+enquiry_id,subject_alias,customer_name,email,mobile,enquiry_channel,purpose,guardian_contact,authorization_note
+ENQ-204,SUB-0001,Aarav Mehta,aarav.mehta@example.test,9000010001,website,,9000010091,web enquiry
+ENQ-205,SUB-0003,Meera Shah,meera.shah@example.test,9000010003,walk_in,admissions,,no authorization provided
+ENQ-206,SUB-0005,Ananya Sen,ananya.sen@example.test,9000010005,website,admissions,9000010092,web enquiry
+ENQ-207,SUB-0007,Riya Shah,riya.shah.one@example.test,9000010007,whatsapp,admissions,,verbal follow up
+ENQ-208,SUB-0008,Riya Shah,riya.shah.two@example.test,9000010008,whatsapp,,9000010093,web enquiry
+ENQ-209,SUB-0010,Tara Kapoor,tara.kapoor@example.test,9000010010,website,course_updates,,existing learner
+ENQ-210,SUB-0012,Zoya Khan,zoya.khan@example.test,9000010012,walk_in,admissions,9000010094,guardian asked for callback
+ENQ-211,SUB-0014,Isha Das,isha.das@example.test,9000010014,website,course_updates,,web enquiry
+ENQ-212,SUB-0016,Aditi Roy,aditi.roy@example.test,9000010016,whatsapp,admissions,,verbal follow up
+ENQ-213,SUB-0018,Maya Menon,maya.menon@example.test,9000010018,website,,9000010095,web enquiry
+ENQ-214,SUB-0020,Naina Joshi,naina.joshi@example.test,9000010020,walk_in,admissions,,web enquiry
+ENQ-215,SUB-0022,Ira Singh,ira.singh@example.test,9000010022,website,admissions,,web enquiry
+ENQ-216,SUB-0024,Sia Verma,sia.verma@example.test,9000010024,whatsapp,admissions,9000010096,verbal follow up
+ENQ-217,,Riya Shah,riya.shah.alt@example.test,9000010087,website,admissions,,ambiguous name test
+ENQ-218,,Riya Shah,riya.shah.alt2@example.test,9000010088,website,admissions,,ambiguous name test
+ENQ-219,,Kiran Vale,kiran.vale@example.test,9000010089,website,,9000010097,missing purpose test
+ENQ-220,,Samira Noor,samira.noor@example.test,9000010090,walk_in,admissions,,new enquiry
+ENQ-221,,Aarav Mehta,aarav.mehta@example.test,9000010001,website,admissions,,duplicate contact test

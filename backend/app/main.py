@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api import NotFoundError, ServiceUnavailableError, router
+from app.ingestion import IngestionProblem
 from app.schemas import ErrorResponse
 
 app = FastAPI(
@@ -29,6 +30,11 @@ async def not_found_handler(_: Request, exc: NotFoundError) -> JSONResponse:
 @app.exception_handler(ServiceUnavailableError)
 async def unavailable_handler(_: Request, exc: ServiceUnavailableError) -> JSONResponse:
     return error_response(503, "SERVICE_UNAVAILABLE", exc.message)
+
+
+@app.exception_handler(IngestionProblem)
+async def ingestion_handler(_: Request, exc: IngestionProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message, exc.details)
 
 
 @app.exception_handler(RequestValidationError)

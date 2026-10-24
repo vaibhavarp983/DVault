@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,6 +10,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./dvault.db"
     environment: str = "development"
     hmac_secret: str = "development-only-secret-change-before-deployment"
+    source_store_dir: Path = Path("./source_stores")
 
     @property
     def is_production(self) -> bool:

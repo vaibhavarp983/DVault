@@ -1,4 +1,18 @@
-SYNTHETIC DEMO DATA ONLY
+SYNTHETIC DEMO DATA ONLY — WhatsApp enquiry archive
 
-09:12 — Parent: Please share the Foundation Mathematics timetable.
+09:12 — Aarav: Please share the Foundation Mathematics timetable. Reach me at aarav.mehta@example.test or +91 90000 10001.
 09:13 — Aranya Coaching: We can send the current schedule after your enquiry is recorded.
+10:04 — Diya: I need the Physics Revision fee details. My contact is +91 90000 10002.
+10:06 — Aranya Coaching: We will share the course information requested.
+10:48 — Meera: Is the Chemistry Lab suitable for a beginner? Email meera.shah@example.test.
+10:50 — Aranya Coaching: A counsellor will respond to this enquiry.
+11:15 — Riya: Please send the Foundation Mathematics brochure to riya.shah.one@example.test.
+11:18 — Aranya Coaching: Brochure request recorded.
+12:02 — Tara: What are the weekend timings? Call +91 90000 10010.
+12:04 — Aranya Coaching: We will provide the current timetable.
+13:21 — Zoya: I am enquiring about English Writing. Contact: zoya.khan@example.test.
+13:23 — Aranya Coaching: Thanks for your enquiry.
+14:05 — Maya: Please explain the admission process. Phone +91 90000 10018.
+14:07 — Aranya Coaching: The admissions team will assist.
+15:40 — New lead: I need a callback for Chemistry Lab at +91 90000 10089.
+15:43 — Aranya Coaching: Callback request received.

@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api import engine as api_engine
+from app.config import Settings
 from app.db import get_db
 from app.main import app
 from app.models import Base
@@ -20,6 +21,7 @@ def client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, N
         connection.execute(text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)"))
         connection.execute(text("INSERT INTO alembic_version (version_num) VALUES ('0001_control_plane')"))
     TestSession = sessionmaker(bind=test_engine, autoflush=False, autocommit=False)
+    monkeypatch.setattr("app.source_store.get_settings", lambda: Settings(source_store_dir=tmp_path / "source_stores"))
     with TestSession() as session:
         seed_database(session)
 
