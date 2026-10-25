@@ -182,9 +182,17 @@ def plan_request(db: Session, workspace: Workspace, request: RightsRequest) -> R
         request.planned_at = now_utc()
         return request
     action_type = ACTION_BY_REQUEST_TYPE[request.request_type]
+    correction_field = str((request.correction_json or {}).get("field", "")).strip()
     grouped: dict[str, list[DataRecordRef]] = {}
     for record in records:
+        if action_type == "RECTIFICATION" and not (record.field_metadata_json or {}).get(correction_field, {}).get("present"):
+            continue
         grouped.setdefault(record.source_id, []).append(record)
+    if not grouped:
+        request.status = "NEEDS_REVIEW"
+        request.summary_json = {"message": "No inventoried source record contains the field requested for correction.", "reason_code": "RECTIFICATION_FIELD_UNAVAILABLE"}
+        request.planned_at = now_utc()
+        return request
     for source_id, source_records in grouped.items():
         existing = db.scalar(select(RightsRequestAction).where(RightsRequestAction.rights_request_id == request.id, RightsRequestAction.source_id == source_id, RightsRequestAction.action_type == action_type))
         if existing is None:

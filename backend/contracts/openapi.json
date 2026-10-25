@@ -4,7 +4,6 @@
       "AccessArtifactResponse": {
         "properties": {
           "bundle": {
-            "additionalProperties": true,
             "title": "Bundle",
             "type": "object"
           },
@@ -52,7 +51,6 @@
           },
           "source_summaries": {
             "items": {
-              "additionalProperties": true,
               "type": "object"
             },
             "title": "Source Summaries",
@@ -354,7 +352,6 @@
             "type": "string"
           },
           "payload": {
-            "additionalProperties": true,
             "title": "Payload",
             "type": "object"
           },
@@ -2262,7 +2259,6 @@
             "title": "Dataset Import Id"
           },
           "details": {
-            "additionalProperties": true,
             "title": "Details",
             "type": "object"
           },
@@ -3436,7 +3432,6 @@
             "type": "string"
           },
           "preview": {
-            "additionalProperties": true,
             "title": "Preview",
             "type": "object"
           },
@@ -3951,7 +3946,6 @@
           },
           "failures": {
             "items": {
-              "additionalProperties": true,
               "type": "object"
             },
             "title": "Failures",
@@ -4395,7 +4389,6 @@
         "properties": {
           "details": {
             "items": {
-              "additionalProperties": true,
               "type": "object"
             },
             "title": "Details",
@@ -5765,7 +5758,6 @@
             "type": "string"
           },
           "metadata": {
-            "additionalProperties": true,
             "title": "Metadata",
             "type": "object"
           },
@@ -6443,7 +6435,6 @@
             "type": "string"
           },
           "details": {
-            "additionalProperties": true,
             "title": "Details",
             "type": "object"
           },
@@ -6694,6 +6685,65 @@
         "title": "MatchCandidateResponse",
         "type": "object"
       },
+      "OcrResponse": {
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "pages": {
+            "title": "Pages",
+            "type": "integer"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/OcrWordResponse"
+            },
+            "title": "Words",
+            "type": "array"
+          }
+        },
+        "required": [
+          "text",
+          "confidence",
+          "words",
+          "method",
+          "provider",
+          "pages"
+        ],
+        "title": "OcrResponse",
+        "type": "object"
+      },
+      "OcrWordResponse": {
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "confidence"
+        ],
+        "title": "OcrWordResponse",
+        "type": "object"
+      },
       "OutboxPageResponse": {
         "properties": {
           "items": {
@@ -6927,7 +6977,6 @@
             "type": "string"
           },
           "rules": {
-            "additionalProperties": true,
             "title": "Rules",
             "type": "object"
           },
@@ -7004,7 +7053,6 @@
             "type": "string"
           },
           "field_metadata": {
-            "additionalProperties": true,
             "title": "Field Metadata",
             "type": "object"
           },
@@ -7344,7 +7392,6 @@
             "type": "string"
           },
           "result": {
-            "additionalProperties": true,
             "title": "Result",
             "type": "object"
           },
@@ -7628,7 +7675,6 @@
             "type": "string"
           },
           "summary": {
-            "additionalProperties": true,
             "title": "Summary",
             "type": "object"
           },
@@ -7684,7 +7730,6 @@
       "SourceResponse": {
         "properties": {
           "configuration_metadata": {
-            "additionalProperties": true,
             "title": "Configuration Metadata",
             "type": "object"
           },
@@ -10775,6 +10820,48 @@
         "summary": "Clear Failure",
         "tags": [
           "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/id-proof/ocr": {
+      "post": {
+        "operationId": "ocr_id_proof_api_v1_workspaces__workspace_ref__demo_id_proof_ocr_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OcrResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ocr Id Proof",
+        "tags": [
+          "id-proof"
         ]
       }
     },

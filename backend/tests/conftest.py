@@ -33,6 +33,7 @@ def test_database(tmp_path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr("app.demo_projection.get_settings", lambda: settings)
     monkeypatch.setattr("app.demo_failures.get_settings", lambda: settings)
     monkeypatch.setattr("app.demo_reset.get_settings", lambda: settings)
+    monkeypatch.setattr("app.ocr_api.get_settings", lambda: settings)
     with TestSession() as session:
         seed_database(session)
     yield TestSession, test_engine

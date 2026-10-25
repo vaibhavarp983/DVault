@@ -20,8 +20,9 @@ The API documentation is then available at `/docs`; verify setup with `/api/v1/h
 - The message gate is intentionally local: `mock_outbox` rows prove which recipients passed an execution-time policy check, but no third-party message is sent.
 - Rights requests create one durable action per source. Access builds a synthetic artifact, erasure deletes rows from the isolated source stores, and withdrawal writes Phase 3 suppressions. A retention hold restricts erasure and routes the request to review instead of reporting deletion.
 - Retry creates a new job and runs only pending, failed, or previously restricted actions. Completed actions are never repeated.
-- `dvault-ingest-fixtures` seeds one visible retention hold, one completed access request, and a signed baseline checkpoint so the Rights Queue, Job Manager, and Security Center have real material. It does not alter fixture identities.
+- `dvault-ingest-fixtures` seeds the full personal-portal demo: one visible retention hold, rights requests across every status and type, documents linked across all seven record kinds, granted/withdrawn/expiring consents, cross-channel conversations with unread and retention states, and a signed baseline checkpoint. It does not alter fixture identities.
 - Connector failure injection is disabled by default. Set `ENABLE_FAILURE_INJECTION=true` in a non-production environment and call `POST /api/v1/workspaces/{workspace_ref}/sources/{source_id}/failure-injection` to rehearse a partial failure. It is a development-only hook, not a production control.
+- External OCR is optional. With `OCR_PROVIDER=google_vision` and `GOOGLE_VISION_API_KEY` set, the phone's ID-proof workflow sends the selected document to Google Cloud Vision through `POST /api/v1/workspaces/{workspace_ref}/demo/id-proof/ocr`. The endpoint validates the upload, processes it in memory, does not persist it, and returns OCR text plus word confidence. The provider's own data-retention terms apply. Set `OCR_PROVIDER=none` to disable external OCR; the phone can instead use its local browser OCR with `VITE_OCR_MODE=local`.
 
 ## Evidence integrity
 

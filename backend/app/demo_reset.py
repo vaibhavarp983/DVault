@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.demo_failures import DemoProblem
 from app.demo_projection import ensure_demo_projections
-from app.demo_seed import ensure_demo_portal_state, ensure_demo_rights_state
+from app.demo_seed import ensure_demo_portal_state, ensure_demo_rights_state, ensure_demo_user_state
 from app.evidence import create_checkpoint
 from app.ingestion import ingest_file
 from app.models import (
@@ -126,6 +126,7 @@ def reset_workspace(db: Session, workspace: Workspace) -> None:
     ensure_demo_policy_state(db, workspace.id)
     ensure_demo_rights_state(db, workspace)
     ensure_demo_portal_state(db, workspace)
+    ensure_demo_user_state(db, workspace)
     ensure_demo_projections(db, workspace)
     create_checkpoint(db, workspace.id, "Reset baseline checkpoint")
     db.commit()

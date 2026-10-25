@@ -14,3 +14,11 @@ export const demoControlsEnabled = import.meta.env.VITE_ENABLE_DEMO_CONTROLS ===
 export const defaultContactMode: ContactMode = 'masked'
 
 export const dataMode: DataMode = apiBaseUrl ? 'api' : 'local'
+
+export type OcrMode = 'external' | 'local'
+
+const configuredOcrMode = (import.meta.env.VITE_OCR_MODE ?? 'external').trim().toLowerCase()
+export const ocrMode: OcrMode = configuredOcrMode === 'local' ? 'local' : 'external'
+export const ocrProviderLabel =
+  (import.meta.env.VITE_OCR_PROVIDER_LABEL ?? 'Google Cloud Vision').trim() ||
+  'Google Cloud Vision'

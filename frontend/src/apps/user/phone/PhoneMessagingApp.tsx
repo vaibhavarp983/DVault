@@ -24,9 +24,12 @@ import type { UserWorkspace } from '@/domain/user'
 import { formatDateTime, formatRelative } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { useUser } from '@/store/user-provider'
+import { useIdProofFlow } from '@/features/id-proof'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PhoneAppShell } from './PhoneChrome'
+import { IdProofAttachments } from './IdProofAttachments'
+import { IdProofSheet } from './IdProofSheet'
 
 export function PhoneMessagingApp({
   workspace,
@@ -75,6 +78,14 @@ export function PhoneMessagingApp({
   const selectedBusiness = selected
     ? businessForConversation(selected.businessCode, selected.businessName)
     : null
+  const idProof = useIdProofFlow({
+    conversation: selected ?? null,
+    business: selectedBusiness,
+    profileName: workspace.profile.name,
+    subjectRef: workspace.demoSubjectRef ?? workspace.profile.id,
+    draft,
+    send: async (body) => (selected ? sendMessage(selected.id, body) : false),
+  })
 
   useEffect(() => {
     setDraft('')
@@ -266,6 +277,7 @@ export function PhoneMessagingApp({
           )}
         </button>
       }
+      overlay={<IdProofSheet flow={idProof} />}
     >
       <div className="flex min-h-full flex-col">
         <div className="border-b border-line bg-panel/60 px-3 py-2.5">
@@ -313,7 +325,12 @@ export function PhoneMessagingApp({
                   : 'border-line bg-panel',
               )}
             >
-              <p className="text-[8.5px] font-semibold text-ink-soft">{message.authorLabel}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-[8.5px] font-semibold text-ink-soft">{message.authorLabel}</p>
+                {message.body?.startsWith('[DVault ID proof]') && (
+                  <Badge tone="gold">ID proof</Badge>
+                )}
+              </div>
               <p className="mt-1 whitespace-pre-wrap text-[10px] leading-4 text-ink">
                 {message.body ??
                   'Content removed by retention policy. This message hash is still verifiable.'}
@@ -325,6 +342,10 @@ export function PhoneMessagingApp({
           ))}
         </div>
         <div className="sticky bottom-0 flex items-end gap-1.5 border-t border-line bg-canvas p-2.5">
+          <IdProofAttachments
+            onOpen={idProof.begin}
+            disabled={selected.status === 'ARCHIVED'}
+          />
           <textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}

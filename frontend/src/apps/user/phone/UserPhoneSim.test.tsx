@@ -36,6 +36,16 @@ describe('phone business deep links', () => {
     ).toBeInTheDocument()
     expect(screen.getAllByText('Aranya Coaching Centre').length).toBeGreaterThan(0)
   })
+
+  it('opens the ID-proof attachment sheet from a business thread', async () => {
+    renderWithDeepLink('/user?app=mail&biz=BIZ-ARANYA')
+    await screen.findByPlaceholderText(/Reply to Aranya Coaching Centre/i)
+    fireEvent.click(screen.getByRole('button', { name: 'Add attachment' }))
+    expect(await screen.findByText('Share an ID proof')).toBeInTheDocument()
+    expect(screen.getByText('Take a photo')).toBeInTheDocument()
+    expect(screen.getByText('Upload an image')).toBeInTheDocument()
+    expect(screen.getByText('Upload a PDF')).toBeInTheDocument()
+  })
 })
 
 describe('google business integration', () => {

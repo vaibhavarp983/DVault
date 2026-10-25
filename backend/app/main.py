@@ -15,6 +15,8 @@ from app.demo_failures import DemoProblem
 from app.evidence import EvidenceProblem
 from app.ingestion import IngestionProblem
 from app.messaging import MessagingProblem
+from app.ocr_api import router as ocr_router
+from app.ocr_provider import OcrProviderProblem
 from app.policy import PolicyProblem
 from app.retention import RetentionProblem
 from app.rights import RightsProblem
@@ -34,6 +36,7 @@ app.add_middleware(
 )
 app.include_router(router)
 app.include_router(demo_router)
+app.include_router(ocr_router)
 
 
 def error_response(status_code: int, code: str, message: str, details: dict[str, Any] | None = None) -> JSONResponse:
@@ -88,6 +91,11 @@ async def demo_handler(_: Request, exc: DemoProblem) -> JSONResponse:
 
 @app.exception_handler(MessagingProblem)
 async def messaging_handler(_: Request, exc: MessagingProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(OcrProviderProblem)
+async def ocr_provider_handler(_: Request, exc: OcrProviderProblem) -> JSONResponse:
     return error_response(exc.status_code, exc.code, exc.message)
 
 
