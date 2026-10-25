@@ -1,4 +1,4 @@
-﻿import {
+import {
   Archive,
   CheckCircle2,
   Clock3,
@@ -379,7 +379,7 @@ export function MessagingApp({
                   {selected.holdActive && <Badge tone="gold">Retention hold</Badge>}
                 </div>
                 <p className="mt-0.5 truncate text-[10px] text-ink-faint">
-                  {selected.customerName} Â· {selected.channel} Â· {selected.messageCount} messages Â·
+                  {selected.customerName} · {selected.channel} · {selected.messageCount} messages ·
                   last activity {formatDateTime(selected.lastActivityAt)}
                 </p>
               </div>
@@ -433,7 +433,7 @@ export function MessagingApp({
                       'Content removed by retention policy. Hashes and chain position are retained.'}
                   </p>
                   <p className="mt-2 truncate font-mono text-[8px] text-ink-faint">
-                    {message.messageHash.slice(0, 24)}â€¦ â† {message.previousHash.slice(0, 12)}â€¦
+                    {message.messageHash.slice(0, 24)}… ← {message.previousHash.slice(0, 12)}…
                   </p>
                 </article>
               ))}
@@ -454,7 +454,7 @@ export function MessagingApp({
                   placeholder={
                     selected.status === 'ARCHIVED'
                       ? 'Reopen the thread before replying'
-                      : `Reply as ${channel === 'email' ? 'email' : 'chat'}â€¦`
+                      : `Reply as ${channel === 'email' ? 'email' : 'chat'}…`
                   }
                   disabled={selected.status === 'ARCHIVED'}
                   className="min-h-[44px] flex-1 resize-none rounded-lg border border-line bg-canvas px-3 py-2 text-[11px] outline-none focus:border-gold/50 disabled:opacity-50"
@@ -579,10 +579,10 @@ function RetentionControls({
         {run && (
           <div className="mt-2 rounded-md border border-line bg-surface px-2 py-1.5 text-[9px] text-ink-soft">
             <p className="flex items-center gap-1">
-              <Clock3 className="size-3" /> {run.trigger} Â· {formatDateTime(run.startedAt)}
+              <Clock3 className="size-3" /> {run.trigger} · {formatDateTime(run.startedAt)}
             </p>
             <p className="mt-0.5">
-              {run.scanned} scanned Â· {run.reduced} reduced Â· {run.purged} purged Â·{' '}
+              {run.scanned} scanned · {run.reduced} reduced · {run.purged} purged ·{' '}
               {run.skippedHold} hold-protected
             </p>
           </div>

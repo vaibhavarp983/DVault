@@ -1,6 +1,5 @@
 ﻿import {
   Building2,
-  ChevronLeft,
   Mail,
   MapPin,
   MessageSquare,
@@ -289,7 +288,7 @@ export function PhoneMessagingApp({
                 )}
               </div>
               <p className="truncate text-[8.5px] text-ink-soft">
-                {selectedBusiness?.category} · {selectedBusiness?.priceRange}
+                {selectedBusiness?.category} · ★ {selectedBusiness?.rating.toFixed(1)}
               </p>
               <p className="mt-0.5 flex items-center gap-1 truncate text-[8px] text-ink-faint">
                 <MapPin className="size-2.5 shrink-0" />
@@ -406,7 +405,7 @@ function BizCodeSheet({
           <input
             value={bizCode}
             onChange={(event) => onBizCode(event.target.value)}
-            placeholder="e.g. BIZ-001"
+            placeholder="e.g. BIZ-SWA001"
             autoCapitalize="characters"
             spellCheck={false}
             className="mt-1 h-9 w-full rounded-xl border border-line bg-panel px-3 text-[11px] font-semibold tracking-wide text-ink outline-none placeholder:font-normal placeholder:tracking-normal focus:border-gold/50"
@@ -439,10 +438,11 @@ function BizCodeSheet({
             <div className="min-w-0 flex-1">
               <p className="truncate text-[10.5px] font-semibold text-ink">{business.name}</p>
               <p className="truncate text-[8.5px] text-ink-soft">
-                {business.category} · {business.priceRange}
+                {business.category} · ★ {business.rating.toFixed(1)} ({business.reviews})
               </p>
               <p className="mt-0.5 flex items-center gap-1 truncate text-[8px] text-ink-faint">
-                <MapPin className="size-2.5 shrink-0" /> {business.directions}
+                <MapPin className="size-2.5 shrink-0" />
+                {business.directions ?? business.address}
               </p>
             </div>
           </div>
@@ -520,5 +520,3 @@ export function PhoneMessagesApp(props: {
 }) {
   return <PhoneMessagingApp {...props} channel="chat" />
 }
-
-export { ChevronLeft }

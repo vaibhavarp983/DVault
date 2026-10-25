@@ -1,4 +1,4 @@
-﻿import type { AuditEvent, DemoData, Job } from '@/domain/types'
+import type { AuditEvent, DemoData, Job } from '@/domain/types'
 import type { WithdrawalTierKey } from '@/domain/messaging'
 import { eventDigest } from '@/lib/integrity'
 import { HttpBusinessRepository } from './api-service'
@@ -178,7 +178,7 @@ export class DemoDataService implements DemoRepository {
       document.confidence = Math.max(document.confidence, 0.96)
       appendAudit(this.data, {
         actor: 'Demo operator',
-        action: `Classification review approved â€” ${document.name}`,
+        action: `Classification review approved — ${document.name}`,
         target: document.name,
         category: 'policy',
         severity: 'info',
@@ -204,7 +204,7 @@ export class DemoDataService implements DemoRepository {
       })
       appendAudit(this.data, {
         actor: 'Demo operator',
-        action: `Job retry requested â€” ${job.name}`,
+        action: `Job retry requested — ${job.name}`,
         target: job.name,
         category: 'system',
         severity: 'info',
@@ -223,7 +223,7 @@ export class DemoDataService implements DemoRepository {
       }
       appendAudit(this.data, {
         actor: 'Demo operator',
-        action: `Approved recipients executed â€” ${campaign.name}`,
+        action: `Approved recipients executed — ${campaign.name}`,
         target: campaign.name,
         category: 'policy',
         severity: 'info',

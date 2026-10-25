@@ -1,4 +1,4 @@
-﻿import {
+import {
   ClipboardList,
   ShieldCheck,
   Sparkles,
@@ -28,6 +28,7 @@ import { PhoneSourcesApp } from './PhoneSourcesApp'
 import { PhoneProfileApp } from './PhoneProfileApp'
 import { PhoneHelpApp } from './PhoneHelpApp'
 import { PhoneMailApp, PhoneMessagesApp } from './PhoneMessagingApp'
+import { BizSearchApp } from './BizSearchApp'
 import type { PhoneApp } from './types'
 
 export function UserPhoneSim() {
@@ -52,7 +53,7 @@ export function UserPhoneSim() {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
-    document.title = 'Personal phone â€” DVault'
+    document.title = 'Personal phone — DVault'
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(timer)
   }, [])
@@ -69,7 +70,7 @@ export function UserPhoneSim() {
 
   const health = data ? selectConsentHealth(data) : undefined
   const summary = data ? selectUserSummary(data) : undefined
-  const screenDarkIcons = !locked && app !== 'home'
+  const screenDarkIcons = !locked && app !== 'home' && app !== 'biz-search'
 
   const toggleLock = () => {
     setLocked((current) => {
@@ -117,7 +118,7 @@ export function UserPhoneSim() {
             <span
               className={cn('size-1.5 rounded-full', mode === 'api' ? 'bg-info' : 'bg-success')}
             />
-            {mode === 'api' ? `API Â· ${apiBaseUrl}` : 'Local synthetic data'}
+            {mode === 'api' ? `API · ${apiBaseUrl}` : 'Local synthetic data'}
           </span>
         </div>
       </header>
@@ -155,7 +156,7 @@ export function UserPhoneSim() {
           </ul>
           {data && (
             <p className="mt-5 text-[9px] text-ink-faint">
-              {data.documents.length} records Â· {data.sources.length} sources Â· updated{' '}
+              {data.documents.length} records · {data.sources.length} sources · updated{' '}
               {formatDate(data.generatedAt)}
             </p>
           )}
@@ -203,6 +204,19 @@ export function UserPhoneSim() {
                   initialMessageType={bizIntent?.type}
                 />
               )}
+              {app === 'biz-search' && (
+                <BizSearchApp
+                  onBack={goHome}
+                  onOpenEmail={(business) => {
+                    setBizIntent({ code: business.code })
+                    setApp('mail')
+                  }}
+                  onOpenMessage={(business) => {
+                    setBizIntent({ code: business.code })
+                    setApp('messages')
+                  }}
+                />
+              )}
               {app === 'data' && <PhoneDataApp workspace={data} onBack={goHome} />}
               {app === 'consent' && <PhoneConsentApp workspace={data} onBack={goHome} />}
               {app === 'requests' && <PhoneRequestsApp workspace={data} onBack={goHome} />}
@@ -232,7 +246,7 @@ export function UserPhoneSim() {
       </main>
 
       <footer className="relative z-10 px-6 pb-4 text-center text-[9px] text-ink-faint">
-        Synthetic smartphone simulator Â· no real personal data Â· {mode === 'api' ? 'FastAPI repository' : 'local repository'}
+        Synthetic smartphone simulator · no real personal data · {mode === 'api' ? 'FastAPI repository' : 'local repository'}
       </footer>
     </div>
   )
@@ -269,6 +283,7 @@ function parseBizIntent(params: URLSearchParams): PhoneBizIntent | null {
 function phoneAppFromQuery(value: string | null, bizCode: string | null): PhoneApp {
   const app = value?.trim().toLowerCase()
   if (app === 'mail') return 'mail'
+  if (app === 'search' || app === 'google' || app === 'biz-search') return 'biz-search'
   if (app === 'chat' || app === 'message' || app === 'messages' || bizCode) return 'messages'
   return 'home'
 }

@@ -1,4 +1,4 @@
-﻿import {
+import {
   createContext,
   useCallback,
   useContext,
@@ -541,7 +541,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     async (breachId: string) => {
       await apply(
         () => demoRepository.draftBreachNotification(breachId),
-        () => notify({ title: 'Draft notification generated', body: 'The draft is labelled DRAFT â€” NOT SENT and was not transmitted.', tone: 'info', appId: 'vault' }),
+        () => notify({ title: 'Draft notification generated', body: 'The draft is labelled DRAFT — NOT SENT and was not transmitted.', tone: 'info', appId: 'vault' }),
       )
     },
     [apply, notify],

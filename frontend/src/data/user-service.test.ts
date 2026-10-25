@@ -61,16 +61,16 @@ describe('personal data service', () => {
     const service = makeService()
     await service.reset()
     const after = await service.createBizConversation({
-      bizCode: 'BIZ-003',
+      bizCode: 'BIZ-NIR003',
       channel: 'chat',
       messageType: 'SUPPORT',
-      body: 'Can you visit tomorrow?',
+      body: 'Can you service my car tomorrow?',
     })
     const thread = after.conversations?.find(
-      (entry) => entry.businessCode === 'BIZ-003' && entry.channel === 'chat',
+      (entry) => entry.businessCode === 'BIZ-NIR003' && entry.channel === 'chat',
     )
-    expect(thread?.businessName).toBe('GreenLeaf Home Services')
-    expect(thread?.messages.at(-1)?.body).toBe('Can you visit tomorrow?')
-    expect(after.activity[0]?.action).toContain('GreenLeaf Home Services')
+    expect(thread?.businessName).toBe('Nirmal Auto Works')
+    expect(thread?.messages.at(-1)?.body).toBe('Can you service my car tomorrow?')
+    expect(after.activity[0]?.action).toContain('Nirmal Auto Works')
   })
 })

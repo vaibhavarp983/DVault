@@ -1,4 +1,4 @@
-﻿import {
+import {
   CheckCircle2,
   Mail,
   MapPin,
@@ -89,7 +89,7 @@ export function PhoneProfileApp({
             <span className="ml-auto text-[8px] text-ink-faint">{mode === 'api' ? 'api' : 'demo'}</span>
           </div>
           <p className="mt-1 truncate text-[8px] text-ink-faint" title={apiBaseUrl ?? undefined}>
-            {mode === 'api' ? apiBaseUrl : 'No network calls Â· session only'}
+            {mode === 'api' ? apiBaseUrl : 'No network calls · session only'}
           </p>
         </div>
 
@@ -101,7 +101,7 @@ export function PhoneProfileApp({
           disabled={resetting}
         >
           <RotateCcw className={cn('size-3.5', resetting && 'animate-spin')} />
-          {resetting ? 'Restoringâ€¦' : 'Restore synthetic data'}
+          {resetting ? 'Restoring…' : 'Restore synthetic data'}
         </Button>
 
         <p className="flex items-start gap-1.5 text-[8px] leading-3.5 text-ink-faint">

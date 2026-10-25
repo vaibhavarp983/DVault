@@ -2,6 +2,7 @@
   | 'home'
   | 'mail'
   | 'messages'
+  | 'biz-search'
   | 'data'
   | 'consent'
   | 'requests'

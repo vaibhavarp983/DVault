@@ -10,10 +10,12 @@ import {
   UserRound,
   type LucideIcon,
 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { UserProfile, UserWorkspace } from '@/domain/user'
 import { selectConsentHealth, selectUserSummary } from '@/data/user-selectors'
 import { initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { GoogleMark } from '@/components/ui/google-mark'
 import { Progress } from '@/components/ui/progress'
 import type { PhoneApp } from './types'
 
@@ -29,6 +31,7 @@ const greeting = (hour: number) =>
 const appGradients = {
   mail: 'from-[#7fa9c7] via-[#4f7f9f] to-[#325b78]',
   messages: 'from-[#86b89a] via-[#4f8b6d] to-[#2f654d]',
+  google: 'from-white via-white to-[#e8eaed]',
   data: 'from-[#e2c17f] via-[#c19440] to-[#8a6521]',
   consent: 'from-[#8fb7a0] via-[#5a9576] to-[#356d54]',
   requests: 'from-[#e0b05b] via-[#c08a2f] to-[#8f651c]',
@@ -69,7 +72,7 @@ export function PhoneHome({
         aria-hidden
       />
 
-      <div className="scroll-thin relative flex h-full flex-col overflow-y-auto px-5 pb-7 pt-[50px]">
+      <div className="no-scrollbar relative flex h-full flex-col overflow-y-auto px-5 pb-7 pt-[50px]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/35">
@@ -178,6 +181,12 @@ export function PhoneHome({
               badge={unread}
             />
             <AppTile
+              label="Google"
+              iconNode={<GoogleMark className="size-[23px]" />}
+              gradient={appGradients.google}
+              onClick={() => onOpenApp('biz-search')}
+            />
+            <AppTile
               label="My data"
               icon={Database}
               gradient={appGradients.data}
@@ -233,12 +242,14 @@ export function PhoneHome({
 function AppTile({
   label,
   icon: Icon,
+  iconNode,
   gradient,
   onClick,
   badge,
 }: {
   label: string
-  icon: LucideIcon
+  icon?: LucideIcon
+  iconNode?: ReactNode
   gradient: string
   onClick: () => void
   badge?: number
@@ -257,7 +268,7 @@ function AppTile({
             gradient,
           )}
         >
-          <Icon className="size-[22px]" strokeWidth={1.75} />
+          {iconNode ?? (Icon ? <Icon className="size-[22px]" strokeWidth={1.75} /> : null)}
         </span>
         {badge !== undefined && badge > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[8px] font-semibold text-white ring-2 ring-[#1b1813]">

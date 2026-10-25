@@ -114,7 +114,7 @@ export function PhoneAppShell({
         <h1 className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">{title}</h1>
         {action}
       </header>
-      <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">{children}</div>
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">{children}</div>
       {overlay}
     </div>
   )
