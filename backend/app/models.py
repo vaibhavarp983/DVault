@@ -316,3 +316,106 @@ class MockOutbox(Base):
     message_template_id: Mapped[str] = mapped_column(String(100))
     dispatch_status: Mapped[str] = mapped_column(String(32), default="QUEUED")
     queued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class RightsRequest(Base):
+    __tablename__ = "rights_requests"
+    __table_args__ = (UniqueConstraint("workspace_id", "idempotency_key", name="uq_rights_request_idempotency"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80), index=True)
+    request_type: Mapped[str] = mapped_column(String(24), index=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="CREATED")
+    idempotency_key: Mapped[str] = mapped_column(String(120))
+    correlation_id: Mapped[str] = mapped_column(String(80), index=True)
+    requester_reference: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    planned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class RightsRequestAction(Base):
+    __tablename__ = "rights_request_actions"
+    __table_args__ = (UniqueConstraint("rights_request_id", "source_id", "action_type", name="uq_rights_action_source_operation"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    rights_request_id: Mapped[str] = mapped_column(ForeignKey("rights_requests.id"), index=True)
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id"), index=True)
+    action_type: Mapped[str] = mapped_column(String(32), index=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="PENDING")
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    retry_eligible: Mapped[bool] = mapped_column(Boolean, default=True)
+    affected_record_count: Mapped[int] = mapped_column(Integer, default=0)
+    result_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    planned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class RetentionHold(Base):
+    __tablename__ = "retention_holds"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    subject_ref: Mapped[str | None] = mapped_column(String(80), index=True, nullable=True)
+    source_id: Mapped[str | None] = mapped_column(ForeignKey("sources.id"), index=True, nullable=True)
+    record_ref_id: Mapped[str | None] = mapped_column(ForeignKey("data_record_refs.id"), index=True, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="ACTIVE")
+    reason_code: Mapped[str] = mapped_column(String(80))
+    review_note: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class RightsAccessArtifact(Base):
+    __tablename__ = "rights_access_artifacts"
+    __table_args__ = (UniqueConstraint("rights_request_id", name="uq_access_artifact_request"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    rights_request_id: Mapped[str] = mapped_column(ForeignKey("rights_requests.id"), index=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="BUILDING")
+    source_summaries_json: Mapped[list] = mapped_column(JSON, default=list)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    rights_request_id: Mapped[str] = mapped_column(ForeignKey("rights_requests.id"), index=True)
+    operation: Mapped[str] = mapped_column(String(48), index=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="QUEUED")
+    attempt_count: Mapped[int] = mapped_column(Integer, default=1)
+    action_total: Mapped[int] = mapped_column(Integer, default=0)
+    action_completed: Mapped[int] = mapped_column(Integer, default=0)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    correlation_id: Mapped[str] = mapped_column(String(80), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class JobEvent(Base):
+    __tablename__ = "job_events"
+    __table_args__ = (UniqueConstraint("job_id", "sequence", name="uq_job_event_sequence"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    job_id: Mapped[str] = mapped_column(ForeignKey("jobs.id"), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    event_type: Mapped[str] = mapped_column(String(48), index=True)
+    action_id: Mapped[str | None] = mapped_column(ForeignKey("rights_request_actions.id"), nullable=True, index=True)
+    message: Mapped[str] = mapped_column(String(320))
+    details_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

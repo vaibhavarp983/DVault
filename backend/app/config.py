@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     hmac_secret: str = "development-only-secret-change-before-deployment"
     source_store_dir: Path = Path("./source_stores")
+    enable_failure_injection: bool = False
 
     @property
     def is_production(self) -> bool:

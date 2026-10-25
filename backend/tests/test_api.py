@@ -1,3 +1,14 @@
+import json
+from pathlib import Path
+
+from app.main import app
+
+
+def test_committed_openapi_snapshot_matches_the_live_app() -> None:
+    snapshot = json.loads((Path(__file__).parents[1] / "contracts" / "openapi.json").read_text(encoding="utf-8"))
+    assert snapshot == app.openapi()
+
+
 def test_health_and_dashboard_are_database_backed(client) -> None:
     health = client.get("/api/v1/health")
     assert health.status_code == 200

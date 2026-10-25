@@ -12,23 +12,30 @@ from app.db import engine, get_db
 from app.ingestion import IngestionProblem, ingest_file, mask_value, normalize_field
 from app.models import (
     AuthorizationRecord, Campaign, CampaignRecipient, DataQualityFinding, DataRecordRef, DatasetImport, Document,
-    DocumentExtraction, FixtureManifest, ImportFieldProfile, MatchCandidate, MockOutbox, Policy, Source,
-    PolicyDecision, SuppressionRecord, Workspace,
+    DocumentExtraction, FixtureManifest, ImportFieldProfile, Job, JobEvent, MatchCandidate, MockOutbox, Policy,
+    RetentionHold, RightsAccessArtifact, RightsRequest, RightsRequestAction, Source, PolicyDecision,
+    SuppressionRecord, Workspace,
 )
 from app.policy import PolicyProblem, ensure_default_policy, evaluate_marketing, masked_subject_ref
+from app.rights import RightsProblem, create_request as create_rights_request, execute_request, plan_request, release_hold, request_actions
 from app.schemas import (
+    AccessArtifactResponse,
     AuthorizationCreateRequest, AuthorizationResponse, CampaignCreateRequest, CampaignRecipientPageResponse,
     CampaignRecipientResponse, CampaignResponse,
     DashboardResponse, DataQualityFindingResponse, DataQualityPageResponse, DocumentExtractionResponse, DocumentResponse,
+    FailureInjectionRequest, FailureInjectionResponse,
     FieldProfileResponse, HealthResponse, ImportPageResponse, ImportResponse, MatchCandidatePageResponse,
     MatchCandidateResponse, OutboxPageResponse, OutboxResponse, PageResponse, PolicyDecisionResponse,
     PolicyEvaluationRequest, PolicyResponse, RecordPageResponse, RecordResponse, SchemaPreviewResponse,
-    SourceResponse, WithdrawalRequest, WorkspaceResponse,
+    SourceResponse, WithdrawalRequest, WorkspaceResponse, JobDetailResponse, JobEventResponse, JobPageResponse,
+    JobResponse, RetentionHoldCreateRequest, RetentionHoldReleaseRequest, RetentionHoldResponse,
+    RightsActionPageResponse, RightsActionResponse,
+    RightsRequestCreateRequest, RightsRequestPageResponse, RightsRequestResponse,
 )
 from app.source_store import SourceStore
 
 router = APIRouter(prefix="/api/v1")
-REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "alembic_version"}
+REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "rights_requests", "rights_request_actions", "retention_holds", "rights_access_artifacts", "jobs", "job_events", "alembic_version"}
 
 
 class NotFoundError(Exception):
@@ -42,6 +49,12 @@ class ServiceUnavailableError(Exception):
 
 
 class ConflictError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+
+
+class ForbiddenError(Exception):
     def __init__(self, code: str, message: str) -> None:
         self.code = code
         self.message = message
@@ -136,6 +149,45 @@ def decision_response(result) -> PolicyDecisionResponse:
     return PolicyDecisionResponse(decision=result.decision, reason_codes=result.reason_codes, evaluated_rules=result.evaluated_rules, policy_id=result.policy_id, policy_version=result.policy_version, correlation_id=result.correlation_id, evaluated_at=result.evaluated_at)
 
 
+def rights_request_response(db: Session, item: RightsRequest) -> RightsRequestResponse:
+    actions = request_actions(db, item.id)
+    completed = len([action for action in actions if action.status == "SUCCEEDED"])
+    return RightsRequestResponse(
+        id=item.id, subject_ref=item.subject_ref, request_type=item.request_type, status=item.status,
+        idempotency_key=item.idempotency_key, correlation_id=item.correlation_id,
+        requester_reference=item.requester_reference, summary=item.summary_json, created_at=item.created_at,
+        planned_at=item.planned_at, completed_at=item.completed_at, updated_at=item.updated_at,
+        source_action_total=len(actions), source_action_completed=completed, unresolved_action_total=len(actions) - completed,
+    )
+
+
+def rights_action_response(item: RightsRequestAction) -> RightsActionResponse:
+    return RightsActionResponse(
+        id=item.id, source_id=item.source_id, action_type=item.action_type, status=item.status,
+        attempt_count=item.attempt_count, retry_eligible=item.retry_eligible,
+        affected_record_count=item.affected_record_count, result=item.result_json,
+        error_code=item.error_code, error_message=item.error_message, planned_at=item.planned_at,
+        started_at=item.started_at, completed_at=item.completed_at, updated_at=item.updated_at,
+    )
+
+
+def job_response(item: Job) -> JobResponse:
+    return JobResponse(
+        id=item.id, rights_request_id=item.rights_request_id, operation=item.operation, status=item.status,
+        attempt_count=item.attempt_count, action_total=item.action_total, action_completed=item.action_completed,
+        error_code=item.error_code, error_message=item.error_message, correlation_id=item.correlation_id,
+        created_at=item.created_at, started_at=item.started_at, completed_at=item.completed_at,
+    )
+
+
+def hold_response(item: RetentionHold) -> RetentionHoldResponse:
+    return RetentionHoldResponse(
+        id=item.id, subject_ref=item.subject_ref, source_id=item.source_id, record_ref_id=item.record_ref_id,
+        status=item.status, reason_code=item.reason_code, review_note=item.review_note,
+        expires_at=item.expires_at, released_at=item.released_at, created_at=item.created_at,
+    )
+
+
 @router.get("/health", response_model=HealthResponse, tags=["system"])
 def health(db: Session = Depends(get_db)) -> HealthResponse:
     try:
@@ -169,6 +221,22 @@ def get_source(workspace_ref: str, source_id: str, db: Session = Depends(get_db)
     if source is None:
         raise NotFoundError("source")
     return source
+
+
+@router.post("/workspaces/{workspace_ref}/sources/{source_id}/failure-injection", response_model=FailureInjectionResponse, tags=["sources"])
+def set_failure_injection(workspace_ref: str, source_id: str, payload: FailureInjectionRequest, db: Session = Depends(get_db)) -> FailureInjectionResponse:
+    """Development-only hook for rehearsing a connector failure. Disabled by default."""
+    settings = get_settings()
+    if settings.is_production or not settings.enable_failure_injection:
+        raise ForbiddenError("FAILURE_INJECTION_DISABLED", "Synthetic connector failure injection is disabled.")
+    workspace = resolve_workspace(workspace_ref, db)
+    source = db.scalar(select(Source).where(Source.workspace_id == workspace.id, Source.id == source_id))
+    if source is None:
+        raise NotFoundError("source")
+    source.configuration_metadata = {**(source.configuration_metadata or {}), "phase4_failure": payload.enabled}
+    db.commit()
+    db.refresh(source)
+    return FailureInjectionResponse(source_id=source.id, source_key=source.source_key, failure_injection_enabled=payload.enabled, scope="development-test-hook")
 
 
 @router.get("/workspaces/{workspace_ref}/policies", response_model=list[PolicyResponse], tags=["policy"])
@@ -239,6 +307,150 @@ def withdraw_authorization(workspace_ref: str, authorization_id: str, payload: W
         db.commit()
     db.refresh(item)
     return authorization_response(item)
+
+
+def resolve_rights_request(workspace: Workspace, request_id: str, db: Session) -> RightsRequest:
+    item = db.scalar(select(RightsRequest).where(RightsRequest.workspace_id == workspace.id, RightsRequest.id == request_id))
+    if item is None:
+        raise NotFoundError("rights_request")
+    return item
+
+
+@router.post("/workspaces/{workspace_ref}/rights-requests", response_model=RightsRequestResponse, status_code=201, tags=["rights"])
+def create_rights_request_endpoint(workspace_ref: str, payload: RightsRequestCreateRequest, response: Response, db: Session = Depends(get_db)) -> RightsRequestResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    request, reused = create_rights_request(db, workspace, payload.subject_ref, payload.request_type, payload.idempotency_key, payload.requester_reference)
+    db.commit()
+    db.refresh(request)
+    if reused:
+        response.status_code = 200
+    return rights_request_response(db, request)
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests", response_model=RightsRequestPageResponse, tags=["rights"])
+def list_rights_requests(workspace_ref: str, page: int = Query(1, ge=1), page_size: int = Query(25, ge=1, le=100), status: str | None = None, request_type: str | None = None, db: Session = Depends(get_db)) -> RightsRequestPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [RightsRequest.workspace_id == workspace.id]
+    if status:
+        filters.append(RightsRequest.status == status)
+    if request_type:
+        filters.append(RightsRequest.request_type == request_type.upper())
+    total = db.scalar(select(func.count(RightsRequest.id)).where(*filters)) or 0
+    rows = db.scalars(select(RightsRequest).where(*filters).order_by(RightsRequest.created_at.desc()).offset((page - 1) * page_size).limit(page_size))
+    return RightsRequestPageResponse(items=[rights_request_response(db, item) for item in rows], page=page, page_size=page_size, total=total)
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}", response_model=RightsRequestResponse, tags=["rights"])
+def get_rights_request(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> RightsRequestResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    return rights_request_response(db, resolve_rights_request(workspace, request_id, db))
+
+
+@router.post("/workspaces/{workspace_ref}/rights-requests/{request_id}/plan", response_model=RightsRequestResponse, tags=["rights"])
+def plan_rights_request(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> RightsRequestResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    request = plan_request(db, workspace, resolve_rights_request(workspace, request_id, db))
+    db.commit()
+    db.refresh(request)
+    return rights_request_response(db, request)
+
+
+@router.post("/workspaces/{workspace_ref}/rights-requests/{request_id}/execute", response_model=JobResponse, tags=["rights"])
+def execute_rights_request(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> JobResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    job = execute_request(db, workspace, resolve_rights_request(workspace, request_id, db))
+    db.commit()
+    db.refresh(job)
+    return job_response(job)
+
+
+@router.post("/workspaces/{workspace_ref}/rights-requests/{request_id}/retry", response_model=JobResponse, tags=["rights"])
+def retry_rights_request(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> JobResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    job = execute_request(db, workspace, resolve_rights_request(workspace, request_id, db), retry=True)
+    db.commit()
+    db.refresh(job)
+    return job_response(job)
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}/actions", response_model=RightsActionPageResponse, tags=["rights"])
+def list_rights_actions(workspace_ref: str, request_id: str, page: int = Query(1, ge=1), page_size: int = Query(25, ge=1, le=100), db: Session = Depends(get_db)) -> RightsActionPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    request = resolve_rights_request(workspace, request_id, db)
+    actions = request_actions(db, request.id)
+    total = len(actions)
+    window = actions[(page - 1) * page_size: page * page_size]
+    return RightsActionPageResponse(items=[rights_action_response(action) for action in window], page=page, page_size=page_size, total=total)
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}/access-artifact", response_model=AccessArtifactResponse, tags=["rights"])
+def get_access_artifact(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> AccessArtifactResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    request = resolve_rights_request(workspace, request_id, db)
+    artifact = db.scalar(select(RightsAccessArtifact).where(RightsAccessArtifact.rights_request_id == request.id))
+    if artifact is None:
+        raise NotFoundError("rights_access_artifact")
+    return AccessArtifactResponse(id=artifact.id, rights_request_id=artifact.rights_request_id, status=artifact.status, source_summaries=artifact.source_summaries_json, expires_at=artifact.expires_at, created_at=artifact.created_at, completed_at=artifact.completed_at)
+
+
+@router.post("/workspaces/{workspace_ref}/retention-holds", response_model=RetentionHoldResponse, status_code=201, tags=["rights"])
+def create_retention_hold(workspace_ref: str, payload: RetentionHoldCreateRequest, db: Session = Depends(get_db)) -> RetentionHoldResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    if not any((payload.subject_ref, payload.source_id, payload.record_ref_id)):
+        raise RightsProblem("RETENTION_HOLD_SCOPE_REQUIRED", "A retention hold must include a subject, source, or record scope.", 422)
+    if payload.source_id and db.scalar(select(Source.id).where(Source.workspace_id == workspace.id, Source.id == payload.source_id)) is None:
+        raise NotFoundError("source")
+    if payload.record_ref_id and db.scalar(select(DataRecordRef.id).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == payload.record_ref_id)) is None:
+        raise NotFoundError("record")
+    hold = RetentionHold(workspace_id=workspace.id, subject_ref=payload.subject_ref, source_id=payload.source_id, record_ref_id=payload.record_ref_id, status="ACTIVE", reason_code=payload.reason_code, review_note=payload.review_note, expires_at=payload.expires_at)
+    db.add(hold)
+    db.commit()
+    db.refresh(hold)
+    return hold_response(hold)
+
+
+@router.get("/workspaces/{workspace_ref}/retention-holds", response_model=list[RetentionHoldResponse], tags=["rights"])
+def list_retention_holds(workspace_ref: str, subject_ref: str | None = None, status: str | None = None, db: Session = Depends(get_db)) -> list[RetentionHoldResponse]:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [RetentionHold.workspace_id == workspace.id]
+    if subject_ref:
+        filters.append(RetentionHold.subject_ref == subject_ref)
+    if status:
+        filters.append(RetentionHold.status == status)
+    return [hold_response(hold) for hold in db.scalars(select(RetentionHold).where(*filters).order_by(RetentionHold.created_at.desc()))]
+
+
+@router.post("/workspaces/{workspace_ref}/retention-holds/{hold_id}/release", response_model=RetentionHoldResponse, tags=["rights"])
+def release_retention_hold(workspace_ref: str, hold_id: str, payload: RetentionHoldReleaseRequest, db: Session = Depends(get_db)) -> RetentionHoldResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    hold = db.scalar(select(RetentionHold).where(RetentionHold.workspace_id == workspace.id, RetentionHold.id == hold_id))
+    if hold is None:
+        raise NotFoundError("retention_hold")
+    release_hold(hold, payload.note)
+    db.commit()
+    db.refresh(hold)
+    return hold_response(hold)
+
+
+@router.get("/workspaces/{workspace_ref}/jobs", response_model=JobPageResponse, tags=["jobs"])
+def list_jobs(workspace_ref: str, page: int = Query(1, ge=1), page_size: int = Query(25, ge=1, le=100), status: str | None = None, db: Session = Depends(get_db)) -> JobPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [Job.workspace_id == workspace.id]
+    if status:
+        filters.append(Job.status == status)
+    total = db.scalar(select(func.count(Job.id)).where(*filters)) or 0
+    rows = db.scalars(select(Job).where(*filters).order_by(Job.created_at.desc()).offset((page - 1) * page_size).limit(page_size))
+    return JobPageResponse(items=[job_response(job) for job in rows], page=page, page_size=page_size, total=total)
+
+
+@router.get("/workspaces/{workspace_ref}/jobs/{job_id}", response_model=JobDetailResponse, tags=["jobs"])
+def get_job(workspace_ref: str, job_id: str, db: Session = Depends(get_db)) -> JobDetailResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    job = db.scalar(select(Job).where(Job.workspace_id == workspace.id, Job.id == job_id))
+    if job is None:
+        raise NotFoundError("job")
+    timeline = list(db.scalars(select(JobEvent).where(JobEvent.job_id == job.id).order_by(JobEvent.sequence)))
+    return JobDetailResponse(**job_response(job).model_dump(), timeline=[JobEventResponse(id=event.id, sequence=event.sequence, event_type=event.event_type, action_id=event.action_id, message=event.message, details=event.details_json, created_at=event.created_at) for event in timeline])
 
 
 def resolve_campaign(workspace: Workspace, campaign_id: str, db: Session) -> Campaign:
@@ -535,17 +747,21 @@ def get_dashboard(workspace_ref: str, db: Session = Depends(get_db)) -> Dashboar
     finding_total = db.scalar(select(func.count(DataQualityFinding.id)).where(DataQualityFinding.workspace_id == workspace.id, DataQualityFinding.status == "OPEN")) or 0
     covered_source_ids = set(db.scalars(select(DatasetImport.source_id).where(DatasetImport.workspace_id == workspace.id, DatasetImport.status == "COMPLETE")))
     policy = db.scalar(select(Policy).where(Policy.workspace_id == workspace.id, Policy.status == "ACTIVE").order_by(Policy.version.desc()))
-    decision_rows = db.execute(select(PolicyDecision.decision, func.count(PolicyDecision.id)).where(PolicyDecision.workspace_id == workspace.id).group_by(PolicyDecision.decision))
+    decision_rows = list(db.execute(select(PolicyDecision.decision, func.count(PolicyDecision.id)).where(PolicyDecision.workspace_id == workspace.id).group_by(PolicyDecision.decision)))
     suppression_total = db.scalar(select(func.count(SuppressionRecord.id)).where(SuppressionRecord.workspace_id == workspace.id, SuppressionRecord.status == "ACTIVE")) or 0
     campaign_total = db.scalar(select(func.count(Campaign.id)).where(Campaign.workspace_id == workspace.id)) or 0
     outbox_total = db.scalar(select(func.count(MockOutbox.id)).where(MockOutbox.workspace_id == workspace.id)) or 0
+    pending_rights_total = db.scalar(select(func.count(RightsRequest.id)).where(RightsRequest.workspace_id == workspace.id, RightsRequest.status.in_(("CREATED", "PLANNING", "EXECUTING")))) or 0
+    active_job_total = db.scalar(select(func.count(Job.id)).where(Job.workspace_id == workspace.id, Job.status.in_(("RUNNING", "EXECUTING")))) or 0
+    rights_review_total = db.scalar(select(func.count(RightsRequest.id)).where(RightsRequest.workspace_id == workspace.id, RightsRequest.status == "NEEDS_REVIEW")) or 0
+    rights_partial_total = db.scalar(select(func.count(RightsRequest.id)).where(RightsRequest.workspace_id == workspace.id, RightsRequest.status == "PARTIAL")) or 0
     return DashboardResponse(
         workspace_id=workspace.id,
         source_total=source_total,
         document_total=document_total,
         sources_by_status={status: count for status, count in source_rows},
         documents_by_type={document_type: count for document_type, count in document_rows},
-        workflow_summary={"pending_rights_requests": 0, "active_jobs": 0, "policy_decisions": 0, "integrity_alerts": 0},
+        workflow_summary={"pending_rights_requests": pending_rights_total, "active_jobs": active_job_total, "policy_decisions": sum(count for _, count in decision_rows), "integrity_alerts": 0},
         import_total=import_total,
         record_total=record_total,
         records_requiring_review=review_total,
@@ -556,4 +772,6 @@ def get_dashboard(workspace_ref: str, db: Session = Depends(get_db)) -> Dashboar
         active_suppression_total=suppression_total,
         campaign_total=campaign_total,
         mock_outbox_total=outbox_total,
+        rights_requests_requiring_review=rights_review_total,
+        rights_requests_partial=rights_partial_total,
     )

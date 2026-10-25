@@ -5,9 +5,10 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api import ConflictError, NotFoundError, ServiceUnavailableError, router
+from app.api import ConflictError, ForbiddenError, NotFoundError, ServiceUnavailableError, router
 from app.ingestion import IngestionProblem
 from app.policy import PolicyProblem
+from app.rights import RightsProblem
 from app.schemas import ErrorResponse
 
 app = FastAPI(
@@ -43,9 +44,19 @@ async def policy_handler(_: Request, exc: PolicyProblem) -> JSONResponse:
     return error_response(exc.status_code, exc.code, exc.message)
 
 
+@app.exception_handler(RightsProblem)
+async def rights_handler(_: Request, exc: RightsProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
 @app.exception_handler(ConflictError)
 async def conflict_handler(_: Request, exc: ConflictError) -> JSONResponse:
     return error_response(409, exc.code, exc.message)
+
+
+@app.exception_handler(ForbiddenError)
+async def forbidden_handler(_: Request, exc: ForbiddenError) -> JSONResponse:
+    return error_response(403, exc.code, exc.message)
 
 
 @app.exception_handler(RequestValidationError)

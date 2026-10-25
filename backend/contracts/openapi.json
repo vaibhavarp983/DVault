@@ -1,6 +1,70 @@
 {
   "components": {
     "schemas": {
+      "AccessArtifactResponse": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "rights_request_id": {
+            "title": "Rights Request Id",
+            "type": "string"
+          },
+          "source_summaries": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Source Summaries",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rights_request_id",
+          "status",
+          "source_summaries",
+          "expires_at",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "AccessArtifactResponse",
+        "type": "object"
+      },
       "AuthorizationCreateRequest": {
         "properties": {
           "captured_at": {
@@ -161,7 +225,7 @@
       "Body_create_import_api_v1_workspaces__workspace_ref__sources__source_id__imports_post": {
         "properties": {
           "file": {
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File",
             "type": "string"
           }
@@ -518,6 +582,16 @@
             "title": "Records Requiring Review",
             "type": "integer"
           },
+          "rights_requests_partial": {
+            "default": 0,
+            "title": "Rights Requests Partial",
+            "type": "integer"
+          },
+          "rights_requests_requiring_review": {
+            "default": 0,
+            "title": "Rights Requests Requiring Review",
+            "type": "integer"
+          },
           "source_coverage": {
             "additionalProperties": {
               "type": "integer"
@@ -799,6 +873,47 @@
         "title": "DocumentResponse",
         "type": "object"
       },
+      "FailureInjectionRequest": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "FailureInjectionRequest",
+        "type": "object"
+      },
+      "FailureInjectionResponse": {
+        "properties": {
+          "failure_injection_enabled": {
+            "title": "Failure Injection Enabled",
+            "type": "boolean"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_key": {
+            "title": "Source Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_key",
+          "failure_injection_enabled",
+          "scope"
+        ],
+        "title": "FailureInjectionResponse",
+        "type": "object"
+      },
       "FieldProfileResponse": {
         "properties": {
           "classification": {
@@ -1059,6 +1174,309 @@
           "completed_at"
         ],
         "title": "ImportResponse",
+        "type": "object"
+      },
+      "JobDetailResponse": {
+        "properties": {
+          "action_completed": {
+            "title": "Action Completed",
+            "type": "integer"
+          },
+          "action_total": {
+            "title": "Action Total",
+            "type": "integer"
+          },
+          "attempt_count": {
+            "title": "Attempt Count",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "operation": {
+            "title": "Operation",
+            "type": "string"
+          },
+          "rights_request_id": {
+            "title": "Rights Request Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/JobEventResponse"
+            },
+            "title": "Timeline",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "rights_request_id",
+          "operation",
+          "status",
+          "attempt_count",
+          "action_total",
+          "action_completed",
+          "error_code",
+          "error_message",
+          "correlation_id",
+          "created_at",
+          "started_at",
+          "completed_at",
+          "timeline"
+        ],
+        "title": "JobDetailResponse",
+        "type": "object"
+      },
+      "JobEventResponse": {
+        "properties": {
+          "action_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "event_type",
+          "action_id",
+          "message",
+          "details",
+          "created_at"
+        ],
+        "title": "JobEventResponse",
+        "type": "object"
+      },
+      "JobPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "JobPageResponse",
+        "type": "object"
+      },
+      "JobResponse": {
+        "properties": {
+          "action_completed": {
+            "title": "Action Completed",
+            "type": "integer"
+          },
+          "action_total": {
+            "title": "Action Total",
+            "type": "integer"
+          },
+          "attempt_count": {
+            "title": "Attempt Count",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "operation": {
+            "title": "Operation",
+            "type": "string"
+          },
+          "rights_request_id": {
+            "title": "Rights Request Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rights_request_id",
+          "operation",
+          "status",
+          "attempt_count",
+          "action_total",
+          "action_completed",
+          "error_code",
+          "error_message",
+          "correlation_id",
+          "created_at",
+          "started_at",
+          "completed_at"
+        ],
+        "title": "JobResponse",
         "type": "object"
       },
       "MatchCandidatePageResponse": {
@@ -1503,6 +1921,531 @@
         "title": "RecordResponse",
         "type": "object"
       },
+      "RetentionHoldCreateRequest": {
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "reason_code": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "record_ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Ref Id"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "subject_ref": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Ref"
+          }
+        },
+        "required": [
+          "reason_code"
+        ],
+        "title": "RetentionHoldCreateRequest",
+        "type": "object"
+      },
+      "RetentionHoldReleaseRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "RetentionHoldReleaseRequest",
+        "type": "object"
+      },
+      "RetentionHoldResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "record_ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Ref Id"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Ref"
+          }
+        },
+        "required": [
+          "id",
+          "subject_ref",
+          "source_id",
+          "record_ref_id",
+          "status",
+          "reason_code",
+          "review_note",
+          "expires_at",
+          "released_at",
+          "created_at"
+        ],
+        "title": "RetentionHoldResponse",
+        "type": "object"
+      },
+      "RightsActionPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RightsActionResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "RightsActionPageResponse",
+        "type": "object"
+      },
+      "RightsActionResponse": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "affected_record_count": {
+            "title": "Affected Record Count",
+            "type": "integer"
+          },
+          "attempt_count": {
+            "title": "Attempt Count",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "planned_at": {
+            "format": "date-time",
+            "title": "Planned At",
+            "type": "string"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "retry_eligible": {
+            "title": "Retry Eligible",
+            "type": "boolean"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_id",
+          "action_type",
+          "status",
+          "attempt_count",
+          "retry_eligible",
+          "affected_record_count",
+          "result",
+          "error_code",
+          "error_message",
+          "planned_at",
+          "started_at",
+          "completed_at",
+          "updated_at"
+        ],
+        "title": "RightsActionResponse",
+        "type": "object"
+      },
+      "RightsRequestCreateRequest": {
+        "properties": {
+          "idempotency_key": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "request_type": {
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Request Type",
+            "type": "string"
+          },
+          "requester_reference": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requester Reference"
+          },
+          "subject_ref": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Subject Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_ref",
+          "request_type",
+          "idempotency_key"
+        ],
+        "title": "RightsRequestCreateRequest",
+        "type": "object"
+      },
+      "RightsRequestPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RightsRequestResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "RightsRequestPageResponse",
+        "type": "object"
+      },
+      "RightsRequestResponse": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "planned_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned At"
+          },
+          "request_type": {
+            "title": "Request Type",
+            "type": "string"
+          },
+          "requester_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requester Reference"
+          },
+          "source_action_completed": {
+            "default": 0,
+            "title": "Source Action Completed",
+            "type": "integer"
+          },
+          "source_action_total": {
+            "default": 0,
+            "title": "Source Action Total",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_ref": {
+            "title": "Subject Ref",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          },
+          "unresolved_action_total": {
+            "default": 0,
+            "title": "Unresolved Action Total",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subject_ref",
+          "request_type",
+          "status",
+          "idempotency_key",
+          "correlation_id",
+          "requester_reference",
+          "summary",
+          "created_at",
+          "planned_at",
+          "completed_at",
+          "updated_at"
+        ],
+        "title": "RightsRequestResponse",
+        "type": "object"
+      },
       "SchemaPreviewResponse": {
         "properties": {
           "fields": {
@@ -1583,13 +2526,6 @@
       },
       "ValidationError": {
         "properties": {
-          "ctx": {
-            "title": "Context",
-            "type": "object"
-          },
-          "input": {
-            "title": "Input"
-          },
           "loc": {
             "items": {
               "anyOf": [
@@ -2859,6 +3795,138 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/jobs": {
+      "get": {
+        "operationId": "list_jobs_api_v1_workspaces__workspace_ref__jobs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job_api_v1_workspaces__workspace_ref__jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/match-candidates": {
       "get": {
         "operationId": "list_match_candidates_api_v1_workspaces__workspace_ref__match_candidates_get",
@@ -3366,6 +4434,671 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/retention-holds": {
+      "get": {
+        "operationId": "list_retention_holds_api_v1_workspaces__workspace_ref__retention_holds_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_ref",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Ref"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetentionHoldResponse"
+                  },
+                  "title": "Response List Retention Holds Api V1 Workspaces  Workspace Ref  Retention Holds Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Retention Holds",
+        "tags": [
+          "rights"
+        ]
+      },
+      "post": {
+        "operationId": "create_retention_hold_api_v1_workspaces__workspace_ref__retention_holds_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionHoldCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionHoldResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Retention Hold",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/retention-holds/{hold_id}/release": {
+      "post": {
+        "operationId": "release_retention_hold_api_v1_workspaces__workspace_ref__retention_holds__hold_id__release_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hold_id",
+            "required": true,
+            "schema": {
+              "title": "Hold Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionHoldReleaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionHoldResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release Retention Hold",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests": {
+      "get": {
+        "operationId": "list_rights_requests_api_v1_workspaces__workspace_ref__rights_requests_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "request_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Request Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RightsRequestPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Rights Requests",
+        "tags": [
+          "rights"
+        ]
+      },
+      "post": {
+        "operationId": "create_rights_request_endpoint_api_v1_workspaces__workspace_ref__rights_requests_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RightsRequestCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RightsRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Rights Request Endpoint",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}": {
+      "get": {
+        "operationId": "get_rights_request_api_v1_workspaces__workspace_ref__rights_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RightsRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Rights Request",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/access-artifact": {
+      "get": {
+        "operationId": "get_access_artifact_api_v1_workspaces__workspace_ref__rights_requests__request_id__access_artifact_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessArtifactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Access Artifact",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/actions": {
+      "get": {
+        "operationId": "list_rights_actions_api_v1_workspaces__workspace_ref__rights_requests__request_id__actions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RightsActionPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Rights Actions",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/execute": {
+      "post": {
+        "operationId": "execute_rights_request_api_v1_workspaces__workspace_ref__rights_requests__request_id__execute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Rights Request",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/plan": {
+      "post": {
+        "operationId": "plan_rights_request_api_v1_workspaces__workspace_ref__rights_requests__request_id__plan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RightsRequestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plan Rights Request",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/retry": {
+      "post": {
+        "operationId": "retry_rights_request_api_v1_workspaces__workspace_ref__rights_requests__request_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Rights Request",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/sources": {
       "get": {
         "operationId": "list_sources_api_v1_workspaces__workspace_ref__sources_get",
@@ -3458,6 +5191,68 @@
           }
         },
         "summary": "Get Source",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/sources/{source_id}/failure-injection": {
+      "post": {
+        "description": "Development-only hook for rehearsing a connector failure. Disabled by default.",
+        "operationId": "set_failure_injection_api_v1_workspaces__workspace_ref__sources__source_id__failure_injection_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FailureInjectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FailureInjectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Failure Injection",
         "tags": [
           "sources"
         ]

@@ -74,6 +74,8 @@ class DashboardResponse(APIModel):
     active_suppression_total: int = 0
     campaign_total: int = 0
     mock_outbox_total: int = 0
+    rights_requests_requiring_review: int = 0
+    rights_requests_partial: int = 0
 
 
 class ImportResponse(APIModel):
@@ -303,6 +305,146 @@ class OutboxPageResponse(APIModel):
     page: int = Field(ge=1)
     page_size: int = Field(ge=1, le=100)
     total: int = Field(ge=0)
+
+
+class RightsRequestCreateRequest(BaseModel):
+    subject_ref: str = Field(min_length=1, max_length=80)
+    request_type: str = Field(min_length=1, max_length=24)
+    idempotency_key: str = Field(min_length=1, max_length=120)
+    requester_reference: str | None = Field(default=None, max_length=160)
+
+
+class RightsRequestResponse(APIModel):
+    id: str
+    subject_ref: str
+    request_type: str
+    status: str
+    idempotency_key: str
+    correlation_id: str
+    requester_reference: str | None
+    summary: dict[str, Any]
+    created_at: datetime
+    planned_at: datetime | None
+    completed_at: datetime | None
+    updated_at: datetime
+    source_action_total: int = 0
+    source_action_completed: int = 0
+    unresolved_action_total: int = 0
+
+
+class RightsRequestPageResponse(APIModel):
+    items: list[RightsRequestResponse]
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+    total: int = Field(ge=0)
+
+
+class RightsActionResponse(APIModel):
+    id: str
+    source_id: str
+    action_type: str
+    status: str
+    attempt_count: int
+    retry_eligible: bool
+    affected_record_count: int
+    result: dict[str, Any]
+    error_code: str | None
+    error_message: str | None
+    planned_at: datetime
+    started_at: datetime | None
+    completed_at: datetime | None
+    updated_at: datetime
+
+
+class RightsActionPageResponse(APIModel):
+    items: list[RightsActionResponse]
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+    total: int = Field(ge=0)
+
+
+class JobResponse(APIModel):
+    id: str
+    rights_request_id: str
+    operation: str
+    status: str
+    attempt_count: int
+    action_total: int
+    action_completed: int
+    error_code: str | None
+    error_message: str | None
+    correlation_id: str
+    created_at: datetime
+    started_at: datetime | None
+    completed_at: datetime | None
+
+
+class JobEventResponse(APIModel):
+    id: str
+    sequence: int
+    event_type: str
+    action_id: str | None
+    message: str
+    details: dict[str, Any]
+    created_at: datetime
+
+
+class JobDetailResponse(JobResponse):
+    timeline: list[JobEventResponse]
+
+
+class JobPageResponse(APIModel):
+    items: list[JobResponse]
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+    total: int = Field(ge=0)
+
+
+class RetentionHoldCreateRequest(BaseModel):
+    subject_ref: str | None = Field(default=None, max_length=80)
+    source_id: str | None = None
+    record_ref_id: str | None = None
+    reason_code: str = Field(min_length=1, max_length=80)
+    review_note: str | None = Field(default=None, max_length=320)
+    expires_at: datetime | None = None
+
+
+class RetentionHoldResponse(APIModel):
+    id: str
+    subject_ref: str | None
+    source_id: str | None
+    record_ref_id: str | None
+    status: str
+    reason_code: str
+    review_note: str | None
+    expires_at: datetime | None
+    released_at: datetime | None
+    created_at: datetime
+
+
+class RetentionHoldReleaseRequest(BaseModel):
+    note: str | None = Field(default=None, max_length=320)
+
+
+class FailureInjectionRequest(BaseModel):
+    enabled: bool
+
+
+class FailureInjectionResponse(APIModel):
+    source_id: str
+    source_key: str
+    failure_injection_enabled: bool
+    scope: str
+
+
+class AccessArtifactResponse(APIModel):
+    id: str
+    rights_request_id: str
+    status: str
+    source_summaries: list[dict[str, Any]]
+    expires_at: datetime | None
+    created_at: datetime
+    completed_at: datetime | None
 
 
 class ErrorDetail(APIModel):

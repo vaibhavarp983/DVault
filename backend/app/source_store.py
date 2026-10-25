@@ -61,3 +61,12 @@ class SourceStore:
         with self._connect() as connection:
             connection.execute("DELETE FROM source_records WHERE dataset_import_id = ?", (dataset_import_id,))
             connection.execute("DELETE FROM source_documents WHERE dataset_import_id = ?", (dataset_import_id,))
+
+    def delete_records(self, source_record_ids: list[str]) -> int:
+        """Delete only the selected synthetic source rows; metadata remains in the control plane action ledger."""
+        if not source_record_ids:
+            return 0
+        placeholders = ", ".join("?" for _ in source_record_ids)
+        with self._connect() as connection:
+            result = connection.execute(f"DELETE FROM source_records WHERE source_record_id IN ({placeholders})", source_record_ids)
+        return result.rowcount
