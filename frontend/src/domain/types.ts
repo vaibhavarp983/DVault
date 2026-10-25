@@ -1,3 +1,11 @@
+import type {
+  Conversation,
+  MessageIntegrity,
+  RetentionPolicy,
+  RetentionRun,
+  WithdrawalTier,
+} from './messaging'
+
 export type ID = string
 export type ISODate = string
 
@@ -383,6 +391,11 @@ export interface DemoData {
   checkpoints: IntegrityCheckpoint[]
   integrity?: IntegritySummary
   breaches?: BreachIncident[]
+  conversations?: Conversation[]
+  retentionPolicy?: RetentionPolicy | null
+  retentionRuns?: RetentionRun[]
+  withdrawalTiers?: WithdrawalTier[]
+  messageIntegrity?: MessageIntegrity | null
   demo?: DemoFlags
 }
 
@@ -395,5 +408,5 @@ export interface AppNotification {
   at: ISODate
   tone: NotificationTone
   read: boolean
-  appId?: 'vault' | 'file-explorer'
+  appId?: 'vault' | 'file-explorer' | 'mail' | 'messages'
 }

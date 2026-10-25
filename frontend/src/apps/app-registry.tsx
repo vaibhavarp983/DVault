@@ -3,11 +3,16 @@ import type { AppId } from './app-meta'
 import type { WindowPayload } from '@/store/window-provider'
 import { DVaultApp } from './vault/DVaultApp'
 import { FileExplorerApp } from './file-explorer/FileExplorerApp'
+import { MailApp, MessagesApp } from './messaging/MessagingApp'
 
 export function renderApp(appId: AppId, payload?: WindowPayload): ReactNode {
   switch (appId) {
     case 'vault':
       return <DVaultApp payload={payload} />
+    case 'mail':
+      return <MailApp payload={payload} />
+    case 'messages':
+      return <MessagesApp payload={payload} />
     case 'file-explorer':
       return <FileExplorerApp payload={payload} />
   }

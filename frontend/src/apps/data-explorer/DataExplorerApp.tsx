@@ -107,7 +107,7 @@ export function DataExplorerApp({
       const compare =
         sort.key === 'name'
           ? a.name.localeCompare(b.name)
-          : a.modifiedAt.localeCompare(b.modifiedAt)
+          : (a.modifiedAt ?? a.createdAt).localeCompare(b.modifiedAt ?? b.createdAt)
       return sort.direction === 'asc' ? compare : -compare
     })
   }, [data, search, sourceId, customerFilter, importFilter, sort])

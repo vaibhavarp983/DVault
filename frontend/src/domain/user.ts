@@ -1,4 +1,10 @@
 import type { FieldClassification, RightsRequestType } from './types'
+import type {
+  Conversation,
+  MessageIntegrity,
+  RetentionPolicy,
+  WithdrawalTier,
+} from './messaging'
 
 export interface UserProfile {
   id: string
@@ -101,4 +107,9 @@ export interface UserWorkspace {
   documents: UserDocument[]
   requests: UserRightsRequest[]
   activity: UserActivityEvent[]
+  demoSubjectRef?: string | null
+  conversations?: Conversation[]
+  withdrawalTiers?: WithdrawalTier[]
+  retentionPolicy?: RetentionPolicy | null
+  messageIntegrity?: MessageIntegrity | null
 }

@@ -9,7 +9,17 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.evidence import append_event, canonical_json, iso_utc, verify_chain
-from app.models import AuditEvent, DemoFailureLog, RetentionHold, Source, Workspace, utc_now
+from app.messaging import verify_conversation
+from app.models import (
+    AuditEvent,
+    Conversation,
+    ConversationMessage,
+    DemoFailureLog,
+    RetentionHold,
+    Source,
+    Workspace,
+    utc_now,
+)
 from app.rights import create_hold, release_hold
 
 TAMPER_EXCLUDED = {
@@ -104,6 +114,34 @@ def inject_audit_tamper(db: Session, workspace: Workspace) -> AuditEvent:
     return event
 
 
+def inject_message_tamper(db: Session, workspace: Workspace, target_id: str | None = None) -> ConversationMessage:
+    existing = db.scalar(select(DemoFailureLog).where(
+        DemoFailureLog.workspace_id == workspace.id,
+        DemoFailureLog.kind == "message_tamper",
+    ))
+    if existing is not None:
+        raise DemoProblem("MESSAGE_TAMPER_ALREADY_ACTIVE", "A message tamper is already active; clear it before injecting another.", 409)
+    query = select(ConversationMessage).join(
+        Conversation,
+        Conversation.id == ConversationMessage.conversation_id,
+    ).where(
+        ConversationMessage.workspace_id == workspace.id,
+        ConversationMessage.retention_state == "FULL",
+        ConversationMessage.body.is_not(None),
+    ).order_by(ConversationMessage.sent_at.desc())
+    if target_id:
+        query = query.where(ConversationMessage.conversation_id == target_id)
+    message = db.scalar(query.limit(1))
+    if message is None:
+        raise DemoProblem("MESSAGE_TAMPER_NOT_FOUND", "There is no retained message available to tamper with.", 409)
+    original = message.body or ""
+    message.body = f"{original}\n[injected tamper rehearsal]"
+    _log(db, workspace, "message_tamper", message.id, {"conversation_id": message.conversation_id, "original_body": original})
+    db.flush()
+    verify_conversation(db, workspace, message.conversation_id)
+    return message
+
+
 def clear_failures(db: Session, workspace: Workspace) -> int:
     logs = list(db.scalars(select(DemoFailureLog).where(DemoFailureLog.workspace_id == workspace.id)))
     cleared = 0
@@ -134,6 +172,15 @@ def clear_failures(db: Session, workspace: Workspace) -> int:
             event = db.scalar(select(AuditEvent).where(AuditEvent.id == entry.target_ref))
             if event is not None and details.get("original"):
                 event.canonical_payload = details["original"]
+            cleared += 1
+        elif entry.kind == "message_tamper":
+            message = db.scalar(select(ConversationMessage).where(ConversationMessage.id == entry.target_ref))
+            if message is not None:
+                message.body = details.get("original_body", message.body)
+                message.tamper_state = "VERIFIED"
+                conversation_id = details.get("conversation_id") or message.conversation_id
+                db.flush()
+                verify_conversation(db, workspace, conversation_id)
             cleared += 1
         db.delete(entry)
     db.flush()

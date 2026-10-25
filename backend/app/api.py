@@ -82,7 +82,7 @@ from app.schemas import (
 from app.source_store import SourceStore
 
 router = APIRouter(prefix="/api/v1")
-REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "rights_requests", "rights_request_actions", "retention_holds", "rights_access_artifacts", "jobs", "job_events", "audit_events", "audit_checkpoints", "audit_verifications", "integrity_incidents", "breach_incidents", "breach_affected_subjects", "breach_affected_sources", "alembic_version"}
+REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "rights_requests", "rights_request_actions", "retention_holds", "rights_access_artifacts", "jobs", "job_events", "audit_events", "audit_checkpoints", "audit_verifications", "integrity_incidents", "breach_incidents", "breach_affected_subjects", "breach_affected_sources", "conversations", "conversation_messages", "retention_policies", "retention_runs", "withdrawal_tiers", "alembic_version"}
 
 
 class NotFoundError(Exception):

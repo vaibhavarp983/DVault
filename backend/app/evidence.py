@@ -87,6 +87,14 @@ EVENT_SCHEMAS: dict[str, tuple[set[str], set[str]]] = {
     "BREACH_ASSESSED": ({"breach_id", "notifiable", "reason_code", "timeliness"}, set()),
     "BREACH_NOTIFICATION_DRAFTED": ({"breach_id", "affected_subject_total", "affected_source_total", "draft_status"}, set()),
     "BREACH_CLOSED": ({"breach_id", "closed_at"}, {"note_sha256"}),
+    "MESSAGE_RECORDED": ({"message_id", "conversation_id", "subject_ref", "channel", "direction", "sender", "sequence", "body_sha256", "subject_sha256", "previous_hash", "message_hash"}, set()),
+    "MESSAGE_RETENTION_REDUCED": ({"message_id", "conversation_id", "subject_ref", "from_state", "to_state", "run_id"}, set()),
+    "MESSAGE_CONTENT_PURGED": ({"message_id", "conversation_id", "subject_ref", "from_state", "to_state", "run_id"}, set()),
+    "MESSAGE_CHAIN_TAMPER_DETECTED": ({"message_id", "conversation_id", "subject_ref", "reason_code", "expected_hash", "actual_hash"}, set()),
+    "RETENTION_POLICY_UPDATED": ({"policy_version", "previous_version", "rules_summary"}, set()),
+    "RETENTION_SWEEP_COMPLETED": ({"run_id", "policy_version", "scanned", "retained", "reduced", "purged", "restricted", "skipped_hold"}, set()),
+    "WITHDRAWAL_TIER_UPDATED": ({"tier_key", "version", "effect", "active"}, set()),
+    "WITHDRAWAL_TIER_APPLIED": ({"tier_key", "subject_ref", "purposes", "effect"}, {"retention_run_id"}),
 }
 
 

@@ -1,4 +1,5 @@
 import type { RightsRequestType } from '@/domain/types'
+import type { WithdrawalTierKey } from '@/domain/messaging'
 import type { UserWorkspace } from '@/domain/user'
 import { demoApiPrefix } from './config'
 import { requestJson, type RequestOptions } from './http'
@@ -47,5 +48,28 @@ export class HttpUserRepository implements UserRepository {
 
   reset(): Promise<UserWorkspace> {
     return this.request('/user/reset', { method: 'POST', timeoutMs: 60_000 })
+  }
+
+  sendMessage(conversationId: string, body: string): Promise<UserWorkspace> {
+    return this.request(`/user/conversations/${encodeURIComponent(conversationId)}/messages`, {
+      method: 'POST',
+      body: { body },
+    })
+  }
+
+  markConversationRead(conversationId: string): Promise<UserWorkspace> {
+    return this.request(`/user/conversations/${encodeURIComponent(conversationId)}/read`, {
+      method: 'POST',
+    })
+  }
+
+  verifyConversation(conversationId: string): Promise<UserWorkspace> {
+    return this.request(`/user/conversations/${encodeURIComponent(conversationId)}/verify`, {
+      method: 'POST',
+    })
+  }
+
+  withdraw(tier: WithdrawalTierKey): Promise<UserWorkspace> {
+    return this.request('/user/withdraw', { method: 'POST', body: { tier } })
   }
 }

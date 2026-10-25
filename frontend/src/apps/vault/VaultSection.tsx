@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DocumentKind, DocumentRecord } from '@/domain/types'
-import { formatDateTime, formatFileSize, formatRelative } from '@/lib/format'
+import { compareDatesDesc, formatDateTime, formatFileSize, formatRelative } from '@/lib/format'
 import { fnv1a } from '@/lib/integrity'
 import { documentTypeLabel } from '@/data/selectors'
 import { importLabels, reviewLabels } from '@/lib/document-meta'
@@ -126,7 +126,9 @@ export function VaultSection({
           .toLowerCase()
           .includes(term)
       })
-      .sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
+      .sort((a, b) =>
+        compareDatesDesc(a.modifiedAt ?? a.createdAt, b.modifiedAt ?? b.createdAt),
+      )
   }, [data, collection, search])
 
   if (status === 'loading' || (status === 'ready' && !data)) {

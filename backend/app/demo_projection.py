@@ -24,6 +24,8 @@ from app.models import (
     IntegrityIncident,
     Campaign,
     CampaignRecipient,
+    Conversation,
+    ConversationMessage,
     DataRecordRef,
     DatasetImport,
     DemoCustomer,
@@ -36,16 +38,29 @@ from app.models import (
     Policy,
     PolicyDecision,
     RetentionHold,
+    RetentionPolicy,
+    RetentionRun,
     RightsAccessArtifact,
     RightsRequest,
     RightsRequestAction,
     Source,
     SuppressionRecord,
+    WithdrawalTier,
     Workspace,
     utc_now,
 )
+from app.messaging import BUSINESS_LABEL, hold_active, message_integrity_summary
 from app.policy import masked_subject_ref
 from app.privacy import mask_value
+from app.retention import (
+    ensure_policy,
+    ensure_tiers,
+    last_runs,
+    list_tiers,
+    policy_payload,
+    run_payload,
+    tier_payload,
+)
 from app.rights import request_actions
 from app.source_store import SourceStore
 
@@ -476,6 +491,92 @@ def resolve_demo_subject(db: Session, workspace: Workspace) -> str | None:
     return db.scalar(select(DemoCustomer.subject_ref).where(DemoCustomer.workspace_id == workspace.id).order_by(DemoCustomer.display_name).limit(1))
 
 
+def _conversation_payload(
+    db: Session,
+    workspace: Workspace,
+    conversation: Conversation,
+    customer: DemoCustomer | None,
+) -> dict:
+    messages = list(db.scalars(select(ConversationMessage).where(
+        ConversationMessage.conversation_id == conversation.id,
+    ).order_by(ConversationMessage.sequence)))
+    held = hold_active(db, workspace.id, conversation.subject_ref)
+    customer_name = customer.display_name if customer else f"Subject {conversation.subject_ref[-6:].upper()}"
+    unread_business = sum(1 for message in messages if message.sender == "CUSTOMER" and message.read_by_business_at is None)
+    unread_customer = sum(1 for message in messages if message.sender == "BUSINESS" and message.read_by_customer_at is None)
+    message_items = []
+    for message in messages:
+        author = customer_name if message.sender == "CUSTOMER" else BUSINESS_LABEL if message.sender == "BUSINESS" else "DVault"
+        message_items.append({
+            "id": message.id,
+            "conversationId": conversation.id,
+            "sequence": message.sequence,
+            "direction": message.direction,
+            "sender": message.sender,
+            "authorLabel": author,
+            "subject": message.subject_line,
+            "body": message.body if message.retention_state == "FULL" else None,
+            "bodySha256": message.body_sha256,
+            "subjectSha256": message.subject_sha256,
+            "previousHash": message.previous_hash,
+            "messageHash": message.message_hash,
+            "sentAt": _iso(message.sent_at),
+            "retentionState": message.retention_state,
+            "redactedAt": _iso(message.redacted_at),
+            "purgedAt": _iso(message.purged_at),
+            "readByBusinessAt": _iso(message.read_by_business_at),
+            "readByCustomerAt": _iso(message.read_by_customer_at),
+            "tamperState": message.tamper_state,
+        })
+    return {
+        "id": conversation.id,
+        "subjectRef": conversation.subject_ref,
+        "customerName": customer_name,
+        "channel": conversation.channel,
+        "subject": conversation.subject_line,
+        "status": conversation.status,
+        "interactionLevel": conversation.interaction_level,
+        "retentionClass": conversation.retention_class,
+        "integrityState": conversation.integrity_state,
+        "holdActive": held,
+        "unreadForBusiness": unread_business,
+        "unreadForCustomer": unread_customer,
+        "messageCount": len(messages),
+        "lastActivityAt": _iso(conversation.last_activity_at),
+        "createdAt": _iso(conversation.created_at),
+        "messages": message_items,
+    }
+
+
+def _messaging_payload(db: Session, workspace: Workspace, subject_ref: str | None = None) -> dict:
+    policy = ensure_policy(db, workspace)
+    tiers = ensure_tiers(db, workspace)
+    customer_by_subject = {
+        customer.subject_ref: customer
+        for customer in db.scalars(select(DemoCustomer).where(DemoCustomer.workspace_id == workspace.id))
+    }
+    query = select(Conversation).where(Conversation.workspace_id == workspace.id)
+    if subject_ref:
+        query = query.where(Conversation.subject_ref == subject_ref)
+    conversations = list(db.scalars(query.order_by(Conversation.last_activity_at.desc())))
+    return {
+        "conversations": [
+            _conversation_payload(db, workspace, conversation, customer_by_subject.get(conversation.subject_ref))
+            for conversation in conversations
+        ],
+        "retentionPolicy": policy_payload(policy),
+        "retentionRuns": [run_payload(run) for run in last_runs(db, workspace)],
+        "withdrawalTiers": [tier_payload(tier) for tier in tiers],
+        "messageIntegrity": message_integrity_summary(db, workspace) if subject_ref is None else _subject_integrity(db, workspace, subject_ref),
+    }
+
+
+def _subject_integrity(db: Session, workspace: Workspace, subject_ref: str) -> dict:
+    from app.messaging import verify_all
+
+    return verify_all(db, workspace, subject_ref=subject_ref)
+
+
 def _audit_payload(event: AuditEvent) -> dict:
     try:
         payload = json.loads(event.canonical_payload)
@@ -778,6 +879,7 @@ def build_demo_snapshot(db: Session, workspace: Workspace, contact_mode: str = "
         "syntheticContactsAvailable": settings.demo_show_synthetic_contacts and not settings.is_production,
         "userSubjectRef": resolve_demo_subject(db, workspace),
     }
+    messaging = _messaging_payload(db, workspace)
     return {
         "schemaVersion": DEMO_SCHEMA_VERSION,
         "workspace": {"id": workspace.id, "ref": workspace.slug, "name": workspace.name},
@@ -811,6 +913,11 @@ def build_demo_snapshot(db: Session, workspace: Workspace, contact_mode: str = "
         "checkpoints": checkpoint_items,
         "integrity": integrity,
         "breaches": breach_items,
+        "conversations": messaging["conversations"],
+        "retentionPolicy": messaging["retentionPolicy"],
+        "retentionRuns": messaging["retentionRuns"],
+        "withdrawalTiers": messaging["withdrawalTiers"],
+        "messageIntegrity": messaging["messageIntegrity"],
         "demo": demo_flags,
     }
 
@@ -820,7 +927,22 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
     settings = get_settings()
     subject = subject_ref or resolve_demo_subject(db, workspace)
     if not subject:
-        return {"generatedAt": _iso(utc_now()), "notice": DEMO_NOTICE, "contactMode": contact_mode, "demoSubjectRef": None, "profile": None, "sources": [], "consents": [], "documents": [], "requests": [], "activity": []}
+        return {
+            "generatedAt": _iso(utc_now()),
+            "notice": DEMO_NOTICE,
+            "contactMode": contact_mode,
+            "demoSubjectRef": None,
+            "profile": None,
+            "sources": [],
+            "consents": [],
+            "documents": [],
+            "requests": [],
+            "activity": [],
+            "conversations": [],
+            "withdrawalTiers": [],
+            "retentionPolicy": None,
+            "messageIntegrity": None,
+        }
     customer = db.scalar(select(DemoCustomer).where(DemoCustomer.workspace_id == workspace.id, DemoCustomer.subject_ref == subject))
     email, phone = _contact_text(settings, customer, contact_mode) if customer else ("", "")
     records = list(db.scalars(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.subject_ref == subject)))
@@ -923,6 +1045,7 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
         })
         if len(activity) >= 50:
             break
+    messaging = _messaging_payload(db, workspace, subject)
     return {
         "generatedAt": _iso(utc_now()),
         "notice": DEMO_NOTICE,
@@ -942,4 +1065,8 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
         "documents": documents,
         "requests": request_items,
         "activity": activity,
+        "conversations": messaging["conversations"],
+        "withdrawalTiers": messaging["withdrawalTiers"],
+        "retentionPolicy": messaging["retentionPolicy"],
+        "messageIntegrity": messaging["messageIntegrity"],
     }

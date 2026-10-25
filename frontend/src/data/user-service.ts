@@ -1,7 +1,17 @@
-import type { RightsRequestType } from '@/domain/types'
+﻿import type { RightsRequestType } from '@/domain/types'
+import type { WithdrawalTierKey } from '@/domain/messaging'
 import type { UserRightsRequest, UserWorkspace } from '@/domain/user'
 import { apiBaseUrl } from './config'
 import type { CorrectionPayload } from './repository'
+import {
+  LOCAL_DEMO_SUBJECT,
+  localMarkRead,
+  localMessagingSnapshot,
+  localSendMessage,
+  localVerifyConversation,
+  localWithdraw,
+  resetLocalMessagingStore,
+} from './local-messaging-store'
 import type { UserRepository } from './user-repository'
 import { HttpUserRepository } from './user-api'
 import { createUserSeed } from './user-synthetic'
@@ -31,11 +41,19 @@ export class LocalUserService implements UserRepository {
     this.latencyMs = options.latencyMs ?? 320
   }
 
+  private snapshot(): UserWorkspace {
+    return {
+      ...this.data,
+      demoSubjectRef: LOCAL_DEMO_SUBJECT,
+      ...localMessagingSnapshot(LOCAL_DEMO_SUBJECT),
+    }
+  }
+
   private async settle(): Promise<UserWorkspace> {
     if (this.latencyMs > 0) {
       await new Promise((resolve) => setTimeout(resolve, this.latencyMs))
     }
-    return clone(this.data)
+    return clone(this.snapshot())
   }
 
   private appendActivity(
@@ -118,8 +136,45 @@ export class LocalUserService implements UserRepository {
     return this.settle()
   }
 
+  async sendMessage(conversationId: string, body: string): Promise<UserWorkspace> {
+    localSendMessage(conversationId, body, 'CUSTOMER')
+    this.appendActivity('Message sent to the business', 'system')
+    return this.settle()
+  }
+
+  async markConversationRead(conversationId: string): Promise<UserWorkspace> {
+    localMarkRead(conversationId, 'customer')
+    return this.settle()
+  }
+
+  async verifyConversation(conversationId: string): Promise<UserWorkspace> {
+    localVerifyConversation(conversationId)
+    this.appendActivity('Message chain verified locally', 'system')
+    return this.settle()
+  }
+
+  async withdraw(tier: WithdrawalTierKey): Promise<UserWorkspace> {
+    const applied = localWithdraw(tier, LOCAL_DEMO_SUBJECT)
+    const mapped = new Set(
+      applied.purposes.map((purpose) =>
+        purpose === 'course_updates' ? 'product' : purpose,
+      ),
+    )
+    for (const consent of this.data.consents) {
+      if (consent.required) continue
+      const key = consent.id.replace(/^ucns-/, '')
+      if (!mapped.has(key)) continue
+      consent.granted = false
+      consent.updatedAt = new Date().toISOString()
+      consent.channel = 'Withdrawal tier'
+    }
+    this.appendActivity(`${applied.label} applied`, 'consent', 'warning')
+    return this.settle()
+  }
+
   async reset(): Promise<UserWorkspace> {
     this.data = createUserSeed()
+    resetLocalMessagingStore()
     return this.settle()
   }
 }

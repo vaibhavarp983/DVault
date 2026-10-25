@@ -17,20 +17,37 @@ const timeFormatter = new Intl.DateTimeFormat('en-GB', {
   minute: '2-digit',
 })
 
-export function formatDate(value: string | Date): string {
-  return dateFormatter.format(new Date(value))
+type DateLike = string | Date | null | undefined
+
+function toValidDate(value: DateLike): Date | null {
+  if (value === null || value === undefined || value === '') return null
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
-export function formatDateTime(value: string | Date): string {
-  return dateTimeFormatter.format(new Date(value))
+/** Sort ISO date strings newest-first, tolerating null or missing values. */
+export function compareDatesDesc(a?: string | null, b?: string | null): number {
+  return (b ?? '').localeCompare(a ?? '')
 }
 
-export function formatTime(value: string | Date): string {
-  return timeFormatter.format(new Date(value))
+export function formatDate(value: DateLike): string {
+  const date = toValidDate(value)
+  return date ? dateFormatter.format(date) : '—'
 }
 
-export function formatRelative(value: string | Date, now = new Date()): string {
-  const date = new Date(value)
+export function formatDateTime(value: DateLike): string {
+  const date = toValidDate(value)
+  return date ? dateTimeFormatter.format(date) : '—'
+}
+
+export function formatTime(value: DateLike): string {
+  const date = toValidDate(value)
+  return date ? timeFormatter.format(date) : '—'
+}
+
+export function formatRelative(value: DateLike, now = new Date()): string {
+  const date = toValidDate(value)
+  if (!date) return '—'
   const diffMs = now.getTime() - date.getTime()
   const minutes = Math.round(diffMs / 60_000)
 

@@ -1,4 +1,5 @@
-import type { AuditEvent, DemoData, Job } from '@/domain/types'
+﻿import type { AuditEvent, DemoData, Job } from '@/domain/types'
+import type { WithdrawalTierKey } from '@/domain/messaging'
 import { eventDigest } from '@/lib/integrity'
 import { HttpBusinessRepository } from './api-service'
 import { apiBaseUrl, type ContactMode } from './config'
@@ -6,11 +7,27 @@ import type {
   BreachAssessmentPayload,
   BreachDraftPayload,
   CampaignDraftPayload,
+  CreateConversationPayload,
   DemoRepository,
   EvaluatePolicyPayload,
   HoldDraftPayload,
+  RetentionPolicyPayload,
+  RetentionTierPayload,
   RightsDraftPayload,
 } from './repository'
+import {
+  applyLocalMessaging,
+  localArchiveConversation,
+  localCreateConversation,
+  localMarkRead,
+  localRunRetention,
+  localSendMessage,
+  localUpdatePolicy,
+  localUpdateTier,
+  localVerifyAll,
+  localVerifyConversation,
+  resetLocalMessagingStore,
+} from './local-messaging-store'
 import { createSeedData } from './synthetic'
 
 export class ApiRequiredError extends Error {
@@ -70,8 +87,12 @@ export class DemoDataService implements DemoRepository {
     // Local mode always uses the fixture's masked values.
   }
 
+  private messagingSnapshot(): DemoData {
+    return applyLocalMessaging(clone(this.data))
+  }
+
   async load(): Promise<DemoData> {
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
   }
 
   async importFile(_sourceId: string, _file: File): Promise<DemoData> {
@@ -111,7 +132,7 @@ export class DemoDataService implements DemoRepository {
   }
 
   async verifyAudit(): Promise<DemoData> {
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
   }
 
   async createCheckpoint(_note?: string): Promise<DemoData> {
@@ -147,7 +168,7 @@ export class DemoDataService implements DemoRepository {
   }
 
   async refresh(): Promise<DemoData> {
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
   }
 
   async markDocumentReviewed(documentId: string): Promise<DemoData> {
@@ -157,13 +178,13 @@ export class DemoDataService implements DemoRepository {
       document.confidence = Math.max(document.confidence, 0.96)
       appendAudit(this.data, {
         actor: 'Demo operator',
-        action: `Classification review approved — ${document.name}`,
+        action: `Classification review approved â€” ${document.name}`,
         target: document.name,
         category: 'policy',
         severity: 'info',
       })
     }
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
   }
 
   async retryJob(jobId: string): Promise<DemoData> {
@@ -183,13 +204,13 @@ export class DemoDataService implements DemoRepository {
       })
       appendAudit(this.data, {
         actor: 'Demo operator',
-        action: `Job retry requested — ${job.name}`,
+        action: `Job retry requested â€” ${job.name}`,
         target: job.name,
         category: 'system',
         severity: 'info',
       })
     }
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
   }
 
   async executeCampaign(campaignId: string): Promise<DemoData> {
@@ -202,13 +223,13 @@ export class DemoDataService implements DemoRepository {
       }
       appendAudit(this.data, {
         actor: 'Demo operator',
-        action: `Approved recipients executed — ${campaign.name}`,
+        action: `Approved recipients executed â€” ${campaign.name}`,
         target: campaign.name,
         category: 'policy',
         severity: 'info',
       })
     }
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
   }
 
   async retryRightsRequest(requestId: string): Promise<DemoData> {
@@ -233,12 +254,61 @@ export class DemoDataService implements DemoRepository {
         })
       }
     }
-    return this.settle(clone(this.data))
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async createConversation(payload: CreateConversationPayload): Promise<DemoData> {
+    localCreateConversation(payload)
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async sendMessage(conversationId: string, body: string): Promise<DemoData> {
+    localSendMessage(conversationId, body, 'BUSINESS')
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async markConversationRead(conversationId: string): Promise<DemoData> {
+    localMarkRead(conversationId, 'business')
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async archiveConversation(conversationId: string): Promise<DemoData> {
+    localArchiveConversation(conversationId)
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async verifyConversation(conversationId: string): Promise<DemoData> {
+    localVerifyConversation(conversationId)
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async verifyMessages(): Promise<DemoData> {
+    localVerifyAll()
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async updateRetentionPolicy(payload: RetentionPolicyPayload): Promise<DemoData> {
+    localUpdatePolicy(payload)
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async runRetention(): Promise<DemoData> {
+    localRunRetention()
+    return this.settle(this.messagingSnapshot())
+  }
+
+  async updateWithdrawalTier(
+    key: WithdrawalTierKey,
+    payload: RetentionTierPayload,
+  ): Promise<DemoData> {
+    localUpdateTier(key, payload)
+    return this.settle(this.messagingSnapshot())
   }
 
   async reset(): Promise<DemoData> {
     this.data = createSeedData()
-    return this.settle(clone(this.data))
+    resetLocalMessagingStore()
+    return this.settle(this.messagingSnapshot())
   }
 }
 

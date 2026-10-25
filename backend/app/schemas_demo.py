@@ -216,6 +216,97 @@ class DemoIncidentResponse(APIModel):
     linkedBreachIncidentId: str | None = None
 
 
+class DemoConversationMessageResponse(APIModel):
+    id: str
+    conversationId: str
+    sequence: int
+    direction: str
+    sender: str
+    authorLabel: str
+    subject: str
+    body: str | None
+    bodySha256: str
+    subjectSha256: str
+    previousHash: str
+    messageHash: str
+    sentAt: datetime
+    retentionState: str
+    redactedAt: datetime | None
+    purgedAt: datetime | None
+    readByBusinessAt: datetime | None
+    readByCustomerAt: datetime | None
+    tamperState: str
+
+
+class DemoConversationResponse(APIModel):
+    id: str
+    subjectRef: str
+    customerName: str
+    channel: str
+    subject: str
+    status: str
+    interactionLevel: str
+    retentionClass: str
+    integrityState: str
+    holdActive: bool
+    unreadForBusiness: int
+    unreadForCustomer: int
+    messageCount: int
+    lastActivityAt: datetime
+    createdAt: datetime
+    messages: list[DemoConversationMessageResponse]
+
+
+class DemoRetentionPolicyResponse(APIModel):
+    id: str
+    version: int
+    active: bool
+    activeDays: int
+    mediumDays: int
+    highMinMessages: int
+    mediumMinMessages: int
+    actions: dict[str, str]
+    updatedAt: datetime | None
+
+
+class DemoRetentionRunResponse(APIModel):
+    id: str
+    policyVersion: int
+    trigger: str
+    startedAt: datetime
+    finishedAt: datetime | None
+    scanned: int
+    retained: int
+    reduced: int
+    purged: int
+    restricted: int
+    skippedHold: int
+    details: list[dict[str, Any]]
+
+
+class DemoWithdrawalTierResponse(APIModel):
+    id: str
+    key: str
+    label: str
+    description: str
+    purposes: list[str]
+    effect: str
+    displayOrder: int
+    active: bool
+    version: int
+    updatedAt: datetime | None
+
+
+class DemoMessageIntegrityResponse(APIModel):
+    status: str
+    conversationTotal: int
+    messageTotal: int
+    verifiedConversations: int
+    flaggedConversations: int
+    flaggedMessages: int
+    headHash: str
+
+
 class DemoIntegrityResponse(APIModel):
     status: str
     evidenceState: str
@@ -279,6 +370,11 @@ class DemoSnapshotResponse(APIModel):
     checkpoints: list[DemoCheckpointResponse]
     integrity: DemoIntegrityResponse
     breaches: list[DemoBreachResponse]
+    conversations: list[DemoConversationResponse]
+    retentionPolicy: DemoRetentionPolicyResponse
+    retentionRuns: list[DemoRetentionRunResponse]
+    withdrawalTiers: list[DemoWithdrawalTierResponse]
+    messageIntegrity: DemoMessageIntegrityResponse
     demo: DemoFlagsResponse
 
 
@@ -368,6 +464,38 @@ class DemoUserRequestCreate(BaseModel):
     correction: DemoCorrectionRequest | None = None
 
 
+class DemoConversationCreateRequest(BaseModel):
+    subjectRef: str = Field(min_length=1, max_length=80)
+    channel: str = Field(default="chat", max_length=24)
+    subject: str = Field(default="", max_length=240)
+    body: str = Field(min_length=1, max_length=8000)
+
+
+class DemoMessageCreateRequest(BaseModel):
+    body: str = Field(min_length=1, max_length=8000)
+
+
+class DemoRetentionPolicyRequest(BaseModel):
+    activeDays: int = Field(ge=1, le=3650)
+    mediumDays: int = Field(ge=1, le=3650)
+    highMinMessages: int = Field(ge=1, le=10000)
+    mediumMinMessages: int = Field(ge=1, le=10000)
+    actions: dict[str, str]
+
+
+class DemoRetentionTierRequest(BaseModel):
+    label: str | None = Field(default=None, max_length=160)
+    description: str | None = Field(default=None, max_length=500)
+    effect: str | None = Field(default=None, max_length=32)
+    active: bool | None = None
+    displayOrder: int | None = Field(default=None, ge=0, le=1000)
+    purposes: list[str] | None = Field(default=None, max_length=20)
+
+
+class DemoUserWithdrawRequest(BaseModel):
+    tier: str = Field(min_length=1, max_length=60)
+
+
 class DemoUserProfile(APIModel):
     id: str
     name: str
@@ -452,6 +580,10 @@ class DemoUserWorkspaceResponse(APIModel):
     documents: list[DemoUserDocument]
     requests: list[DemoUserRequest]
     activity: list[DemoUserActivity]
+    conversations: list[DemoConversationResponse] = Field(default_factory=list)
+    withdrawalTiers: list[DemoWithdrawalTierResponse] = Field(default_factory=list)
+    retentionPolicy: DemoRetentionPolicyResponse | None = None
+    messageIntegrity: DemoMessageIntegrityResponse | None = None
 
 
 class DemoImportResponse(DemoSnapshotResponse):

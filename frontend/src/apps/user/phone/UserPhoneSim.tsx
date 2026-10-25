@@ -1,12 +1,10 @@
-import {
-  ArrowUpRight,
-  Building2,
+﻿import {
   ClipboardList,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { selectConsentHealth, selectUserSummary } from '@/data/user-selectors'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
@@ -28,6 +26,7 @@ import { PhoneActivityApp } from './PhoneActivityApp'
 import { PhoneSourcesApp } from './PhoneSourcesApp'
 import { PhoneProfileApp } from './PhoneProfileApp'
 import { PhoneHelpApp } from './PhoneHelpApp'
+import { PhoneMailApp, PhoneMessagesApp } from './PhoneMessagingApp'
 import type { PhoneApp } from './types'
 
 export function UserPhoneSim() {
@@ -44,10 +43,9 @@ export function UserPhoneSim() {
   const [app, setApp] = useState<PhoneApp>('home')
   const [locked, setLocked] = useState(false)
   const [now, setNow] = useState(() => new Date())
-  const navigate = useNavigate()
 
   useEffect(() => {
-    document.title = 'Personal phone — DVault'
+    document.title = 'Personal phone â€” DVault'
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(timer)
   }, [])
@@ -106,14 +104,8 @@ export function UserPhoneSim() {
             <span
               className={cn('size-1.5 rounded-full', mode === 'api' ? 'bg-info' : 'bg-success')}
             />
-            {mode === 'api' ? `API · ${apiBaseUrl}` : 'Local synthetic data'}
+            {mode === 'api' ? `API Â· ${apiBaseUrl}` : 'Local synthetic data'}
           </span>
-          <Link
-            to="/business"
-            className="inline-flex items-center gap-1.5 rounded-md border border-line-strong bg-panel px-2.5 py-1.5 text-[10.5px] font-medium text-ink-soft transition-colors hover:border-gold/40 hover:text-ink"
-          >
-            <Building2 className="size-3.5" /> Business desktop
-          </Link>
         </div>
       </header>
 
@@ -148,15 +140,9 @@ export function UserPhoneSim() {
               )
             })}
           </ul>
-          <Link
-            to="/business"
-            className="mt-6 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gold-ink hover:text-gold"
-          >
-            Open the business desktop simulator <ArrowUpRight className="size-3.5" />
-          </Link>
           {data && (
             <p className="mt-5 text-[9px] text-ink-faint">
-              {data.documents.length} records · {data.sources.length} sources · updated{' '}
+              {data.documents.length} records Â· {data.sources.length} sources Â· updated{' '}
               {formatDate(data.generatedAt)}
             </p>
           )}
@@ -185,10 +171,11 @@ export function UserPhoneSim() {
               workspace={data}
               now={now}
               onOpenApp={openApp}
-              onOpenBusiness={() => navigate('/business')}
             />
           ) : (
             <>
+              {app === 'mail' && <PhoneMailApp workspace={data} onBack={goHome} />}
+              {app === 'messages' && <PhoneMessagesApp workspace={data} onBack={goHome} />}
               {app === 'data' && <PhoneDataApp workspace={data} onBack={goHome} />}
               {app === 'consent' && <PhoneConsentApp workspace={data} onBack={goHome} />}
               {app === 'requests' && <PhoneRequestsApp workspace={data} onBack={goHome} />}
@@ -200,13 +187,7 @@ export function UserPhoneSim() {
                   onOpenData={() => setApp('data')}
                 />
               )}
-              {app === 'profile' && (
-                <PhoneProfileApp
-                  workspace={data}
-                  onBack={goHome}
-                  onOpenBusiness={() => navigate('/business')}
-                />
-              )}
+              {app === 'profile' && <PhoneProfileApp workspace={data} onBack={goHome} />}
               {app === 'help' && (
                 <PhoneHelpApp onBack={goHome} onOpenApp={openApp} />
               )}
@@ -224,7 +205,7 @@ export function UserPhoneSim() {
       </main>
 
       <footer className="relative z-10 px-6 pb-4 text-center text-[9px] text-ink-faint">
-        Synthetic smartphone simulator · no real personal data · {mode === 'api' ? 'FastAPI repository' : 'local repository'}
+        Synthetic smartphone simulator Â· no real personal data Â· {mode === 'api' ? 'FastAPI repository' : 'local repository'}
       </footer>
     </div>
   )

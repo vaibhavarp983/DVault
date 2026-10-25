@@ -1,6 +1,6 @@
-import { FolderOpen, LockKeyhole, type LucideIcon } from 'lucide-react'
+﻿import { FolderOpen, LockKeyhole, Mail, MessageSquare, type LucideIcon } from 'lucide-react'
 
-export type AppId = 'vault' | 'file-explorer'
+export type AppId = 'vault' | 'file-explorer' | 'mail' | 'messages'
 
 export interface AppMeta {
   id: AppId
@@ -20,6 +20,22 @@ export const APP_META: Record<AppId, AppMeta> = {
     defaultSize: { width: 1400, height: 840 },
     minSize: { width: 1120, height: 660 },
   },
+  mail: {
+    id: 'mail',
+    title: 'Mail',
+    subtitle: 'Customer email threads',
+    icon: Mail,
+    defaultSize: { width: 1180, height: 740 },
+    minSize: { width: 860, height: 540 },
+  },
+  messages: {
+    id: 'messages',
+    title: 'Messages',
+    subtitle: 'Customer chat threads',
+    icon: MessageSquare,
+    defaultSize: { width: 1180, height: 740 },
+    minSize: { width: 860, height: 540 },
+  },
   'file-explorer': {
     id: 'file-explorer',
     title: 'File Explorer',
@@ -30,4 +46,4 @@ export const APP_META: Record<AppId, AppMeta> = {
   },
 }
 
-export const APP_ORDER: AppId[] = ['vault', 'file-explorer']
+export const APP_ORDER: AppId[] = ['vault', 'mail', 'messages', 'file-explorer']

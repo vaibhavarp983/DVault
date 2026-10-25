@@ -1,4 +1,4 @@
-import {
+﻿import {
   createContext,
   useCallback,
   useContext,
@@ -20,11 +20,15 @@ import type {
   BreachAssessmentPayload,
   BreachDraftPayload,
   CampaignDraftPayload,
+  CreateConversationPayload,
   DataMode,
   EvaluatePolicyPayload,
   HoldDraftPayload,
+  RetentionPolicyPayload,
+  RetentionTierPayload,
   RightsDraftPayload,
 } from '@/data/repository'
+import type { WithdrawalTierKey } from '@/domain/messaging'
 import { demoRepository } from '@/data/service'
 import type { AppNotification, DemoData } from '@/domain/types'
 
@@ -121,6 +125,18 @@ interface DemoContextValue {
   closeBreach: (breachId: string, note: string) => Promise<void>
   injectFailure: (kind: string, targetId?: string) => Promise<void>
   clearFailures: () => Promise<void>
+  createConversation: (payload: CreateConversationPayload) => Promise<void>
+  sendMessage: (conversationId: string, body: string) => Promise<void>
+  markConversationRead: (conversationId: string) => Promise<void>
+  archiveConversation: (conversationId: string) => Promise<void>
+  verifyConversation: (conversationId: string) => Promise<void>
+  verifyMessages: () => Promise<void>
+  updateRetentionPolicy: (payload: RetentionPolicyPayload) => Promise<void>
+  runRetention: () => Promise<void>
+  updateWithdrawalTier: (
+    key: WithdrawalTierKey,
+    payload: RetentionTierPayload,
+  ) => Promise<void>
   resetDemo: () => Promise<void>
   dismissNotification: (id: string) => void
   markNotificationRead: (id: string) => void
@@ -498,7 +514,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     async (breachId: string) => {
       await apply(
         () => demoRepository.draftBreachNotification(breachId),
-        () => notify({ title: 'Draft notification generated', body: 'The draft is labelled DRAFT — NOT SENT and was not transmitted.', tone: 'info', appId: 'vault' }),
+        () => notify({ title: 'Draft notification generated', body: 'The draft is labelled DRAFT â€” NOT SENT and was not transmitted.', tone: 'info', appId: 'vault' }),
       )
     },
     [apply, notify],
@@ -542,6 +558,138 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         }),
     )
   }, [apply, notify])
+
+  const createConversation = useCallback(
+    async (payload: CreateConversationPayload) => {
+      await apply(
+        () => demoRepository.createConversation(payload),
+        () =>
+          notify({
+            title: 'Conversation started',
+            body: 'The first message is recorded in the tamper-evident chain.',
+            tone: 'success',
+            appId: payload.channel === 'email' ? 'mail' : 'messages',
+          }),
+      )
+    },
+    [apply, notify],
+  )
+
+  const sendMessage = useCallback(
+    async (conversationId: string, body: string) => {
+      await apply(
+        () => demoRepository.sendMessage(conversationId, body),
+        () =>
+          notify({
+            title: 'Message recorded',
+            body: 'The customer will see it in their phone app on next refresh.',
+            tone: 'success',
+            appId: 'messages',
+          }),
+      )
+    },
+    [apply, notify],
+  )
+
+  const markConversationRead = useCallback(
+    async (conversationId: string) => {
+      await apply(() => demoRepository.markConversationRead(conversationId))
+    },
+    [apply],
+  )
+
+  const archiveConversation = useCallback(
+    async (conversationId: string) => {
+      await apply(() => demoRepository.archiveConversation(conversationId))
+    },
+    [apply],
+  )
+
+  const verifyConversation = useCallback(
+    async (conversationId: string) => {
+      await apply(
+        () => demoRepository.verifyConversation(conversationId),
+        (data) => {
+          const conversation = data.conversations?.find((entry) => entry.id === conversationId)
+          notify({
+            title:
+              conversation?.integrityState === 'FLAGGED'
+                ? 'Chain integrity flagged'
+                : 'Chain verified',
+            body:
+              conversation?.integrityState === 'FLAGGED'
+                ? 'A message hash does not match. Review the flag before dispatch.'
+                : 'Every message hash in this thread matches its predecessor.',
+            tone: conversation?.integrityState === 'FLAGGED' ? 'danger' : 'success',
+            appId: 'messages',
+          })
+        },
+      )
+    },
+    [apply, notify],
+  )
+
+  const verifyMessages = useCallback(async () => {
+    await apply(
+      () => demoRepository.verifyMessages(),
+      (data) =>
+        notify({
+          title: 'Message integrity checked',
+          body: `${data.messageIntegrity?.verifiedConversations ?? 0} of ${data.messageIntegrity?.conversationTotal ?? 0} threads verified.`,
+          tone: data.messageIntegrity?.flaggedConversations ? 'danger' : 'success',
+          appId: 'messages',
+        }),
+    )
+  }, [apply, notify])
+
+  const updateRetentionPolicy = useCallback(
+    async (payload: RetentionPolicyPayload) => {
+      await apply(
+        () => demoRepository.updateRetentionPolicy(payload),
+        () =>
+          notify({
+            title: 'Retention policy updated',
+            body: 'A new policy version is active. Run retention to apply it.',
+            tone: 'info',
+            appId: 'mail',
+          }),
+      )
+    },
+    [apply, notify],
+  )
+
+  const runRetention = useCallback(async () => {
+    await apply(
+      () => demoRepository.runRetention(),
+      (data) => {
+        const run = data.retentionRuns?.[0]
+        notify({
+          title: 'Retention sweep complete',
+          body: run
+            ? `${run.reduced} reduced, ${run.purged} purged, ${run.skippedHold} protected by hold.`
+            : 'Retention sweep completed.',
+          tone: run?.skippedHold ? 'warning' : 'success',
+          appId: 'mail',
+        })
+      },
+    )
+  }, [apply, notify])
+
+  const updateWithdrawalTier = useCallback(
+    async (key: WithdrawalTierKey, payload: RetentionTierPayload) => {
+      await apply(
+        () => demoRepository.updateWithdrawalTier(key, payload),
+        () =>
+          notify({
+            title: 'Withdrawal tier updated',
+            body: `${key} now applies ${payload.effect ?? 'its current effect'}.`,
+            tone: 'info',
+            appId: 'mail',
+          }),
+      )
+    },
+    [apply, notify],
+  )
 
   const resetDemo = useCallback(async () => {
     await apply(
@@ -618,6 +766,15 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       closeBreach,
       injectFailure,
       clearFailures,
+      createConversation,
+      sendMessage,
+      markConversationRead,
+      archiveConversation,
+      verifyConversation,
+      verifyMessages,
+      updateRetentionPolicy,
+      runRetention,
+      updateWithdrawalTier,
       resetDemo,
       dismissNotification,
       markNotificationRead,
@@ -657,6 +814,15 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       closeBreach,
       injectFailure,
       clearFailures,
+      createConversation,
+      sendMessage,
+      markConversationRead,
+      archiveConversation,
+      verifyConversation,
+      verifyMessages,
+      updateRetentionPolicy,
+      runRetention,
+      updateWithdrawalTier,
       resetDemo,
       dismissNotification,
       markNotificationRead,

@@ -2956,6 +2956,276 @@
         "title": "DemoConsentRequest",
         "type": "object"
       },
+      "DemoConversationCreateRequest": {
+        "properties": {
+          "body": {
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "channel": {
+            "default": "chat",
+            "maxLength": 24,
+            "title": "Channel",
+            "type": "string"
+          },
+          "subject": {
+            "default": "",
+            "maxLength": 240,
+            "title": "Subject",
+            "type": "string"
+          },
+          "subjectRef": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Subjectref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectRef",
+          "body"
+        ],
+        "title": "DemoConversationCreateRequest",
+        "type": "object"
+      },
+      "DemoConversationMessageResponse": {
+        "properties": {
+          "authorLabel": {
+            "title": "Authorlabel",
+            "type": "string"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "bodySha256": {
+            "title": "Bodysha256",
+            "type": "string"
+          },
+          "conversationId": {
+            "title": "Conversationid",
+            "type": "string"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "messageHash": {
+            "title": "Messagehash",
+            "type": "string"
+          },
+          "previousHash": {
+            "title": "Previoushash",
+            "type": "string"
+          },
+          "purgedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purgedat"
+          },
+          "readByBusinessAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readbybusinessat"
+          },
+          "readByCustomerAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Readbycustomerat"
+          },
+          "redactedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redactedat"
+          },
+          "retentionState": {
+            "title": "Retentionstate",
+            "type": "string"
+          },
+          "sender": {
+            "title": "Sender",
+            "type": "string"
+          },
+          "sentAt": {
+            "format": "date-time",
+            "title": "Sentat",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "subjectSha256": {
+            "title": "Subjectsha256",
+            "type": "string"
+          },
+          "tamperState": {
+            "title": "Tamperstate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "conversationId",
+          "sequence",
+          "direction",
+          "sender",
+          "authorLabel",
+          "subject",
+          "body",
+          "bodySha256",
+          "subjectSha256",
+          "previousHash",
+          "messageHash",
+          "sentAt",
+          "retentionState",
+          "redactedAt",
+          "purgedAt",
+          "readByBusinessAt",
+          "readByCustomerAt",
+          "tamperState"
+        ],
+        "title": "DemoConversationMessageResponse",
+        "type": "object"
+      },
+      "DemoConversationResponse": {
+        "properties": {
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "customerName": {
+            "title": "Customername",
+            "type": "string"
+          },
+          "holdActive": {
+            "title": "Holdactive",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "integrityState": {
+            "title": "Integritystate",
+            "type": "string"
+          },
+          "interactionLevel": {
+            "title": "Interactionlevel",
+            "type": "string"
+          },
+          "lastActivityAt": {
+            "format": "date-time",
+            "title": "Lastactivityat",
+            "type": "string"
+          },
+          "messageCount": {
+            "title": "Messagecount",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/DemoConversationMessageResponse"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "retentionClass": {
+            "title": "Retentionclass",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "subjectRef": {
+            "title": "Subjectref",
+            "type": "string"
+          },
+          "unreadForBusiness": {
+            "title": "Unreadforbusiness",
+            "type": "integer"
+          },
+          "unreadForCustomer": {
+            "title": "Unreadforcustomer",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "subjectRef",
+          "customerName",
+          "channel",
+          "subject",
+          "status",
+          "interactionLevel",
+          "retentionClass",
+          "integrityState",
+          "holdActive",
+          "unreadForBusiness",
+          "unreadForCustomer",
+          "messageCount",
+          "lastActivityAt",
+          "createdAt",
+          "messages"
+        ],
+        "title": "DemoConversationResponse",
+        "type": "object"
+      },
       "DemoCorrectionRequest": {
         "properties": {
           "field": {
@@ -3854,6 +4124,64 @@
         "title": "DemoJobResponse",
         "type": "object"
       },
+      "DemoMessageCreateRequest": {
+        "properties": {
+          "body": {
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "DemoMessageCreateRequest",
+        "type": "object"
+      },
+      "DemoMessageIntegrityResponse": {
+        "properties": {
+          "conversationTotal": {
+            "title": "Conversationtotal",
+            "type": "integer"
+          },
+          "flaggedConversations": {
+            "title": "Flaggedconversations",
+            "type": "integer"
+          },
+          "flaggedMessages": {
+            "title": "Flaggedmessages",
+            "type": "integer"
+          },
+          "headHash": {
+            "title": "Headhash",
+            "type": "string"
+          },
+          "messageTotal": {
+            "title": "Messagetotal",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verifiedConversations": {
+            "title": "Verifiedconversations",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "conversationTotal",
+          "messageTotal",
+          "verifiedConversations",
+          "flaggedConversations",
+          "flaggedMessages",
+          "headHash"
+        ],
+        "title": "DemoMessageIntegrityResponse",
+        "type": "object"
+      },
       "DemoPolicyResponse": {
         "properties": {
           "area": {
@@ -3953,6 +4281,276 @@
           "value"
         ],
         "title": "DemoPolicyRule",
+        "type": "object"
+      },
+      "DemoRetentionPolicyRequest": {
+        "properties": {
+          "actions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "object"
+          },
+          "activeDays": {
+            "maximum": 3650.0,
+            "minimum": 1.0,
+            "title": "Activedays",
+            "type": "integer"
+          },
+          "highMinMessages": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Highminmessages",
+            "type": "integer"
+          },
+          "mediumDays": {
+            "maximum": 3650.0,
+            "minimum": 1.0,
+            "title": "Mediumdays",
+            "type": "integer"
+          },
+          "mediumMinMessages": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Mediumminmessages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activeDays",
+          "mediumDays",
+          "highMinMessages",
+          "mediumMinMessages",
+          "actions"
+        ],
+        "title": "DemoRetentionPolicyRequest",
+        "type": "object"
+      },
+      "DemoRetentionPolicyResponse": {
+        "properties": {
+          "actions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "object"
+          },
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "activeDays": {
+            "title": "Activedays",
+            "type": "integer"
+          },
+          "highMinMessages": {
+            "title": "Highminmessages",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mediumDays": {
+            "title": "Mediumdays",
+            "type": "integer"
+          },
+          "mediumMinMessages": {
+            "title": "Mediumminmessages",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "active",
+          "activeDays",
+          "mediumDays",
+          "highMinMessages",
+          "mediumMinMessages",
+          "actions",
+          "updatedAt"
+        ],
+        "title": "DemoRetentionPolicyResponse",
+        "type": "object"
+      },
+      "DemoRetentionRunResponse": {
+        "properties": {
+          "details": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "policyVersion": {
+            "title": "Policyversion",
+            "type": "integer"
+          },
+          "purged": {
+            "title": "Purged",
+            "type": "integer"
+          },
+          "reduced": {
+            "title": "Reduced",
+            "type": "integer"
+          },
+          "restricted": {
+            "title": "Restricted",
+            "type": "integer"
+          },
+          "retained": {
+            "title": "Retained",
+            "type": "integer"
+          },
+          "scanned": {
+            "title": "Scanned",
+            "type": "integer"
+          },
+          "skippedHold": {
+            "title": "Skippedhold",
+            "type": "integer"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "title": "Startedat",
+            "type": "string"
+          },
+          "trigger": {
+            "title": "Trigger",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "policyVersion",
+          "trigger",
+          "startedAt",
+          "finishedAt",
+          "scanned",
+          "retained",
+          "reduced",
+          "purged",
+          "restricted",
+          "skippedHold",
+          "details"
+        ],
+        "title": "DemoRetentionRunResponse",
+        "type": "object"
+      },
+      "DemoRetentionTierRequest": {
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "displayOrder": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayorder"
+          },
+          "effect": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "purposes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purposes"
+          }
+        },
+        "title": "DemoRetentionTierRequest",
         "type": "object"
       },
       "DemoRightsCreateRequest": {
@@ -4160,6 +4758,13 @@
             "title": "Contactmode",
             "type": "string"
           },
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/DemoConversationResponse"
+            },
+            "title": "Conversations",
+            "type": "array"
+          },
           "customers": {
             "items": {
               "$ref": "#/components/schemas/DemoCustomerResponse"
@@ -4199,6 +4804,9 @@
             "title": "Jobs",
             "type": "array"
           },
+          "messageIntegrity": {
+            "$ref": "#/components/schemas/DemoMessageIntegrityResponse"
+          },
           "notice": {
             "title": "Notice",
             "type": "string"
@@ -4208,6 +4816,16 @@
               "$ref": "#/components/schemas/DemoPolicyResponse"
             },
             "title": "Policies",
+            "type": "array"
+          },
+          "retentionPolicy": {
+            "$ref": "#/components/schemas/DemoRetentionPolicyResponse"
+          },
+          "retentionRuns": {
+            "items": {
+              "$ref": "#/components/schemas/DemoRetentionRunResponse"
+            },
+            "title": "Retentionruns",
             "type": "array"
           },
           "rightsHolds": {
@@ -4235,6 +4853,13 @@
             "title": "Sources",
             "type": "array"
           },
+          "withdrawalTiers": {
+            "items": {
+              "$ref": "#/components/schemas/DemoWithdrawalTierResponse"
+            },
+            "title": "Withdrawaltiers",
+            "type": "array"
+          },
           "workspace": {
             "$ref": "#/components/schemas/DemoWorkspaceRef"
           }
@@ -4259,6 +4884,11 @@
           "checkpoints",
           "integrity",
           "breaches",
+          "conversations",
+          "retentionPolicy",
+          "retentionRuns",
+          "withdrawalTiers",
+          "messageIntegrity",
           "demo"
         ],
         "title": "DemoSnapshotResponse",
@@ -4816,6 +5446,21 @@
         "title": "DemoUserStep",
         "type": "object"
       },
+      "DemoUserWithdrawRequest": {
+        "properties": {
+          "tier": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier"
+        ],
+        "title": "DemoUserWithdrawRequest",
+        "type": "object"
+      },
       "DemoUserWorkspaceResponse": {
         "properties": {
           "activity": {
@@ -4835,6 +5480,13 @@
           "contactMode": {
             "title": "Contactmode",
             "type": "string"
+          },
+          "conversations": {
+            "items": {
+              "$ref": "#/components/schemas/DemoConversationResponse"
+            },
+            "title": "Conversations",
+            "type": "array"
           },
           "demoSubjectRef": {
             "anyOf": [
@@ -4866,6 +5518,16 @@
             ],
             "title": "Generatedat"
           },
+          "messageIntegrity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoMessageIntegrityResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "notice": {
             "title": "Notice",
             "type": "string"
@@ -4887,11 +5549,28 @@
             "title": "Requests",
             "type": "array"
           },
+          "retentionPolicy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoRetentionPolicyResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sources": {
             "items": {
               "$ref": "#/components/schemas/DemoUserSource"
             },
             "title": "Sources",
+            "type": "array"
+          },
+          "withdrawalTiers": {
+            "items": {
+              "$ref": "#/components/schemas/DemoWithdrawalTierResponse"
+            },
+            "title": "Withdrawaltiers",
             "type": "array"
           }
         },
@@ -4908,6 +5587,75 @@
           "activity"
         ],
         "title": "DemoUserWorkspaceResponse",
+        "type": "object"
+      },
+      "DemoWithdrawalTierResponse": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "displayOrder": {
+            "title": "Displayorder",
+            "type": "integer"
+          },
+          "effect": {
+            "title": "Effect",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "purposes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Purposes",
+            "type": "array"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "label",
+          "description",
+          "purposes",
+          "effect",
+          "displayOrder",
+          "active",
+          "version",
+          "updatedAt"
+        ],
+        "title": "DemoWithdrawalTierResponse",
         "type": "object"
       },
       "DemoWorkspaceRef": {
@@ -9539,6 +10287,322 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/demo/conversations": {
+      "post": {
+        "operationId": "create_demo_conversation_api_v1_workspaces__workspace_ref__demo_conversations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoConversationCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Demo Conversation",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/archive": {
+      "post": {
+        "operationId": "archive_demo_conversation_api_v1_workspaces__workspace_ref__demo_conversations__conversation_id__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive Demo Conversation",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/messages": {
+      "post": {
+        "operationId": "send_demo_business_message_api_v1_workspaces__workspace_ref__demo_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoMessageCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Demo Business Message",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/read": {
+      "post": {
+        "operationId": "read_demo_conversation_api_v1_workspaces__workspace_ref__demo_conversations__conversation_id__read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Demo Conversation",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/verify": {
+      "post": {
+        "operationId": "verify_demo_conversation_api_v1_workspaces__workspace_ref__demo_conversations__conversation_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Demo Conversation",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/demo/documents/{document_id}/review": {
       "post": {
         "operationId": "review_document_api_v1_workspaces__workspace_ref__demo_documents__document_id__review_post",
@@ -9908,6 +10972,58 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/demo/message-integrity/verify": {
+      "post": {
+        "operationId": "verify_demo_messages_api_v1_workspaces__workspace_ref__demo_message_integrity_verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Demo Messages",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/demo/policies/evaluate": {
       "post": {
         "operationId": "evaluate_policy_api_v1_workspaces__workspace_ref__demo_policies_evaluate_post",
@@ -10202,6 +11318,120 @@
           }
         },
         "summary": "Release Demo Hold",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/retention-policy": {
+      "post": {
+        "operationId": "update_demo_retention_policy_api_v1_workspaces__workspace_ref__demo_retention_policy_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoRetentionPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Demo Retention Policy",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/retention/run": {
+      "post": {
+        "operationId": "run_demo_retention_api_v1_workspaces__workspace_ref__demo_retention_run_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Demo Retention",
         "tags": [
           "demo"
         ]
@@ -10624,6 +11854,199 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/conversations/{conversation_id}/messages": {
+      "post": {
+        "operationId": "send_user_message_api_v1_workspaces__workspace_ref__demo_user_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoMessageCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send User Message",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/conversations/{conversation_id}/read": {
+      "post": {
+        "operationId": "read_user_conversation_api_v1_workspaces__workspace_ref__demo_user_conversations__conversation_id__read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read User Conversation",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/conversations/{conversation_id}/verify": {
+      "post": {
+        "operationId": "verify_user_conversation_api_v1_workspaces__workspace_ref__demo_user_conversations__conversation_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify User Conversation",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/demo/user/refresh": {
       "post": {
         "operationId": "refresh_user_workspace_api_v1_workspaces__workspace_ref__demo_user_refresh_post",
@@ -10846,6 +12269,139 @@
           }
         },
         "summary": "Reset User Workspace",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/withdraw": {
+      "post": {
+        "operationId": "withdraw_user_consent_api_v1_workspaces__workspace_ref__demo_user_withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoUserWithdrawRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw User Consent",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/withdrawal-tiers/{tier_key}": {
+      "post": {
+        "operationId": "update_demo_withdrawal_tier_api_v1_workspaces__workspace_ref__demo_withdrawal_tiers__tier_key__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tier_key",
+            "required": true,
+            "schema": {
+              "title": "Tier Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoRetentionTierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Demo Withdrawal Tier",
         "tags": [
           "demo"
         ]

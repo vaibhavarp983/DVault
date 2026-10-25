@@ -1,4 +1,10 @@
 import type { DemoData } from '@/domain/types'
+import type {
+  ConversationDraft,
+  RetentionPolicyDraft,
+  RetentionAction,
+  WithdrawalTierKey,
+} from '@/domain/messaging'
 import type { ContactMode } from './config'
 
 export type DataMode = 'local' | 'api'
@@ -58,6 +64,25 @@ export interface BreachAssessmentPayload {
   note?: string
 }
 
+export interface CreateConversationPayload extends ConversationDraft {}
+
+export interface RetentionPolicyPayload extends RetentionPolicyDraft {}
+
+export interface RetentionTierPayload {
+  label?: string
+  description?: string
+  effect?: string
+  active?: boolean
+  displayOrder?: number
+  purposes?: string[]
+}
+
+export interface WithdrawPayload {
+  tier: WithdrawalTierKey
+}
+
+export type { RetentionAction, WithdrawalTierKey }
+
 /**
  * The single data boundary used by the UI. The HTTP implementation talks to the
  * versioned `/demo` facade; the local implementation keeps the offline fixture.
@@ -89,4 +114,13 @@ export interface DemoRepository {
   closeBreach(breachId: string, note: string): Promise<DemoData>
   injectFailure(kind: string, targetId?: string): Promise<DemoData>
   clearFailures(): Promise<DemoData>
+  createConversation(payload: CreateConversationPayload): Promise<DemoData>
+  sendMessage(conversationId: string, body: string): Promise<DemoData>
+  markConversationRead(conversationId: string): Promise<DemoData>
+  archiveConversation(conversationId: string): Promise<DemoData>
+  verifyConversation(conversationId: string): Promise<DemoData>
+  verifyMessages(): Promise<DemoData>
+  updateRetentionPolicy(payload: RetentionPolicyPayload): Promise<DemoData>
+  runRetention(): Promise<DemoData>
+  updateWithdrawalTier(key: WithdrawalTierKey, payload: RetentionTierPayload): Promise<DemoData>
 }

@@ -15,6 +15,8 @@ const trayDate = new Intl.DateTimeFormat('en-GB', {
 
 const appGradients: Record<string, string> = {
   vault: 'from-[#e0bd78] via-[#c2953f] to-[#8d6520]',
+  mail: 'from-[#7fa9c7] via-[#4f7f9f] to-[#325b78]',
+  messages: 'from-[#86b89a] via-[#4f8b6d] to-[#2f654d]',
   'file-explorer': 'from-[#e8c079] via-[#c99a45] to-[#9c7529]',
 }
 

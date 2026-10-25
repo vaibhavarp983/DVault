@@ -27,6 +27,9 @@ export interface WindowPayload {
   customerId?: string
   sourceId?: string
   search?: string
+  conversationId?: string
+  channel?: 'email' | 'chat'
+  panel?: 'threads' | 'controls'
 }
 
 export interface WindowInstance {

@@ -1,5 +1,4 @@
-import {
-  Building2,
+﻿import {
   CheckCircle2,
   Mail,
   MapPin,
@@ -20,11 +19,9 @@ import { PhoneAppShell } from './PhoneChrome'
 export function PhoneProfileApp({
   workspace,
   onBack,
-  onOpenBusiness,
 }: {
   workspace: UserWorkspace
   onBack: () => void
-  onOpenBusiness: () => void
 }) {
   const { mode, apiBaseUrl, reset } = useUser()
   const [resetting, setResetting] = useState(false)
@@ -92,13 +89,10 @@ export function PhoneProfileApp({
             <span className="ml-auto text-[8px] text-ink-faint">{mode === 'api' ? 'api' : 'demo'}</span>
           </div>
           <p className="mt-1 truncate text-[8px] text-ink-faint" title={apiBaseUrl ?? undefined}>
-            {mode === 'api' ? apiBaseUrl : 'No network calls · session only'}
+            {mode === 'api' ? apiBaseUrl : 'No network calls Â· session only'}
           </p>
         </div>
 
-        <Button variant="outline" size="sm" className="w-full" onClick={onOpenBusiness}>
-          <Building2 className="size-3.5" /> Open business desktop
-        </Button>
         <Button
           variant="ghost"
           size="sm"
@@ -107,7 +101,7 @@ export function PhoneProfileApp({
           disabled={resetting}
         >
           <RotateCcw className={cn('size-3.5', resetting && 'animate-spin')} />
-          {resetting ? 'Restoring…' : 'Restore synthetic data'}
+          {resetting ? 'Restoringâ€¦' : 'Restore synthetic data'}
         </Button>
 
         <p className="flex items-start gap-1.5 text-[8px] leading-3.5 text-ink-faint">

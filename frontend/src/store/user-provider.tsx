@@ -28,6 +28,10 @@ interface UserContextValue {
   setConsent: (consentId: string, granted: boolean) => Promise<boolean>
   createRequest: (type: RightsRequestType, correction?: CorrectionPayload) => Promise<boolean>
   retryRequest: (requestId: string) => Promise<boolean>
+  sendMessage: (conversationId: string, body: string) => Promise<boolean>
+  markConversationRead: (conversationId: string) => Promise<void>
+  verifyConversation: (conversationId: string) => Promise<void>
+  withdraw: (tier: string) => Promise<boolean>
   reset: () => Promise<void>
   dismissNotification: (id: string) => void
   clearNotifications: () => void
@@ -186,6 +190,65 @@ export function UserProvider({ children }: { children: ReactNode }) {
     [handleError, notify],
   )
 
+  const sendMessage = useCallback(
+    async (conversationId: string, body: string): Promise<boolean> => {
+      try {
+        const workspace = await userRepository.sendMessage(conversationId, body)
+        setData(workspace)
+        notify('Message sent', 'The business will see it in their Mail or Messages app.', 'success')
+        return true
+      } catch (caught) {
+        handleError(caught)
+        return false
+      }
+    },
+    [handleError, notify],
+  )
+
+  const markConversationRead = useCallback(
+    async (conversationId: string) => {
+      try {
+        const workspace = await userRepository.markConversationRead(conversationId)
+        setData(workspace)
+      } catch (caught) {
+        handleError(caught)
+      }
+    },
+    [handleError],
+  )
+
+  const verifyConversation = useCallback(
+    async (conversationId: string) => {
+      try {
+        const workspace = await userRepository.verifyConversation(conversationId)
+        setData(workspace)
+        notify('Conversation verified', 'Message hashes match the local simulated chain.', 'info')
+      } catch (caught) {
+        handleError(caught)
+      }
+    },
+    [handleError, notify],
+  )
+
+  const withdraw = useCallback(
+    async (tier: string): Promise<boolean> => {
+      try {
+        const workspace = await userRepository.withdraw(tier)
+        setData(workspace)
+        notify(
+          'Withdrawal applied',
+          'Optional purposes were withdrawn and the matching retention effect ran.',
+          'success',
+        )
+        return true
+      } catch (caught) {
+        handleError(caught)
+        return false
+      }
+    },
+    [handleError, notify],
+  )
+
   const reset = useCallback(async () => {
     try {
       const workspace = await userRepository.reset()
@@ -217,6 +280,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setConsent,
       createRequest,
       retryRequest,
+      sendMessage,
+      markConversationRead,
+      verifyConversation,
+      withdraw,
       reset,
       dismissNotification,
       clearNotifications,
@@ -231,6 +298,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setConsent,
       createRequest,
       retryRequest,
+      sendMessage,
+      markConversationRead,
+      verifyConversation,
+      withdraw,
       reset,
       dismissNotification,
       clearNotifications,

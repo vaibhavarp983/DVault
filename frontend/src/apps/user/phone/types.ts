@@ -1,5 +1,7 @@
-export type PhoneApp =
+﻿export type PhoneApp =
   | 'home'
+  | 'mail'
+  | 'messages'
   | 'data'
   | 'consent'
   | 'requests'

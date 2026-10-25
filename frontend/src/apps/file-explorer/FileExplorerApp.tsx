@@ -85,7 +85,9 @@ export function FileExplorerApp({ payload }: { payload?: WindowPayload }) {
       if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1
       let compare = 0
       if (sort.key === 'name') compare = a.name.localeCompare(b.name)
-      if (sort.key === 'modified') compare = a.modifiedAt.localeCompare(b.modifiedAt)
+      if (sort.key === 'modified') {
+        compare = (a.modifiedAt ?? '').localeCompare(b.modifiedAt ?? '')
+      }
       if (sort.key === 'type') compare = a.typeLabel.localeCompare(b.typeLabel)
       if (sort.key === 'size') compare = (a.sizeKb ?? 0) - (b.sizeKb ?? 0)
       return sort.direction === 'asc' ? compare : -compare

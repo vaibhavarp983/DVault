@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#171512" />
+    <style>
+      /* Prevent off-white flash when navigating to the dark desktop page.
+         The React page component toggles this class on mount/unmount. */
+      body.bg-charcoal { background-color: #171512 !important; }
+    </style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta
       name="description"

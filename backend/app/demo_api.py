@@ -22,7 +22,15 @@ from app.campaigns import execute_campaign as execute_campaign_service
 from app.campaigns import preview_campaign as preview_campaign_service
 from app.config import get_settings
 from app.db import get_db
-from app.demo_failures import DemoProblem, clear_failures, inject_audit_tamper, inject_retention_hold, inject_source_failure, require_failure_controls
+from app.demo_failures import (
+    DemoProblem,
+    clear_failures,
+    inject_audit_tamper,
+    inject_message_tamper,
+    inject_retention_hold,
+    inject_source_failure,
+    require_failure_controls,
+)
 from app.demo_projection import (
     CONSENT_CATALOG,
     build_demo_snapshot,
@@ -33,8 +41,19 @@ from app.demo_projection import (
 from app.demo_reset import require_demo_controls, reset_workspace
 from app.evidence import EvidenceProblem, append_event, create_checkpoint, iso_utc, resolve_integrity_incident, sha256_hex, verify_chain
 from app.ingestion import ingest_file
+from app.messaging import (
+    BUSINESS_LABEL,
+    archive_conversation,
+    business_send,
+    create_conversation,
+    customer_send,
+    mark_read,
+    verify_all,
+    verify_conversation,
+)
 from app.models import (
     AuthorizationRecord,
+    Conversation,
     DataRecordRef,
     Document,
     IntegrityIncident,
@@ -46,6 +65,16 @@ from app.models import (
     utc_now,
 )
 from app.policy import evaluate_marketing
+from app.retention import (
+    RetentionProblem,
+    apply_tier_effect,
+    ensure_policy,
+    resolve_tier,
+    sweep,
+    update_policy,
+    update_tier,
+    validate_rules,
+)
 from app.rights import create_hold, create_request, execute_request, plan_request, release_hold
 from app.schemas_demo import (
     DemoBreachAssessmentRequest,
@@ -54,8 +83,13 @@ from app.schemas_demo import (
     DemoCampaignCreateRequest,
     DemoCheckpointRequest,
     DemoConsentRequest,
+    DemoConversationCreateRequest,
     DemoEvaluateRequest,
     DemoFailureRequest,
+    DemoMessageCreateRequest,
+    DemoRetentionPolicyRequest,
+    DemoRetentionTierRequest,
+    DemoUserWithdrawRequest,
     DemoHoldCreateRequest,
     DemoHoldReleaseRequest,
     DemoIncidentResolveRequest,
@@ -124,6 +158,111 @@ def reset_demo(workspace_ref: str, contacts: str = Query("masked"), db: Session 
     require_demo_controls()
     workspace = resolve_workspace(workspace_ref, db)
     reset_workspace(db, workspace)
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/conversations", response_model=DemoSnapshotResponse, status_code=201)
+def create_demo_conversation(workspace_ref: str, payload: DemoConversationCreateRequest, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    policy = ensure_policy(db, workspace)
+    subject_line = payload.subject.strip() or ("Direct chat" if payload.channel.strip().lower() == "chat" else "Email thread")
+    create_conversation(
+        db,
+        workspace,
+        subject_ref=payload.subjectRef,
+        channel=payload.channel,
+        subject_line=subject_line,
+        sender="BUSINESS",
+        author_label=BUSINESS_LABEL,
+        body=payload.body,
+        direction="OUTBOUND",
+        rules=policy.rules_json,
+    )
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/messages", response_model=DemoSnapshotResponse, status_code=201)
+def send_demo_business_message(workspace_ref: str, conversation_id: str, payload: DemoMessageCreateRequest, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    policy = ensure_policy(db, workspace)
+    business_send(db, workspace, conversation_id, payload.body, policy.rules_json)
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/read", response_model=DemoSnapshotResponse)
+def read_demo_conversation(workspace_ref: str, conversation_id: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    mark_read(db, workspace, conversation_id, "business")
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/archive", response_model=DemoSnapshotResponse)
+def archive_demo_conversation(workspace_ref: str, conversation_id: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    archive_conversation(db, workspace, conversation_id)
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/conversations/{conversation_id}/verify", response_model=DemoSnapshotResponse)
+def verify_demo_conversation(workspace_ref: str, conversation_id: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    verify_conversation(db, workspace, conversation_id)
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/message-integrity/verify", response_model=DemoSnapshotResponse)
+def verify_demo_messages(workspace_ref: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    verify_all(db, workspace)
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/retention-policy", response_model=DemoSnapshotResponse)
+def update_demo_retention_policy(workspace_ref: str, payload: DemoRetentionPolicyRequest, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    update_policy(db, workspace, payload.model_dump())
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/retention/run", response_model=DemoSnapshotResponse)
+def run_demo_retention(workspace_ref: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    sweep(db, workspace, trigger="MANUAL")
+    db.commit()
+    return _snapshot(db, workspace, contacts)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/withdrawal-tiers/{tier_key}", response_model=DemoSnapshotResponse)
+def update_demo_withdrawal_tier(workspace_ref: str, tier_key: str, payload: DemoRetentionTierRequest, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoSnapshotResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    update_tier(
+        db,
+        workspace,
+        tier_key,
+        label=payload.label,
+        description=payload.description,
+        effect=payload.effect,
+        active=payload.active,
+        display_order=payload.displayOrder,
+        purposes=payload.purposes,
+    )
     db.commit()
     return _snapshot(db, workspace, contacts)
 
@@ -396,8 +535,10 @@ def inject_failure(workspace_ref: str, payload: DemoFailureRequest, contacts: st
         inject_retention_hold(db, workspace, payload.targetId)
     elif payload.kind == "audit_tamper":
         inject_audit_tamper(db, workspace)
+    elif payload.kind == "message_tamper":
+        inject_message_tamper(db, workspace, payload.targetId)
     else:
-        raise DemoProblem("DEMO_FAILURE_INVALID", "kind must be source_connector, retention_hold, or audit_tamper.", 422)
+        raise DemoProblem("DEMO_FAILURE_INVALID", "kind must be source_connector, retention_hold, audit_tamper, or message_tamper.", 422)
     db.commit()
     return _snapshot(db, workspace, contacts)
 
@@ -518,6 +659,151 @@ def set_user_consent(workspace_ref: str, purpose: str, payload: DemoConsentReque
                 entity_ref=authorization.id,
                 occurred_at=now,
             )
+    db.commit()
+    return _user(db, workspace, contacts, subject)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/user/conversations/{conversation_id}/messages", response_model=DemoUserWorkspaceResponse, status_code=201)
+def send_user_message(workspace_ref: str, conversation_id: str, payload: DemoMessageCreateRequest, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoUserWorkspaceResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    subject = resolve_demo_subject(db, workspace)
+    if not subject:
+        raise DemoProblem("DEMO_SUBJECT_NOT_FOUND", "No demo customer is available.", 409)
+    policy = ensure_policy(db, workspace)
+    customer_send(db, workspace, conversation_id, subject, payload.body, policy.rules_json)
+    db.commit()
+    return _user(db, workspace, contacts, subject)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/user/conversations/{conversation_id}/read", response_model=DemoUserWorkspaceResponse)
+def read_user_conversation(workspace_ref: str, conversation_id: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoUserWorkspaceResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    subject = resolve_demo_subject(db, workspace)
+    conversation = db.scalar(select(Conversation).where(
+        Conversation.workspace_id == workspace.id,
+        Conversation.id == conversation_id,
+        Conversation.subject_ref == subject,
+    ))
+    if conversation is None:
+        raise DemoProblem("CONVERSATION_NOT_FOUND", "The conversation was not found.", 404)
+    mark_read(db, workspace, conversation_id, "customer")
+    db.commit()
+    return _user(db, workspace, contacts, subject)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/user/conversations/{conversation_id}/verify", response_model=DemoUserWorkspaceResponse)
+def verify_user_conversation(workspace_ref: str, conversation_id: str, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoUserWorkspaceResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    subject = resolve_demo_subject(db, workspace)
+    conversation = db.scalar(select(Conversation).where(
+        Conversation.workspace_id == workspace.id,
+        Conversation.id == conversation_id,
+        Conversation.subject_ref == subject,
+    ))
+    if conversation is None:
+        raise DemoProblem("CONVERSATION_NOT_FOUND", "The conversation was not found.", 404)
+    verify_conversation(db, workspace, conversation_id)
+    db.commit()
+    return _user(db, workspace, contacts, subject)
+
+
+@router.post("/workspaces/{workspace_ref}/demo/user/withdraw", response_model=DemoUserWorkspaceResponse)
+def withdraw_user_consent(workspace_ref: str, payload: DemoUserWithdrawRequest, contacts: str = Query("masked"), db: Session = Depends(get_db)) -> DemoUserWorkspaceResponse:
+    require_demo_controls()
+    workspace = resolve_workspace(workspace_ref, db)
+    subject = resolve_demo_subject(db, workspace)
+    if not subject:
+        raise DemoProblem("DEMO_SUBJECT_NOT_FOUND", "No demo customer is available.", 409)
+    tier = resolve_tier(db, workspace, payload.tier)
+    if not tier.active:
+        raise RetentionProblem("WITHDRAWAL_TIER_INACTIVE", "The selected withdrawal tier is not active.", 409)
+    now = utc_now()
+    purposes = [purpose for purpose in (tier.purposes_json or []) if purpose != "service"]
+    for purpose in purposes:
+        authorizations = list(db.scalars(select(AuthorizationRecord).where(
+            AuthorizationRecord.workspace_id == workspace.id,
+            AuthorizationRecord.subject_ref == subject,
+            AuthorizationRecord.purpose == purpose,
+            AuthorizationRecord.status == "ACTIVE",
+        )))
+        channels = {authorization.channel for authorization in authorizations} or {"email"}
+        for authorization in authorizations:
+            authorization.status = "WITHDRAWN"
+            authorization.withdrawn_at = now
+            suppression = db.scalar(select(SuppressionRecord).where(
+                SuppressionRecord.workspace_id == workspace.id,
+                SuppressionRecord.subject_ref == subject,
+                SuppressionRecord.purpose == purpose,
+                SuppressionRecord.channel == authorization.channel,
+                SuppressionRecord.status == "ACTIVE",
+            ))
+            if suppression is None:
+                suppression = SuppressionRecord(
+                    workspace_id=workspace.id,
+                    subject_ref=subject,
+                    purpose=purpose,
+                    channel=authorization.channel,
+                    status="ACTIVE",
+                    source="personal_portal",
+                    effective_at=now,
+                )
+                db.add(suppression)
+                db.flush()
+            append_event(
+                db,
+                workspace.id,
+                "AUTHORIZATION_WITHDRAWN",
+                {
+                    "subject_ref": subject,
+                    "authorization_id": authorization.id,
+                    "purpose": purpose,
+                    "channel": authorization.channel,
+                    "suppression_id": suppression.id,
+                    "withdrawn_at": iso_utc(now),
+                },
+                entity_type="authorization",
+                entity_ref=authorization.id,
+                occurred_at=now,
+            )
+        if not authorizations:
+            for channel in channels:
+                suppression = db.scalar(select(SuppressionRecord).where(
+                    SuppressionRecord.workspace_id == workspace.id,
+                    SuppressionRecord.subject_ref == subject,
+                    SuppressionRecord.purpose == purpose,
+                    SuppressionRecord.channel == channel,
+                    SuppressionRecord.status == "ACTIVE",
+                ))
+                if suppression is None:
+                    db.add(SuppressionRecord(
+                        workspace_id=workspace.id,
+                        subject_ref=subject,
+                        purpose=purpose,
+                        channel=channel,
+                        status="ACTIVE",
+                        source="personal_portal",
+                        effective_at=now,
+                    ))
+    run = apply_tier_effect(db, workspace, subject, tier.effect)
+    append_event(
+        db,
+        workspace.id,
+        "WITHDRAWAL_TIER_APPLIED",
+        {
+            "tier_key": tier.key,
+            "subject_ref": subject,
+            "purposes": purposes,
+            "effect": tier.effect,
+            "retention_run_id": run.id if run else None,
+        },
+        entity_type="withdrawal_tier",
+        entity_ref=tier.id,
+        occurred_at=utc_now(),
+        actor_reference="customer",
+    )
     db.commit()
     return _user(db, workspace, contacts, subject)
 

@@ -1,10 +1,11 @@
 import {
   Activity,
-  Building2,
   ClipboardList,
   Database,
   HardDrive,
   HelpCircle,
+  Mail,
+  MessageSquare,
   ShieldCheck,
   UserRound,
   type LucideIcon,
@@ -26,13 +27,14 @@ const greeting = (hour: number) =>
   hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
 const appGradients = {
+  mail: 'from-[#7fa9c7] via-[#4f7f9f] to-[#325b78]',
+  messages: 'from-[#86b89a] via-[#4f8b6d] to-[#2f654d]',
   data: 'from-[#e2c17f] via-[#c19440] to-[#8a6521]',
-  consent: 'from-[#7fb89a] via-[#4f8b6d] to-[#2f654d]',
+  consent: 'from-[#8fb7a0] via-[#5a9576] to-[#356d54]',
   requests: 'from-[#e0b05b] via-[#c08a2f] to-[#8f651c]',
   activity: 'from-[#7ea3c3] via-[#527b9d] to-[#355b79]',
   sources: 'from-[#9aa7b8] via-[#707f92] to-[#4a5869]',
   profile: 'from-[#5a554c] via-[#3a352e] to-[#24211b]',
-  business: 'from-[#4b453b] via-[#2f2b25] to-[#1c1916]',
   help: 'from-[#c8b296] via-[#a38c6d] to-[#7b664b]',
 } as const
 
@@ -41,17 +43,19 @@ export function PhoneHome({
   workspace,
   now,
   onOpenApp,
-  onOpenBusiness,
 }: {
   profile: UserProfile
   workspace: UserWorkspace
   now: Date
   onOpenApp: (app: PhoneApp) => void
-  onOpenBusiness: () => void
 }) {
   const summary = selectUserSummary(workspace)
   const health = selectConsentHealth(workspace)
   const latestActivity = [...workspace.activity].sort((a, b) => b.at.localeCompare(a.at))[0]
+  const conversations = workspace.conversations ?? []
+  const unread = conversations.reduce((total, entry) => total + entry.unreadForCustomer, 0)
+  const mailCount = conversations.filter((entry) => entry.channel === 'email').length
+  const messageCount = conversations.filter((entry) => entry.channel === 'chat').length
 
   return (
     <div className="relative h-full overflow-hidden text-white">
@@ -65,7 +69,7 @@ export function PhoneHome({
         aria-hidden
       />
 
-      <div className="relative flex h-full flex-col px-5 pb-8 pt-[50px]">
+      <div className="scroll-thin relative flex h-full flex-col overflow-y-auto px-5 pb-7 pt-[50px]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/35">
@@ -105,22 +109,14 @@ export function PhoneHome({
             label="Consent health"
           />
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
-            <button
-              type="button"
-              onClick={() => onOpenApp('consent')}
-              className="text-left"
-            >
+            <button type="button" onClick={() => onOpenApp('consent')} className="text-left">
               <p className="text-[14px] font-semibold text-white tnum">
                 {health.active}
                 <span className="text-[10px] font-normal text-white/35">/{health.total}</span>
               </p>
               <p className="mt-0.5 text-[8.5px] text-white/40">optional consents active</p>
             </button>
-            <button
-              type="button"
-              onClick={() => onOpenApp('requests')}
-              className="text-left"
-            >
+            <button type="button" onClick={() => onOpenApp('requests')} className="text-left">
               <p className="text-[14px] font-semibold text-white tnum">{summary.openRequests}</p>
               <p className="mt-0.5 text-[8.5px] text-white/40">
                 open request{summary.openRequests === 1 ? '' : 's'}
@@ -149,44 +145,57 @@ export function PhoneHome({
           </button>
         )}
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => onOpenApp('requests')}
-            className="rounded-2xl border border-white/10 bg-white/[0.06] p-2.5 text-left backdrop-blur-md transition-colors hover:bg-white/[0.1]"
-          >
-            <div className="flex items-center justify-between">
-              <ClipboardList className="size-4 text-gold-bright/80" />
-              <span className="text-[7.5px] uppercase tracking-[0.12em] text-white/25">
-                Rights
-              </span>
-            </div>
-            <p className="mt-2 text-[9.5px] font-medium text-white/85">Track requests</p>
-            <p className="mt-0.5 text-[8px] text-white/35">
-              {summary.openRequests} open
-              {summary.failedRequests ? ' · 1 needs attention' : ''}
+        {unread > 0 && (
+          <div className="mt-3 flex items-center gap-2 rounded-2xl border border-gold/30 bg-gold/15 px-3 py-2 backdrop-blur-md">
+            <MessageSquare className="size-3.5 text-gold-bright" />
+            <p className="flex-1 text-[9.5px] text-white/80">
+              {unread} unread message{unread === 1 ? '' : 's'} from the business
             </p>
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenApp('data')}
-            className="rounded-2xl border border-white/10 bg-white/[0.06] p-2.5 text-left backdrop-blur-md transition-colors hover:bg-white/[0.1]"
-          >
-            <div className="flex items-center justify-between">
-              <Database className="size-4 text-gold-bright/80" />
-              <span className="text-[7.5px] uppercase tracking-[0.12em] text-white/25">
-                Library
-              </span>
-            </div>
-            <p className="mt-2 text-[9.5px] font-medium text-white/85">Your records</p>
-            <p className="mt-0.5 text-[8px] text-white/35">
-              {summary.records} across {summary.sources} sources
-            </p>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => onOpenApp('messages')}
+              className="text-[9px] font-semibold text-gold-bright"
+            >
+              Open
+            </button>
+          </div>
+        )}
 
-        <div className="mt-auto">
-          <div className="grid grid-cols-4 gap-x-3 gap-y-4 px-1">
+        <div className="mt-auto pt-5">
+          <div className="grid grid-cols-3 gap-x-4 gap-y-5 px-2">
+            <AppTile
+              label="Mail"
+              icon={Mail}
+              gradient={appGradients.mail}
+              onClick={() => onOpenApp('mail')}
+              badge={mailCount}
+            />
+            <AppTile
+              label="Messages"
+              icon={MessageSquare}
+              gradient={appGradients.messages}
+              onClick={() => onOpenApp('messages')}
+              badge={unread}
+            />
+            <AppTile
+              label="My data"
+              icon={Database}
+              gradient={appGradients.data}
+              onClick={() => onOpenApp('data')}
+            />
+            <AppTile
+              label="Consent"
+              icon={ShieldCheck}
+              gradient={appGradients.consent}
+              onClick={() => onOpenApp('consent')}
+            />
+            <AppTile
+              label="Requests"
+              icon={ClipboardList}
+              gradient={appGradients.requests}
+              onClick={() => onOpenApp('requests')}
+              badge={summary.openRequests}
+            />
             <AppTile
               label="Activity"
               icon={Activity}
@@ -200,10 +209,10 @@ export function PhoneHome({
               onClick={() => onOpenApp('sources')}
             />
             <AppTile
-              label="Business"
-              icon={Building2}
-              gradient={appGradients.business}
-              onClick={onOpenBusiness}
+              label="Profile"
+              icon={UserRound}
+              gradient={appGradients.profile}
+              onClick={() => onOpenApp('profile')}
             />
             <AppTile
               label="Help"
@@ -212,40 +221,9 @@ export function PhoneHome({
               onClick={() => onOpenApp('help')}
             />
           </div>
-
-          <div className="mt-5 rounded-[26px] border border-white/12 bg-white/[0.09] px-3 py-3 backdrop-blur-xl">
-            <div className="grid grid-cols-4 gap-2">
-              <AppTile
-                label="My data"
-                icon={Database}
-                gradient={appGradients.data}
-                onClick={() => onOpenApp('data')}
-                compact
-              />
-              <AppTile
-                label="Consent"
-                icon={ShieldCheck}
-                gradient={appGradients.consent}
-                onClick={() => onOpenApp('consent')}
-                compact
-              />
-              <AppTile
-                label="Requests"
-                icon={ClipboardList}
-                gradient={appGradients.requests}
-                onClick={() => onOpenApp('requests')}
-                compact
-                badge={summary.openRequests}
-              />
-              <AppTile
-                label="Profile"
-                icon={UserRound}
-                gradient={appGradients.profile}
-                onClick={() => onOpenApp('profile')}
-                compact
-              />
-            </div>
-          </div>
+          <p className="mt-5 text-center text-[8px] text-white/35">
+            {messageCount} chat threads · all identity and message data is synthetic
+          </p>
         </div>
       </div>
     </div>
@@ -258,14 +236,12 @@ function AppTile({
   gradient,
   onClick,
   badge,
-  compact = false,
 }: {
   label: string
   icon: LucideIcon
   gradient: string
   onClick: () => void
   badge?: number
-  compact?: boolean
 }) {
   return (
     <button
@@ -277,12 +253,11 @@ function AppTile({
       <span className="relative">
         <span
           className={cn(
-            'relative flex items-center justify-center rounded-[14px] border border-white/15 bg-gradient-to-br shadow-[0_8px_18px_-8px_rgba(0,0,0,0.8)] transition-transform group-active:scale-95',
-            compact ? 'size-[46px]' : 'size-[52px]',
+            'relative flex size-[52px] items-center justify-center rounded-[14px] border border-white/15 bg-gradient-to-br shadow-[0_8px_18px_-8px_rgba(0,0,0,0.8)] transition-transform group-active:scale-95',
             gradient,
           )}
         >
-          <Icon className={compact ? 'size-[20px]' : 'size-[23px]'} strokeWidth={1.75} />
+          <Icon className="size-[22px]" strokeWidth={1.75} />
         </span>
         {badge !== undefined && badge > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[8px] font-semibold text-white ring-2 ring-[#1b1813]">
@@ -290,14 +265,7 @@ function AppTile({
           </span>
         )}
       </span>
-      <span
-        className={cn(
-          'max-w-full truncate text-[9px] font-medium text-white/85',
-          compact && 'text-[8.5px]',
-        )}
-      >
-        {label}
-      </span>
+      <span className="max-w-full truncate text-[9px] font-medium text-white/85">{label}</span>
     </button>
   )
 }

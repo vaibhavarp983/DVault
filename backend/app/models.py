@@ -596,3 +596,99 @@ class DemoFailureLog(Base):
     target_ref: Mapped[str | None] = mapped_column(String(120), nullable=True)
     details_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+    __table_args__ = (UniqueConstraint("workspace_id", "thread_key", name="uq_conversation_workspace_thread"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80), index=True)
+    channel: Mapped[str] = mapped_column(String(24), index=True)
+    subject_line: Mapped[str] = mapped_column(String(240), default="")
+    thread_key: Mapped[str] = mapped_column(String(160))
+    status: Mapped[str] = mapped_column(String(24), default="OPEN", index=True)
+    interaction_level: Mapped[str] = mapped_column(String(16), default="LOW", index=True)
+    retention_class: Mapped[str] = mapped_column(String(16), default="FULL", index=True)
+    integrity_state: Mapped[str] = mapped_column(String(16), default="VERIFIED", index=True)
+    message_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class ConversationMessage(Base):
+    __tablename__ = "conversation_messages"
+    __table_args__ = (UniqueConstraint("conversation_id", "sequence", name="uq_conversation_message_sequence"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("conversations.id"), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    direction: Mapped[str] = mapped_column(String(16), index=True)
+    sender: Mapped[str] = mapped_column(String(16), index=True)
+    author_label: Mapped[str] = mapped_column(String(160))
+    subject_line: Mapped[str] = mapped_column(String(240), default="")
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    body_sha256: Mapped[str] = mapped_column(String(64))
+    subject_sha256: Mapped[str] = mapped_column(String(64))
+    previous_hash: Mapped[str] = mapped_column(String(64))
+    message_hash: Mapped[str] = mapped_column(String(64), index=True)
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    retention_state: Mapped[str] = mapped_column(String(16), default="FULL", index=True)
+    redacted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    purged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    read_by_business_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    read_by_customer_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    tamper_state: Mapped[str] = mapped_column(String(16), default="VERIFIED", index=True)
+
+
+class RetentionPolicy(Base):
+    __tablename__ = "retention_policies"
+    __table_args__ = (UniqueConstraint("workspace_id", "version", name="uq_retention_policy_version"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    rules_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_by: Mapped[str] = mapped_column(String(160), default="demo_desktop")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class RetentionRun(Base):
+    __tablename__ = "retention_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    policy_version: Mapped[int] = mapped_column(Integer)
+    trigger: Mapped[str] = mapped_column(String(40), default="MANUAL")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scanned: Mapped[int] = mapped_column(Integer, default=0)
+    retained: Mapped[int] = mapped_column(Integer, default=0)
+    reduced: Mapped[int] = mapped_column(Integer, default=0)
+    purged: Mapped[int] = mapped_column(Integer, default=0)
+    restricted: Mapped[int] = mapped_column(Integer, default=0)
+    skipped_hold: Mapped[int] = mapped_column(Integer, default=0)
+    details_json: Mapped[list] = mapped_column(JSON, default=list)
+
+
+class WithdrawalTier(Base):
+    __tablename__ = "withdrawal_tiers"
+    __table_args__ = (UniqueConstraint("workspace_id", "key", name="uq_withdrawal_tier_workspace_key"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    key: Mapped[str] = mapped_column(String(60))
+    label: Mapped[str] = mapped_column(String(160))
+    description: Mapped[str] = mapped_column(String(500), default="")
+    purposes_json: Mapped[list] = mapped_column(JSON, default=list)
+    effect: Mapped[str] = mapped_column(String(32), default="KEEP_ALL")
+    display_order: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)

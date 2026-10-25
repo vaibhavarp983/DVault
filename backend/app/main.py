@@ -14,7 +14,9 @@ from app.demo_api import router as demo_router
 from app.demo_failures import DemoProblem
 from app.evidence import EvidenceProblem
 from app.ingestion import IngestionProblem
+from app.messaging import MessagingProblem
 from app.policy import PolicyProblem
+from app.retention import RetentionProblem
 from app.rights import RightsProblem
 from app.schemas import ErrorResponse
 
@@ -81,6 +83,16 @@ async def campaign_handler(_: Request, exc: CampaignProblem) -> JSONResponse:
 
 @app.exception_handler(DemoProblem)
 async def demo_handler(_: Request, exc: DemoProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(MessagingProblem)
+async def messaging_handler(_: Request, exc: MessagingProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(RetentionProblem)
+async def retention_handler(_: Request, exc: RetentionProblem) -> JSONResponse:
     return error_response(exc.status_code, exc.code, exc.message)
 
 

@@ -8,6 +8,7 @@ import type {
   PolicyOutcome,
   Sensitivity,
 } from '@/domain/types'
+import { compareDatesDesc } from '@/lib/format'
 import { verifyAuditChain, type IntegrityResult } from '@/lib/integrity'
 
 export const DEMO_NOW = '2026-10-24T17:10:00Z'
@@ -138,7 +139,9 @@ export function selectDocumentLibrary(
       if (filters.customerId && document.customerId !== filters.customerId) return false
       return documentMatchesSearch(document, filters.search ?? '', data)
     })
-    .sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
+    .sort((a, b) =>
+      compareDatesDesc(a.modifiedAt ?? a.createdAt, b.modifiedAt ?? b.createdAt),
+    )
 }
 
 export function selectDocumentsBySource(data: DemoData): Map<string, number> {

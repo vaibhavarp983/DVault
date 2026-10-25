@@ -5,13 +5,36 @@ import type {
   BreachAssessmentPayload,
   BreachDraftPayload,
   CampaignDraftPayload,
+  CreateConversationPayload,
   DemoRepository,
   EvaluatePolicyPayload,
   HoldDraftPayload,
+  RetentionPolicyPayload,
+  RetentionTierPayload,
   RightsDraftPayload,
 } from './repository'
+import type { WithdrawalTierKey } from '@/domain/messaging'
 
 export { ApiError } from './http'
+
+/**
+ * The API can return `modifiedAt: null` for imports that never completed. The UI
+ * treats document dates as strings, so substitute the creation timestamp (or the
+ * snapshot timestamp) before the data reaches any component.
+ */
+function normalizeSnapshot(data: DemoData): DemoData {
+  const fallback = data.generatedAt ?? data.seededAt
+  return {
+    ...data,
+    documents: data.documents.map((document) => ({
+      ...document,
+      modifiedAt:
+        (document.modifiedAt as string | null | undefined) ??
+        document.createdAt ??
+        fallback,
+    })),
+  }
+}
 
 /**
  * Frontend integration repository.
@@ -38,7 +61,7 @@ export class HttpBusinessRepository implements DemoRepository {
     return requestJson<DemoData>(this.baseUrl, `${demoApiPrefix}${path}`, {
       ...options,
       query: { contacts: this.contactMode, ...options.query },
-    })
+    }).then(normalizeSnapshot)
   }
 
   load(): Promise<DemoData> {
@@ -173,5 +196,56 @@ export class HttpBusinessRepository implements DemoRepository {
 
   clearFailures(): Promise<DemoData> {
     return this.request('/failures/clear', { method: 'POST' })
+  }
+
+  createConversation(payload: CreateConversationPayload): Promise<DemoData> {
+    return this.request('/conversations', { method: 'POST', body: payload })
+  }
+
+  sendMessage(conversationId: string, body: string): Promise<DemoData> {
+    return this.request(`/conversations/${encodeURIComponent(conversationId)}/messages`, {
+      method: 'POST',
+      body: { body },
+    })
+  }
+
+  markConversationRead(conversationId: string): Promise<DemoData> {
+    return this.request(`/conversations/${encodeURIComponent(conversationId)}/read`, {
+      method: 'POST',
+    })
+  }
+
+  archiveConversation(conversationId: string): Promise<DemoData> {
+    return this.request(`/conversations/${encodeURIComponent(conversationId)}/archive`, {
+      method: 'POST',
+    })
+  }
+
+  verifyConversation(conversationId: string): Promise<DemoData> {
+    return this.request(`/conversations/${encodeURIComponent(conversationId)}/verify`, {
+      method: 'POST',
+    })
+  }
+
+  verifyMessages(): Promise<DemoData> {
+    return this.request('/message-integrity/verify', { method: 'POST' })
+  }
+
+  updateRetentionPolicy(payload: RetentionPolicyPayload): Promise<DemoData> {
+    return this.request('/retention-policy', { method: 'POST', body: payload })
+  }
+
+  runRetention(): Promise<DemoData> {
+    return this.request('/retention/run', { method: 'POST' })
+  }
+
+  updateWithdrawalTier(
+    key: WithdrawalTierKey,
+    payload: RetentionTierPayload,
+  ): Promise<DemoData> {
+    return this.request(`/withdrawal-tiers/${encodeURIComponent(key)}`, {
+      method: 'POST',
+      body: payload,
+    })
   }
 }

@@ -44,6 +44,10 @@ export function DesktopIcons() {
                 'flex size-11 items-center justify-center rounded-[10px] shadow-[0_6px_16px_-6px_rgba(0,0,0,0.7)] ring-1 ring-white/15',
                 appId === 'vault' &&
                   'bg-gradient-to-br from-[#e0bd78] via-[#c2953f] to-[#8d6520]',
+                appId === 'mail' &&
+                  'bg-gradient-to-br from-[#7fa9c7] via-[#4f7f9f] to-[#325b78]',
+                appId === 'messages' &&
+                  'bg-gradient-to-br from-[#86b89a] via-[#4f8b6d] to-[#2f654d]',
                 appId === 'file-explorer' &&
                   'bg-gradient-to-br from-[#e8c079] via-[#c99a45] to-[#9c7529]',
               )}

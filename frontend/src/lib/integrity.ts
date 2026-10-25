@@ -24,6 +24,45 @@ export function eventDigest(prevHash: string, event: Omit<AuditEvent, 'hash'>): 
   return `${fnv1a(canonical)}${fnv1a(`${canonical}::seal`)}`
 }
 
+export function simulatedHash(input: string): string {
+  let digest = ''
+  for (let index = 0; index < 8; index += 1) {
+    digest += fnv1a(`${index}:${input}`).padStart(8, '0')
+  }
+  return digest
+}
+
+export const GENESIS_HASH = '0'.repeat(64)
+
+export function simulatedMessageHash(input: {
+  workspaceId: string
+  conversationId: string
+  messageId: string
+  channel: string
+  direction: string
+  sender: string
+  sentAt: string
+  bodySha256: string
+  subjectSha256: string
+  previousHash: string
+}): string {
+  return simulatedHash(
+    JSON.stringify({
+      schema: 'dvault.message.v1',
+      workspace_id: input.workspaceId,
+      conversation_id: input.conversationId,
+      message_id: input.messageId,
+      channel: input.channel,
+      direction: input.direction,
+      sender: input.sender,
+      sent_at: input.sentAt,
+      body_sha256: input.bodySha256,
+      subject_sha256: input.subjectSha256,
+      previous_hash: input.previousHash,
+    }),
+  )
+}
+
 export interface IntegrityResult {
   valid: boolean
   verifiedCount: number

@@ -21,6 +21,8 @@ from app.models import (
     BreachIncident,
     Campaign,
     CampaignRecipient,
+    Conversation,
+    ConversationMessage,
     DataQualityFinding,
     DataRecordRef,
     DatasetImport,
@@ -38,11 +40,14 @@ from app.models import (
     MockOutbox,
     PolicyDecision,
     RetentionHold,
+    RetentionPolicy,
+    RetentionRun,
     RightsAccessArtifact,
     RightsRequest,
     RightsRequestAction,
     Source,
     SuppressionRecord,
+    WithdrawalTier,
     Workspace,
 )
 from app.policy import ensure_demo_policy_state
@@ -70,6 +75,11 @@ def _clear_workspace(db: Session, workspace: Workspace) -> list[str]:
     db.execute(delete(Job).where(Job.workspace_id == workspace.id))
     db.execute(delete(RightsRequestAction).where(RightsRequestAction.rights_request_id.in_(request_ids)))
     db.execute(delete(RightsAccessArtifact).where(RightsAccessArtifact.rights_request_id.in_(request_ids)))
+    db.execute(delete(ConversationMessage).where(ConversationMessage.workspace_id == workspace.id))
+    db.execute(delete(Conversation).where(Conversation.workspace_id == workspace.id))
+    db.execute(delete(RetentionRun).where(RetentionRun.workspace_id == workspace.id))
+    db.execute(delete(RetentionPolicy).where(RetentionPolicy.workspace_id == workspace.id))
+    db.execute(delete(WithdrawalTier).where(WithdrawalTier.workspace_id == workspace.id))
     db.execute(delete(RetentionHold).where(RetentionHold.workspace_id == workspace.id))
     db.execute(delete(RightsRequest).where(RightsRequest.workspace_id == workspace.id))
     db.execute(delete(BreachAffectedSource).where(BreachAffectedSource.breach_incident_id.in_(breach_ids)))
