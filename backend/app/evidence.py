@@ -40,6 +40,7 @@ EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 PHONE_RE = re.compile(r"(?<!\d)(?:\+91[\s-]?)?[6-9]\d{9}(?!\d)")
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
 UUID_PATTERN = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.IGNORECASE)
+SUBREF_PATTERN = re.compile(r"subref_[0-9a-f]+", re.IGNORECASE)
 
 
 class EvidenceProblem(Exception):
@@ -69,11 +70,13 @@ EVENT_SCHEMAS: dict[str, tuple[set[str], set[str]]] = {
     "CAMPAIGN_CREATED": ({"campaign_id", "purpose", "channel", "recipient_total"}, set()),
     "CAMPAIGN_PREVIEWED": ({"campaign_id", "decision_summary"}, set()),
     "CAMPAIGN_EXECUTED": ({"campaign_id", "decision_summary", "outbox_total"}, set()),
-    "RIGHTS_REQUEST_CREATED": ({"request_id", "subject_ref", "request_type", "idempotency_key_sha256"}, set()),
+    "RIGHTS_REQUEST_CREATED": ({"request_id", "subject_ref", "request_type", "idempotency_key_sha256"}, {"correction_field", "correction_value_sha256"}),
     "RIGHTS_REQUEST_PLANNED": ({"request_id", "action_total", "source_ids"}, set()),
     "RIGHTS_ACTION_COMPLETED": ({"request_id", "action_id", "source_id", "action_type", "status", "attempt_count"}, {"erased_record_count"}),
     "RIGHTS_REQUEST_COMPLETED": ({"request_id", "status", "action_summary"}, set()),
     "ACCESS_ARTIFACT_READY": ({"request_id", "artifact_id", "status", "source_keys"}, set()),
+    "PORTABILITY_BUNDLE_READY": ({"request_id", "artifact_id", "status", "source_keys"}, set()),
+    "RECTIFICATION_APPLIED": ({"request_id", "action_id", "source_id", "field", "record_count", "value_sha256"}, set()),
     "RETENTION_HOLD_CREATED": ({"hold_id", "reason_code"}, {"subject_ref", "source_id", "record_ref_id", "expires_at"}),
     "RETENTION_HOLD_RELEASED": ({"hold_id", "released_at"}, {"note_sha256"}),
     "AUDIT_CHECKPOINT_CREATED": ({"checkpoint_id", "sequence", "head_hash", "key_id"}, set()),
@@ -131,7 +134,7 @@ def _assert_no_raw_identifiers(value: object, path: str) -> None:
     if isinstance(value, str):
         if value.startswith("subref_") or HEX64_RE.match(value):
             return
-        scrubbed = UUID_PATTERN.sub("", value)
+        scrubbed = SUBREF_PATTERN.sub("", UUID_PATTERN.sub("", value))
         if EMAIL_RE.search(scrubbed) or PHONE_RE.search(scrubbed):
             raise EvidenceProblem(
                 "AUDIT_PAYLOAD_CONTAINS_RAW_IDENTIFIER",

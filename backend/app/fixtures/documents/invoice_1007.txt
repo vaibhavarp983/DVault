@@ -1,4 +1,11 @@
 SYNTHETIC DEMO DATA ONLY
 Invoice: INV-1007
-Service: Foundation Mathematics enrolment
+Bill to: Aarav Mehta
+Invoice date: 2026-10-22
+Due date: 2026-11-05
 Status: Paid
+Item: Foundation Mathematics enrolment | Qty: 1 | Unit price: 1200.00 | Amount: 1200.00
+Item: Practice workbook set | Qty: 2 | Unit price: 150.00 | Amount: 300.00
+Subtotal: 1500.00
+Tax: 270.00
+Total: 1770.00

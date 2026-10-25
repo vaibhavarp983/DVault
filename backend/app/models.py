@@ -85,6 +85,11 @@ class Document(Base):
     document_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     processing_status: Mapped[str] = mapped_column(String(32))
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    review_status: Mapped[str] = mapped_column(String(24), default="AUTO", index=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    preview_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    primary_subject_ref: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
@@ -331,6 +336,9 @@ class RightsRequest(Base):
     correlation_id: Mapped[str] = mapped_column(String(80), index=True)
     requester_reference: Mapped[str | None] = mapped_column(String(160), nullable=True)
     summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    reference: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    correction_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     planned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -382,7 +390,9 @@ class RightsAccessArtifact(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     rights_request_id: Mapped[str] = mapped_column(ForeignKey("rights_requests.id"), index=True)
     status: Mapped[str] = mapped_column(String(32), index=True, default="BUILDING")
+    kind: Mapped[str] = mapped_column(String(32), default="ACCESS_SUMMARY", index=True)
     source_summaries_json: Mapped[list] = mapped_column(JSON, default=list)
+    bundle_json: Mapped[dict] = mapped_column(JSON, default=dict)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -552,3 +562,37 @@ class BreachAffectedSource(Base):
     affected_record_count: Mapped[int] = mapped_column(Integer, default=0)
     affected_subject_count: Mapped[int] = mapped_column(Integer, default=0)
     note: Mapped[str | None] = mapped_column(String(320), nullable=True)
+
+
+class DemoCustomer(Base):
+    __tablename__ = "demo_customers"
+    __table_args__ = (UniqueConstraint("workspace_id", "subject_ref", name="uq_demo_customer_subject"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80), index=True)
+    display_name: Mapped[str] = mapped_column(String(160))
+    company: Mapped[str] = mapped_column(String(160))
+    email_masked: Mapped[str] = mapped_column(String(160), default="")
+    phone_masked: Mapped[str] = mapped_column(String(80), default="")
+    segment: Mapped[str] = mapped_column(String(32), default="Consumer")
+    status: Mapped[str] = mapped_column(String(32), default="active")
+    owner: Mapped[str] = mapped_column(String(120), default="Operations")
+    location: Mapped[str] = mapped_column(String(160), default="")
+    since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    source_ids_json: Mapped[list] = mapped_column(JSON, default=list)
+    primary_source_id: Mapped[str | None] = mapped_column(ForeignKey("sources.id"), nullable=True)
+    primary_source_record_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class DemoFailureLog(Base):
+    __tablename__ = "demo_failure_log"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(40), index=True)
+    target_ref: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    details_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)

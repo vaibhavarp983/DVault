@@ -34,28 +34,29 @@ def _upsert(session: Session, model: type, lookup: dict, values: dict):
     return existing
 
 
-def seed_database(session: Session) -> dict[str, int | str]:
+def seed_workspace(session: Session, workspace: Workspace | None = None) -> dict:
     manifest, checksum = _manifest()
     workspace_spec = manifest["workspace"]
-    workspace = _upsert(
-        session,
-        Workspace,
-        {"slug": workspace_spec["slug"]},
-        workspace_spec,
-    )
+    if workspace is None:
+        workspace = _upsert(
+            session,
+            Workspace,
+            {"slug": workspace_spec["slug"]},
+            workspace_spec,
+        )
     session.add(workspace)
     session.flush()
 
-    source_ids: dict[str, str] = {}
+    sources_by_key: dict[str, Source] = {}
     for source_spec in manifest["sources"]:
         values = {**source_spec, "workspace_id": workspace.id, "last_synced_at": _parse_timestamp(source_spec["last_synced_at"])}
         source = _upsert(session, Source, {"workspace_id": workspace.id, "source_key": source_spec["source_key"]}, values)
         session.add(source)
         session.flush()
-        source_ids[source.source_key] = source.id
+        sources_by_key[source.source_key] = source
 
     for document_spec in manifest["documents"]:
-        source_id = source_ids[document_spec["source_key"]]
+        source_id = sources_by_key[document_spec["source_key"]].id
         values = {
             "id": document_spec["id"],
             "workspace_id": workspace.id,
@@ -95,8 +96,14 @@ def seed_database(session: Session) -> dict[str, int | str]:
     )
     session.add(contract)
     ensure_default_policy(session, workspace.id)
+    session.flush()
+    return {"workspace": workspace, "sources": sources_by_key, "manifest": manifest}
+
+
+def seed_database(session: Session) -> dict[str, int | str]:
+    result = seed_workspace(session)
     session.commit()
-    return {"workspace_id": workspace.id, "sources": len(source_ids), "documents": len(manifest["documents"])}
+    return {"workspace_id": result["workspace"].id, "sources": len(result["sources"]), "documents": len(result["manifest"]["documents"])}
 
 
 def main() -> None:

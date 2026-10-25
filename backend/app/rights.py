@@ -24,8 +24,14 @@ from app.models import (
 )
 from app.source_store import SourceStore
 
-REQUEST_TYPES = {"ACCESS", "ERASURE", "WITHDRAWAL"}
-ACTION_BY_REQUEST_TYPE = {"ACCESS": "ACCESS_EXPORT", "ERASURE": "ERASURE", "WITHDRAWAL": "WITHDRAWAL"}
+REQUEST_TYPES = {"ACCESS", "ERASURE", "WITHDRAWAL", "PORTABILITY", "RECTIFICATION"}
+ACTION_BY_REQUEST_TYPE = {
+    "ACCESS": "ACCESS_EXPORT",
+    "ERASURE": "ERASURE",
+    "WITHDRAWAL": "WITHDRAWAL",
+    "PORTABILITY": "PORTABILITY_EXPORT",
+    "RECTIFICATION": "RECTIFICATION",
+}
 RETRYABLE_STATUSES = {"PENDING", "FAILED", "RESTRICTED"}
 
 
@@ -44,6 +50,28 @@ def request_actions(db: Session, request_id: str) -> list[RightsRequestAction]:
     return list(db.scalars(select(RightsRequestAction).where(RightsRequestAction.rights_request_id == request_id).order_by(RightsRequestAction.planned_at, RightsRequestAction.id)))
 
 
+def _next_reference(db: Session, workspace_id: str, now: datetime) -> str:
+    total = db.scalar(select(func.count(RightsRequest.id)).where(RightsRequest.workspace_id == workspace_id)) or 0
+    for offset in range(1, 1000):
+        candidate = f"RR-{now.year}-{total + offset:04d}"
+        exists = db.scalar(select(RightsRequest.id).where(RightsRequest.workspace_id == workspace_id, RightsRequest.reference == candidate))
+        if exists is None:
+            return candidate
+    raise RightsProblem("RIGHTS_REFERENCE_EXHAUSTED", "Could not allocate a rights request reference.", 409)
+
+
+def _normalise_correction(request_type: str, correction: dict | None) -> dict:
+    if request_type != "RECTIFICATION":
+        return {}
+    if not correction or not str(correction.get("field", "")).strip() or not str(correction.get("requested_value", "")).strip():
+        raise RightsProblem("RECTIFICATION_DETAILS_REQUIRED", "A rectification request needs a field and the requested value.", 422)
+    return {
+        "field": str(correction["field"]).strip()[:120],
+        "requested_value": str(correction["requested_value"]).strip()[:500],
+        "reason": str(correction.get("reason", "")).strip()[:500] or None,
+    }
+
+
 def create_request(
     db: Session,
     workspace: Workspace,
@@ -51,13 +79,18 @@ def create_request(
     request_type: str,
     idempotency_key: str,
     requester_reference: str | None,
+    correction: dict | None = None,
 ) -> tuple[RightsRequest, bool]:
     normalized_type = request_type.upper()
+    if normalized_type == "OBJECTION":
+        normalized_type = "WITHDRAWAL"
     if normalized_type not in REQUEST_TYPES:
-        raise RightsProblem("INVALID_RIGHTS_REQUEST_TYPE", "request_type must be ACCESS, ERASURE, or WITHDRAWAL.", 422)
+        raise RightsProblem("INVALID_RIGHTS_REQUEST_TYPE", "request_type must be ACCESS, ERASURE, WITHDRAWAL, PORTABILITY, or RECTIFICATION.", 422)
     existing = db.scalar(select(RightsRequest).where(RightsRequest.workspace_id == workspace.id, RightsRequest.idempotency_key == idempotency_key))
     if existing is not None:
         return existing, True
+    normalized_correction = _normalise_correction(normalized_type, correction)
+    created_at = now_utc()
     request = RightsRequest(
         workspace_id=workspace.id,
         subject_ref=subject_ref,
@@ -67,19 +100,27 @@ def create_request(
         correlation_id=f"rights:{uuid4()}",
         requester_reference=requester_reference,
         summary_json={"message": "Request created and awaiting planning."},
+        reference=_next_reference(db, workspace.id, created_at),
+        due_at=created_at + timedelta(days=30),
+        correction_json=normalized_correction,
+        created_at=created_at,
     )
     db.add(request)
     db.flush()
+    payload = {
+        "request_id": request.id,
+        "subject_ref": subject_ref,
+        "request_type": normalized_type,
+        "idempotency_key_sha256": sha256_hex(idempotency_key),
+    }
+    if normalized_correction:
+        payload["correction_field"] = normalized_correction["field"]
+        payload["correction_value_sha256"] = sha256_hex(normalized_correction["requested_value"])
     append_event(
         db,
         workspace.id,
         "RIGHTS_REQUEST_CREATED",
-        {
-            "request_id": request.id,
-            "subject_ref": subject_ref,
-            "request_type": normalized_type,
-            "idempotency_key_sha256": sha256_hex(idempotency_key),
-        },
+        payload,
         entity_type="rights_request",
         entity_ref=request.id,
     )
@@ -172,6 +213,48 @@ def plan_request(db: Session, workspace: Workspace, request: RightsRequest) -> R
     return request
 
 
+def create_hold(
+    db: Session,
+    workspace: Workspace,
+    subject_ref: str | None,
+    source_id: str | None,
+    record_ref_id: str | None,
+    reason_code: str,
+    review_note: str | None = None,
+    expires_at: datetime | None = None,
+) -> RetentionHold:
+    if not any((subject_ref, source_id, record_ref_id)):
+        raise RightsProblem("RETENTION_HOLD_SCOPE_REQUIRED", "A retention hold must include a subject, source, or record scope.", 422)
+    hold = RetentionHold(
+        workspace_id=workspace.id,
+        subject_ref=subject_ref,
+        source_id=source_id,
+        record_ref_id=record_ref_id,
+        status="ACTIVE",
+        reason_code=reason_code,
+        review_note=review_note,
+        expires_at=expires_at,
+    )
+    db.add(hold)
+    db.flush()
+    append_event(
+        db,
+        workspace.id,
+        "RETENTION_HOLD_CREATED",
+        {
+            "hold_id": hold.id,
+            "reason_code": hold.reason_code,
+            "subject_ref": hold.subject_ref,
+            "source_id": hold.source_id,
+            "record_ref_id": hold.record_ref_id,
+            "expires_at": iso_utc(hold.expires_at) if hold.expires_at else None,
+        },
+        entity_type="retention_hold",
+        entity_ref=hold.id,
+    )
+    return hold
+
+
 def release_hold(hold: RetentionHold, note: str | None) -> RetentionHold:
     if hold.status != "ACTIVE":
         raise RightsProblem("RETENTION_HOLD_NOT_ACTIVE", "Only active retention holds can be released.")
@@ -262,11 +345,60 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
     try:
         if action.action_type == "ACCESS_EXPORT":
             action.result_json = {"source_key": source.source_key, "record_count": len(records), "summary": "Synthetic source access summary compiled."}
+        elif action.action_type == "PORTABILITY_EXPORT":
+            store = SourceStore(source.id)
+            exported = store.read_records([record.source_record_id for record in records])
+            action.result_json = {
+                "source_key": source.source_key,
+                "record_count": len(exported),
+                "bundle": {
+                    "source_id": source.id,
+                    "source_key": source.source_key,
+                    "record_count": len(exported),
+                    "records": [exported[key] for key in sorted(exported)],
+                },
+            }
         elif action.action_type == "ERASURE":
             deleted = SourceStore(source.id).delete_records([record.source_record_id for record in records])
             for record in records:
                 db.delete(record)
             action.result_json = {"source_key": source.source_key, "planned_record_count": action.affected_record_count, "erased_record_count": deleted}
+        elif action.action_type == "RECTIFICATION":
+            correction = request.correction_json or {}
+            field = str(correction.get("field", ""))
+            requested_value = str(correction.get("requested_value", ""))
+            store = SourceStore(source.id)
+            updated = sum(1 for record in records if store.update_record_field(record.source_record_id, field, requested_value))
+            if updated == 0:
+                action.status = "FAILED"
+                action.retry_eligible = False
+                action.error_code = "RECTIFICATION_FIELD_NOT_FOUND"
+                action.error_message = "No source record for this subject contains the requested field."
+                action.result_json = {"source_key": source.source_key, "field": field, "updated_record_count": 0}
+                action.completed_at = now_utc()
+                _event(db, job, "ACTION_FAILED", "Rectification could not find the requested field.", action, {"code": action.error_code})
+                _emit_action_event(db, request, action)
+                return
+            action.result_json = {"source_key": source.source_key, "field": field, "updated_record_count": updated}
+            from app.demo_projection import invalidate_document_previews, refresh_customer_contact
+
+            invalidate_document_previews(db, {record.dataset_import_id for record in records})
+            refresh_customer_contact(db, workspace, request.subject_ref)
+            append_event(
+                db,
+                workspace.id,
+                "RECTIFICATION_APPLIED",
+                {
+                    "request_id": request.id,
+                    "action_id": action.id,
+                    "source_id": source.id,
+                    "field": field,
+                    "record_count": updated,
+                    "value_sha256": sha256_hex(requested_value),
+                },
+                entity_type="rights_request_action",
+                entity_ref=action.id,
+            )
         elif action.action_type == "WITHDRAWAL":
             authorizations = list(db.scalars(select(AuthorizationRecord).where(AuthorizationRecord.workspace_id == workspace.id, AuthorizationRecord.subject_ref == request.subject_ref, AuthorizationRecord.status == "ACTIVE")))
             withdrawn = 0
@@ -316,26 +448,39 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
         _emit_action_event(db, request, action)
 
 
-def _refresh_access_artifact(db: Session, request: RightsRequest, actions: list[RightsRequestAction]) -> None:
-    if request.request_type != "ACCESS":
+def _refresh_artifact(db: Session, request: RightsRequest, actions: list[RightsRequestAction]) -> None:
+    if request.request_type not in {"ACCESS", "PORTABILITY"}:
         return
     successful = [action for action in actions if action.status == "SUCCEEDED"]
     if not successful:
         return
-    artifact = db.scalar(select(RightsAccessArtifact).where(RightsAccessArtifact.rights_request_id == request.id))
+    kind = "PORTABILITY_BUNDLE" if request.request_type == "PORTABILITY" else "ACCESS_SUMMARY"
     summaries = [action.result_json for action in successful]
+    bundle: dict = {}
+    if kind == "PORTABILITY_BUNDLE":
+        bundle = {
+            "schema": "dvault-portability-v1",
+            "request_id": request.id,
+            "subject_ref": request.subject_ref,
+            "exported_at": iso_utc(now_utc()),
+            "sources": [summary.get("bundle", {}) for summary in summaries],
+        }
+    artifact = db.scalar(select(RightsAccessArtifact).where(RightsAccessArtifact.rights_request_id == request.id))
     if artifact is None:
-        artifact = RightsAccessArtifact(rights_request_id=request.id, status="READY" if request.status == "COMPLETE" else "PARTIAL", source_summaries_json=summaries, expires_at=now_utc() + timedelta(days=7), completed_at=now_utc())
+        artifact = RightsAccessArtifact(rights_request_id=request.id, status="READY" if request.status == "COMPLETE" else "PARTIAL", kind=kind, source_summaries_json=summaries, bundle_json=bundle, expires_at=now_utc() + timedelta(days=7), completed_at=now_utc())
         db.add(artifact)
     else:
         artifact.status = "READY" if request.status == "COMPLETE" else "PARTIAL"
+        artifact.kind = kind
         artifact.source_summaries_json = summaries
+        artifact.bundle_json = bundle
         artifact.completed_at = now_utc()
     db.flush()
+    event_type = "PORTABILITY_BUNDLE_READY" if kind == "PORTABILITY_BUNDLE" else "ACCESS_ARTIFACT_READY"
     append_event(
         db,
         request.workspace_id,
-        "ACCESS_ARTIFACT_READY",
+        event_type,
         {
             "request_id": request.id,
             "artifact_id": artifact.id,
@@ -367,7 +512,7 @@ def execute_request(db: Session, workspace: Workspace, request: RightsRequest, r
         _run_action(db, workspace, request, action, job)
     actions = request_actions(db, request.id)
     _set_request_status(db, request, actions)
-    _refresh_access_artifact(db, request, actions)
+    _refresh_artifact(db, request, actions)
     job.action_completed = len([action for action in eligible if action.status == "SUCCEEDED"])
     job.status = request.status
     job.completed_at = now_utc()

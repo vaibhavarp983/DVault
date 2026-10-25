@@ -1,4 +1,11 @@
 SYNTHETIC DEMO DATA ONLY
 Purchase order: PO-303
 Supplier: Northstar Learning Supplies
-Item: Practice workbooks
+Order date: 2026-10-21
+Delivery date: 2026-10-28
+Status: Approved
+Item: Practice workbooks | Qty: 40 | Unit price: 12.50 | Amount: 500.00
+Item: Chemistry lab consumables | Qty: 12 | Unit price: 35.00 | Amount: 420.00
+Subtotal: 920.00
+Tax: 165.60
+Total: 1085.60

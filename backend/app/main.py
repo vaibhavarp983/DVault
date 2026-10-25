@@ -3,10 +3,15 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api import ConflictError, ForbiddenError, NotFoundError, ServiceUnavailableError, router
 from app.breach import BreachProblem
+from app.campaigns import CampaignProblem
+from app.config import get_settings
+from app.demo_api import router as demo_router
+from app.demo_failures import DemoProblem
 from app.evidence import EvidenceProblem
 from app.ingestion import IngestionProblem
 from app.policy import PolicyProblem
@@ -18,7 +23,15 @@ app = FastAPI(
     version="1.0.0",
     description="Synthetic, local backend foundation for the DVault demo workspace.",
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=get_settings().allowed_origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(router)
+app.include_router(demo_router)
 
 
 def error_response(status_code: int, code: str, message: str, details: dict[str, Any] | None = None) -> JSONResponse:
@@ -58,6 +71,16 @@ async def evidence_handler(_: Request, exc: EvidenceProblem) -> JSONResponse:
 
 @app.exception_handler(BreachProblem)
 async def breach_handler(_: Request, exc: BreachProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(CampaignProblem)
+async def campaign_handler(_: Request, exc: CampaignProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(DemoProblem)
+async def demo_handler(_: Request, exc: DemoProblem) -> JSONResponse:
     return error_response(exc.status_code, exc.code, exc.message)
 
 

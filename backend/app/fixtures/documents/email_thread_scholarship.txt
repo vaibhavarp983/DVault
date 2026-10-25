@@ -1,3 +1,17 @@
 SYNTHETIC DEMO DATA ONLY
+From: Aarav Mehta <aarav.mehta@example.test>
+To: Aranya Coaching <admissions@aranya.example>
 Subject: Scholarship enquiry
-The applicant asked for the eligibility criteria and the next counselling slot.
+Date: 2026-10-23T09:12:00Z
+Direction: inbound
+
+Hello, could you share the eligibility criteria and the next counselling slot?
+
+---
+From: Aranya Coaching <admissions@aranya.example>
+To: Aarav Mehta <aarav.mehta@example.test>
+Subject: Re: Scholarship enquiry
+Date: 2026-10-23T14:00:00Z
+Direction: outbound
+
+Thanks for your message. The eligibility criteria and the next counselling slots are attached. Please reply if you would like to book a call.

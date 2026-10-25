@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.evidence import append_event
 from app.models import AuthorizationRecord, DataRecordRef, DatasetImport, Policy, PolicyDecision, SuppressionRecord, Workspace
 
+__all__ = ["POLICY_KEY", "POLICY_RULES", "DecisionResult", "PolicyProblem", "active_policy", "ensure_default_policy", "ensure_demo_policy_state", "evaluate_marketing", "masked_subject_ref"]
+
 POLICY_KEY = "marketing-authorization"
 POLICY_RULES = {
     "required_operation": "managed_marketing",
@@ -79,6 +81,24 @@ def ensure_demo_policy_state(db: Session, workspace_id: str) -> None:
         suppressed = db.scalar(select(SuppressionRecord).where(SuppressionRecord.workspace_id == workspace_id, SuppressionRecord.subject_ref == refs[2], SuppressionRecord.purpose == "marketing", SuppressionRecord.channel == "whatsapp", SuppressionRecord.source == "synthetic Phase 3 demo seed"))
         if suppressed is None:
             db.add(SuppressionRecord(workspace_id=workspace_id, subject_ref=refs[2], purpose="marketing", channel="whatsapp", status="ACTIVE", source="synthetic Phase 3 demo seed", effective_at=now))
+    db.flush()
+    workspace = db.scalar(select(Workspace).where(Workspace.id == workspace_id))
+    if workspace is None:
+        return
+    for subject_ref in refs[:6]:
+        correlation_id = f"demo:seed:{subject_ref}"
+        existing = db.scalar(select(PolicyDecision.id).where(
+            PolicyDecision.workspace_id == workspace_id,
+            PolicyDecision.correlation_id == correlation_id,
+        ))
+        if existing is not None:
+            continue
+        record = db.scalar(select(DataRecordRef).where(
+            DataRecordRef.workspace_id == workspace_id,
+            DataRecordRef.subject_ref == subject_ref,
+        ).limit(1))
+        evaluate_marketing(db, workspace, subject_ref, "marketing", "whatsapp", record=record, correlation_id=correlation_id)
+    db.flush()
 
 
 def _context_fingerprint(operation: str, subject_ref: str | None, purpose: str | None, channel: str | None, match_status: str | None) -> str:

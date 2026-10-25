@@ -3,19 +3,22 @@ import hashlib
 import hmac
 import io
 import re
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 
 from openpyxl import load_workbook
-from sqlalchemy import select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.document_preview import build_preview
 from app.evidence import append_event
 from app.models import (
     DataQualityFinding,
     DataRecordRef,
+    DemoCustomer,
     DatasetImport,
     Document,
     DocumentExtraction,
@@ -27,10 +30,10 @@ from app.models import (
 )
 from app.source_store import SourceStore
 
+from app.privacy import EMAIL_PATTERN, PHONE_PATTERN, mask_value, normalized_email, normalized_phone
+
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_STRUCTURED_ROWS = 10_000
-EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
-PHONE_PATTERN = re.compile(r"(?<!\d)(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}(?!\d)")
 
 
 class IngestionProblem(Exception):
@@ -79,6 +82,8 @@ def parse_payload(filename: str, payload: bytes) -> ParsedPayload:
         raise IngestionProblem("EMPTY_FILE", "The uploaded file is empty.")
     if len(payload) > MAX_UPLOAD_BYTES:
         raise IngestionProblem("FILE_TOO_LARGE", "The uploaded file exceeds the 10 MiB limit.", 413)
+    if payload.startswith(b"PK\x03\x04"):
+        return parse_xlsx(payload)
     suffix = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if suffix == "csv":
         return parse_csv(payload)
@@ -112,22 +117,27 @@ def parse_xlsx(payload: bytes) -> ParsedPayload:
         workbook = load_workbook(io.BytesIO(payload), read_only=True, data_only=True)
     except Exception as exc:
         raise IngestionProblem("INVALID_XLSX", "The XLSX file could not be opened.") from exc
-    if workbook.security.lockStructure:
+    if workbook.security is not None and workbook.security.lockStructure:
         raise IngestionProblem("PASSWORD_PROTECTED_XLSX", "Password-protected spreadsheets are not supported.")
     sheet = next((candidate for candidate in workbook.worksheets if candidate.sheet_state == "visible"), None)
     if sheet is None:
         raise IngestionProblem("EMPTY_XLSX", "The spreadsheet has no visible worksheet.")
     iterator = sheet.iter_rows(values_only=True)
-    header_row = next(iterator, None)
-    headers = [str(value).strip() if value is not None else "" for value in (header_row or [])]
+    header_row: tuple = ()
+    for values in iterator:
+        if any(value is not None and str(value).strip() for value in values):
+            header_row = values
+            break
+    columns = [(index, str(value).strip()) for index, value in enumerate(header_row) if value is not None and str(value).strip()]
+    headers = [header for _, header in columns]
     validate_headers(headers)
     rows: list[dict] = []
     for values in iterator:
-        if all(value is None for value in values):
+        if all(value is None or str(value).strip() == "" for value in values):
             continue
-        if len(values) > len(headers) and any(value is not None for value in values[len(headers):]):
+        if len(values) > len(header_row) and any(value is not None for value in values[len(header_row):]):
             raise IngestionProblem("INCONSISTENT_XLSX_ROW", "The spreadsheet contains values beyond the header range.")
-        rows.append({header: normalize_value(values[index] if index < len(values) else None) for index, header in enumerate(headers)})
+        rows.append({header: normalize_value(values[index] if index < len(values) else None) for index, header in columns})
         if len(rows) > MAX_STRUCTURED_ROWS:
             raise IngestionProblem("ROW_LIMIT_EXCEEDED", "The import exceeds the 10,000-row limit.", 413)
     return ParsedPayload(kind="tabular", rows=rows, headers=headers)
@@ -159,37 +169,6 @@ def normalize_value(value: object | None) -> str | None:
 
 def hmac_token(token_type: str, value: str) -> str:
     return hmac.new(get_settings().hmac_secret.encode(), f"{token_type}:{value}".encode(), hashlib.sha256).hexdigest()
-
-
-def normalized_email(value: str) -> str | None:
-    value = value.strip().lower()
-    return value if EMAIL_PATTERN.fullmatch(value) else None
-
-
-def normalized_phone(value: str) -> str | None:
-    digits = re.sub(r"\D", "", value)
-    if len(digits) == 10 and digits[0] in "6789":
-        return f"+91{digits}"
-    if len(digits) == 12 and digits.startswith("91") and digits[2] in "6789":
-        return f"+{digits}"
-    return None
-
-
-def mask_value(value: str, classification: str) -> str:
-    if classification == "DIRECT_IDENTIFIER":
-        email = normalized_email(value)
-        if email:
-            local, domain = email.split("@", 1)
-            return f"{local[:1]}***@{domain}"
-        phone = normalized_phone(value)
-        if phone:
-            return f"******{phone[-4:]}"
-        return "[redacted identifier]"
-    if classification in {"PERSON_NAME", "ADDRESS", "DATE_OF_BIRTH"}:
-        return "[redacted personal field]"
-    if classification == "COMMUNICATION_CONTENT":
-        return "[redacted content]"
-    return "[available in source]"
 
 
 def profile_fields(payload: ParsedPayload) -> list[Profile]:
@@ -269,6 +248,10 @@ def redacted_text_preview(text: str) -> tuple[str, dict[str, int]]:
 
 
 def find_or_create_document(db: Session, workspace: Workspace, source: Source, filename: str, digest: str, kind: str) -> Document:
+    document_key = f"import-{digest[:16]}"
+    document = db.scalar(select(Document).where(Document.workspace_id == workspace.id, Document.document_key == document_key))
+    if document is not None:
+        return document
     document = db.scalar(
         select(Document)
         .where(Document.workspace_id == workspace.id, Document.source_id == source.id, Document.filename == filename)
@@ -279,7 +262,7 @@ def find_or_create_document(db: Session, workspace: Workspace, source: Source, f
     return Document(
         workspace_id=workspace.id,
         source_id=source.id,
-        document_key=f"import-{digest[:16]}",
+        document_key=document_key,
         synthetic_label="synthetic_demo_data",
         document_type="structured_dataset" if kind == "tabular" else "text_document",
         filename=filename,
@@ -359,22 +342,106 @@ def add_quality_findings(db: Session, workspace: Workspace, source: Source, impo
         add("AMBIGUOUS_MATCH_CANDIDATE", "warning", candidate_count)
 
 
+def _row_value(row: dict, keys: list[str]) -> str | None:
+    for key in keys:
+        value = row.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return None
+
+
+def _upsert_demo_customer(db: Session, workspace: Workspace, source: Source, record: DataRecordRef, row: dict) -> None:
+    if not record.subject_ref:
+        return
+    existing = db.scalar(select(DemoCustomer).where(
+        DemoCustomer.workspace_id == workspace.id,
+        DemoCustomer.subject_ref == record.subject_ref,
+    ))
+    fallback = f"Subject {record.subject_ref[-6:].upper()}"
+    name = _row_value(row, ["customer_name", "name", "full_name", "applicant", "contact_name"]) or fallback
+    company = _row_value(row, ["company", "organisation", "organization"]) or "Individual"
+    email = _row_value(row, ["email", "email_address", "contact_email"])
+    phone = _row_value(row, ["mobile", "phone", "phone_number", "contact_number"])
+    stage = (_row_value(row, ["legacy_status", "lead_stage", "status"]) or "").lower()
+    status = "closed" if stage in {"archived", "closed"} else "at-risk" if stage in {"follow_up", "follow-up", "paused"} else "active"
+    location = _row_value(row, ["location", "city", "region"]) or ""
+    owner = str((source.configuration_metadata or {}).get("owner") or "Operations")
+    source_ids = set(existing.source_ids_json or []) if existing else set()
+    source_ids.add(source.id)
+    if existing is None:
+        db.add(DemoCustomer(
+            workspace_id=workspace.id,
+            subject_ref=record.subject_ref,
+            display_name=name,
+            company=company,
+            email_masked=mask_value(email, "DIRECT_IDENTIFIER") if email else "",
+            phone_masked=mask_value(phone, "DIRECT_IDENTIFIER") if phone else "",
+            segment="SMB" if company != "Individual" else "Consumer",
+            status=status,
+            owner=owner,
+            location=location,
+            since=record.created_at,
+            source_ids_json=sorted(source_ids),
+            primary_source_id=source.id,
+            primary_source_record_id=record.source_record_id,
+        ))
+    else:
+        if existing.display_name.startswith("Subject ") and not name.startswith("Subject "):
+            existing.display_name = name
+            existing.primary_source_id = source.id
+            existing.primary_source_record_id = record.source_record_id
+        existing.company = existing.company or company
+        existing.email_masked = existing.email_masked or (mask_value(email, "DIRECT_IDENTIFIER") if email else "")
+        existing.phone_masked = existing.phone_masked or (mask_value(phone, "DIRECT_IDENTIFIER") if phone else "")
+        existing.status = status
+        existing.owner = owner
+        existing.location = existing.location or location
+        existing.source_ids_json = sorted(source_ids)
+    db.flush()
+
+
+def _reset_failed_import(db: Session, import_row: DatasetImport) -> None:
+    record_ids = list(db.scalars(select(DataRecordRef.id).where(DataRecordRef.dataset_import_id == import_row.id)))
+    if record_ids:
+        db.execute(delete(MatchCandidate).where(or_(
+            MatchCandidate.left_record_ref_id.in_(record_ids),
+            MatchCandidate.right_record_ref_id.in_(record_ids),
+        )))
+        db.execute(delete(IdentityToken).where(IdentityToken.record_ref_id.in_(record_ids)))
+        db.execute(delete(DataRecordRef).where(DataRecordRef.id.in_(record_ids)))
+    db.execute(delete(ImportFieldProfile).where(ImportFieldProfile.dataset_import_id == import_row.id))
+    db.execute(delete(DataQualityFinding).where(DataQualityFinding.dataset_import_id == import_row.id))
+    db.execute(delete(DocumentExtraction).where(DocumentExtraction.dataset_import_id == import_row.id))
+    SourceStore(import_row.source_id).delete_import(import_row.id)
+    import_row.status = "RECEIVED"
+    import_row.row_count = None
+    import_row.error_code = None
+    import_row.error_message = None
+    import_row.completed_at = None
+    db.flush()
+
+
 def ingest_file(db: Session, workspace: Workspace, source: Source, filename: str, payload: bytes) -> tuple[DatasetImport, bool]:
     digest = hashlib.sha256(payload).hexdigest()
     existing = db.scalar(select(DatasetImport).where(DatasetImport.source_id == source.id, DatasetImport.content_sha256 == digest))
-    if existing is not None:
+    if existing is not None and existing.status != "FAILED":
         return existing, True
 
-    import_row: DatasetImport | None = None
+    import_row: DatasetImport | None = existing
     store: SourceStore | None = None
     try:
+        if import_row is not None:
+            _reset_failed_import(db, import_row)
         suffix = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
         provisional_kind = "tabular" if suffix in {"csv", "xlsx"} else "text"
         document = find_or_create_document(db, workspace, source, filename, digest, provisional_kind)
         db.add(document)
         db.flush()
-        import_row = DatasetImport(workspace_id=workspace.id, source_id=source.id, document_id=document.id, filename=filename, content_type=infer_content_type(filename), byte_size=len(payload), content_sha256=digest, status="RECEIVED")
-        db.add(import_row)
+        if import_row is None:
+            import_row = DatasetImport(workspace_id=workspace.id, source_id=source.id, document_id=document.id, filename=filename, content_type=infer_content_type(filename), byte_size=len(payload), content_sha256=digest, status="RECEIVED")
+            db.add(import_row)
+        else:
+            import_row.document_id = document.id
         db.flush()
         parsed = parse_payload(filename, payload)
         import_row.status = "VALIDATING"
@@ -389,7 +456,12 @@ def ingest_file(db: Session, workspace: Workspace, source: Source, filename: str
         for ordinal, profile in enumerate(profiles, start=1):
             db.add(ImportFieldProfile(dataset_import_id=import_row.id, ordinal=ordinal, source_field=profile.source_field, normalized_field=profile.normalized_field, primitive_type=profile.primitive_type, classification=profile.classification, confidence=profile.confidence, detection_reason=profile.detection_reason, non_null_count=profile.non_null_count, distinct_count=profile.distinct_count, masked_samples_json=profile.masked_samples, mapping_status=profile.mapping_status))
 
+        columns = [
+            {"key": profile.normalized_field, "label": profile.source_field, "type": profile.primitive_type, "classification": profile.classification}
+            for profile in profiles
+        ]
         candidate_count = 0
+        record_pairs: list[tuple[DataRecordRef, dict]] = []
         for source_record_id, _, row in records:
             direct = direct_tokens(row, profiles)
             known_refs = _existing_subject_refs(db, workspace.id, direct)
@@ -405,15 +477,33 @@ def ingest_file(db: Session, workspace: Workspace, source: Source, filename: str
             record = DataRecordRef(workspace_id=workspace.id, source_id=source.id, dataset_import_id=import_row.id, source_record_id=source_record_id, subject_ref=subject_ref, record_type="tabular_row" if parsed.kind == "tabular" else "text_document", match_status=match_status, field_metadata_json=field_metadata)
             db.add(record)
             db.flush()
+            record_pairs.append((record, row))
             weak = name_tokens(row, profiles)
             for token_type, token in direct + weak:
                 db.add(IdentityToken(workspace_id=workspace.id, record_ref_id=record.id, token_type=token_type, hmac_token=token))
             db.flush()
             candidate_count += create_match_candidates(db, workspace, record, weak)
 
+        for record, row in record_pairs:
+            _upsert_demo_customer(db, workspace, source, record, row)
+
+        masked_text = None
         if parsed.text:
-            preview, entities = redacted_text_preview(parsed.text)
-            db.add(DocumentExtraction(document_id=document.id, dataset_import_id=import_row.id, extraction_status="COMPLETE", character_count=len(parsed.text), redacted_text_preview=preview, entity_summary_json=entities, warnings_json=[]))
+            masked_text, entities = redacted_text_preview(parsed.text)
+            db.add(DocumentExtraction(document_id=document.id, dataset_import_id=import_row.id, extraction_status="COMPLETE", character_count=len(parsed.text), redacted_text_preview=masked_text, entity_summary_json=entities, warnings_json=[]))
+        subject_counts = Counter(record.subject_ref for record, _ in record_pairs if record.subject_ref)
+        document.primary_subject_ref = subject_counts.most_common(1)[0][0] if subject_counts else None
+        confidences = [profile.confidence for profile in profiles if profile.confidence is not None]
+        document.confidence = round(sum(confidences) / len(confidences), 3) if confidences else None
+        missing_fields = [profile.source_field for profile in profiles if profile.mapping_status != "MAPPED" or profile.non_null_count == 0]
+        document.review_status = "NEEDS_REVIEW" if (document.confidence is not None and document.confidence < 0.8) or missing_fields else "AUTO"
+        document.preview_json = build_preview(
+            document.document_type,
+            text=masked_text if parsed.kind != "tabular" else None,
+            rows=[row for _, _, row in records] if parsed.kind == "tabular" else None,
+            columns=columns if parsed.kind == "tabular" else None,
+            synthetic_contacts=False,
+        )
         import_row.status = "COMPLETE"
         import_row.row_count = len(records)
         import_row.completed_at = datetime.now(timezone.utc)

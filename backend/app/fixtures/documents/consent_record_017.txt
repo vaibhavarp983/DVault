@@ -1,4 +1,11 @@
 SYNTHETIC DEMO DATA ONLY
 Authorization record: CON-017
 Subject reference: SUB-0002
+Subject name: Diya Iyer
 Purpose: course updates
+Channel: email
+Notice version: demo-v1
+Captured at: 2026-10-20T14:10:00Z
+Expires at: 2027-10-20T14:10:00Z
+Status: active
+Evidence ref: CONSENT-CON-017

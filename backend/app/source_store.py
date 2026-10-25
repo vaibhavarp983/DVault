@@ -57,6 +57,51 @@ class SourceStore:
             row = connection.execute("SELECT record_json FROM source_records WHERE source_record_id = ?", (source_record_id,)).fetchone()
         return json.loads(row["record_json"]) if row else None
 
+    def read_records(self, source_record_ids: list[str]) -> dict[str, dict]:
+        if not source_record_ids:
+            return {}
+        placeholders = ", ".join("?" for _ in source_record_ids)
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT source_record_id, record_json FROM source_records WHERE source_record_id IN ({placeholders})",
+                source_record_ids,
+            ).fetchall()
+        return {row["source_record_id"]: json.loads(row["record_json"]) for row in rows}
+
+    def read_import_records(self, dataset_import_id: str) -> list[dict]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT record_json FROM source_records WHERE dataset_import_id = ? ORDER BY row_index",
+                (dataset_import_id,),
+            ).fetchall()
+        return [json.loads(row["record_json"]) for row in rows]
+
+    def read_document_text(self, document_id: str) -> str | None:
+        with self._connect() as connection:
+            row = connection.execute("SELECT content_text FROM source_documents WHERE document_id = ?", (document_id,)).fetchone()
+        return row["content_text"] if row else None
+
+    def update_record_field(self, source_record_id: str, field: str, value: str) -> bool:
+        with self._connect() as connection:
+            row = connection.execute("SELECT record_json FROM source_records WHERE source_record_id = ?", (source_record_id,)).fetchone()
+            if row is None:
+                return False
+            record = json.loads(row["record_json"])
+            if field not in record:
+                return False
+            record[field] = value
+            connection.execute(
+                "UPDATE source_records SET record_json = ? WHERE source_record_id = ?",
+                (json.dumps(record, sort_keys=True), source_record_id),
+            )
+        return True
+
+    def reset(self) -> None:
+        with self._connect() as connection:
+            connection.execute("DROP TABLE IF EXISTS source_records")
+            connection.execute("DROP TABLE IF EXISTS source_documents")
+        self._initialize()
+
     def delete_import(self, dataset_import_id: str) -> None:
         with self._connect() as connection:
             connection.execute("DELETE FROM source_records WHERE dataset_import_id = ?", (dataset_import_id,))

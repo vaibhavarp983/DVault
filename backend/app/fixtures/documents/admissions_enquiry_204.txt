@@ -1,4 +1,8 @@
 SYNTHETIC DEMO DATA ONLY
 Enquiry: ENQ-204
-Subject reference: SUB-0001
+Applicant: Aarav Mehta
+Email: aarav.mehta@example.test
+Mobile: 9000010001
 Interest: Foundation Mathematics
+Message: Please share the weekend timetable and fee details.
+Consent: marketing=yes

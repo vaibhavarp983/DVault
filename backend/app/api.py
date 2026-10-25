@@ -8,6 +8,11 @@ from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.campaigns import (
+    create_campaign as create_campaign_service,
+    execute_campaign as execute_campaign_service,
+    preview_campaign as preview_campaign_service,
+)
 from app.breach import (
     DISCLAIMER as BREACH_DISCLAIMER,
     affected_counts,
@@ -44,7 +49,15 @@ from app.models import (
     SuppressionRecord, Workspace,
 )
 from app.policy import PolicyProblem, ensure_default_policy, evaluate_marketing, masked_subject_ref
-from app.rights import RightsProblem, create_request as create_rights_request, execute_request, plan_request, release_hold, request_actions
+from app.rights import (
+    RightsProblem,
+    create_hold as create_hold_service,
+    create_request as create_rights_request,
+    execute_request,
+    plan_request,
+    release_hold,
+    request_actions,
+)
 from app.schemas import (
     AccessArtifactResponse,
     AuditCheckpointCreateRequest, AuditCheckpointResponse, AuditCheckpointStatus, AuditChainSummary,
@@ -189,7 +202,8 @@ def rights_request_response(db: Session, item: RightsRequest) -> RightsRequestRe
     return RightsRequestResponse(
         id=item.id, subject_ref=item.subject_ref, request_type=item.request_type, status=item.status,
         idempotency_key=item.idempotency_key, correlation_id=item.correlation_id,
-        requester_reference=item.requester_reference, summary=item.summary_json, created_at=item.created_at,
+        requester_reference=item.requester_reference, summary=item.summary_json, reference=item.reference,
+        due_at=item.due_at, correction_field=(item.correction_json or {}).get("field"), created_at=item.created_at,
         planned_at=item.planned_at, completed_at=item.completed_at, updated_at=item.updated_at,
         source_action_total=len(actions), source_action_completed=completed, unresolved_action_total=len(actions) - completed,
     )
@@ -458,7 +472,15 @@ def resolve_rights_request(workspace: Workspace, request_id: str, db: Session) -
 @router.post("/workspaces/{workspace_ref}/rights-requests", response_model=RightsRequestResponse, status_code=201, tags=["rights"])
 def create_rights_request_endpoint(workspace_ref: str, payload: RightsRequestCreateRequest, response: Response, db: Session = Depends(get_db)) -> RightsRequestResponse:
     workspace = resolve_workspace(workspace_ref, db)
-    request, reused = create_rights_request(db, workspace, payload.subject_ref, payload.request_type, payload.idempotency_key, payload.requester_reference)
+    request, reused = create_rights_request(
+        db,
+        workspace,
+        payload.subject_ref,
+        payload.request_type,
+        payload.idempotency_key,
+        payload.requester_reference,
+        payload.correction.model_dump() if payload.correction else None,
+    )
     db.commit()
     db.refresh(request)
     if reused:
@@ -522,14 +544,49 @@ def list_rights_actions(workspace_ref: str, request_id: str, page: int = Query(1
     return RightsActionPageResponse(items=[rights_action_response(action) for action in window], page=page, page_size=page_size, total=total)
 
 
-@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}/access-artifact", response_model=AccessArtifactResponse, tags=["rights"])
-def get_access_artifact(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> AccessArtifactResponse:
-    workspace = resolve_workspace(workspace_ref, db)
+def artifact_response(artifact: RightsAccessArtifact) -> AccessArtifactResponse:
+    return AccessArtifactResponse(
+        id=artifact.id, rights_request_id=artifact.rights_request_id, status=artifact.status, kind=artifact.kind,
+        source_summaries=artifact.source_summaries_json, bundle=artifact.bundle_json or {},
+        expires_at=artifact.expires_at, created_at=artifact.created_at, completed_at=artifact.completed_at,
+    )
+
+
+def artifact_for_request(workspace: Workspace, request_id: str, db: Session) -> tuple[RightsRequest, RightsAccessArtifact]:
     request = resolve_rights_request(workspace, request_id, db)
     artifact = db.scalar(select(RightsAccessArtifact).where(RightsAccessArtifact.rights_request_id == request.id))
     if artifact is None:
         raise NotFoundError("rights_access_artifact")
-    return AccessArtifactResponse(id=artifact.id, rights_request_id=artifact.rights_request_id, status=artifact.status, source_summaries=artifact.source_summaries_json, expires_at=artifact.expires_at, created_at=artifact.created_at, completed_at=artifact.completed_at)
+    return request, artifact
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}/access-artifact", response_model=AccessArtifactResponse, tags=["rights"])
+def get_access_artifact(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> AccessArtifactResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    _, artifact = artifact_for_request(workspace, request_id, db)
+    return artifact_response(artifact)
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}/artifact", response_model=AccessArtifactResponse, tags=["rights"])
+def get_rights_artifact(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> AccessArtifactResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    _, artifact = artifact_for_request(workspace, request_id, db)
+    return artifact_response(artifact)
+
+
+@router.get("/workspaces/{workspace_ref}/rights-requests/{request_id}/artifact/download", tags=["rights"])
+def download_rights_artifact(workspace_ref: str, request_id: str, db: Session = Depends(get_db)) -> Response:
+    workspace = resolve_workspace(workspace_ref, db)
+    request, artifact = artifact_for_request(workspace, request_id, db)
+    if artifact.kind != "PORTABILITY_BUNDLE":
+        raise RightsProblem("PORTABILITY_BUNDLE_NOT_AVAILABLE", "This request does not have a downloadable portability bundle.", 409)
+    payload = json.dumps(artifact.bundle_json, sort_keys=True, indent=2)
+    filename = f"{request.reference or request.id}-portability.json"
+    return Response(
+        content=payload,
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/workspaces/{workspace_ref}/retention-holds", response_model=RetentionHoldResponse, status_code=201, tags=["rights"])
@@ -541,23 +598,15 @@ def create_retention_hold(workspace_ref: str, payload: RetentionHoldCreateReques
         raise NotFoundError("source")
     if payload.record_ref_id and db.scalar(select(DataRecordRef.id).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == payload.record_ref_id)) is None:
         raise NotFoundError("record")
-    hold = RetentionHold(workspace_id=workspace.id, subject_ref=payload.subject_ref, source_id=payload.source_id, record_ref_id=payload.record_ref_id, status="ACTIVE", reason_code=payload.reason_code, review_note=payload.review_note, expires_at=payload.expires_at)
-    db.add(hold)
-    db.flush()
-    append_event(
+    hold = create_hold_service(
         db,
-        workspace.id,
-        "RETENTION_HOLD_CREATED",
-        {
-            "hold_id": hold.id,
-            "reason_code": hold.reason_code,
-            "subject_ref": hold.subject_ref,
-            "source_id": hold.source_id,
-            "record_ref_id": hold.record_ref_id,
-            "expires_at": iso_utc(hold.expires_at) if hold.expires_at else None,
-        },
-        entity_type="retention_hold",
-        entity_ref=hold.id,
+        workspace,
+        payload.subject_ref,
+        payload.source_id,
+        payload.record_ref_id,
+        payload.reason_code,
+        payload.review_note,
+        payload.expires_at,
     )
     db.commit()
     db.refresh(hold)
@@ -925,31 +974,15 @@ def resolve_campaign(workspace: Workspace, campaign_id: str, db: Session) -> Cam
 @router.post("/workspaces/{workspace_ref}/campaigns", response_model=CampaignResponse, status_code=201, tags=["message-gate"])
 def create_campaign(workspace_ref: str, payload: CampaignCreateRequest, db: Session = Depends(get_db)) -> CampaignResponse:
     workspace = resolve_workspace(workspace_ref, db)
-    if bool(payload.dataset_import_id) == bool(payload.record_ids):
-        raise PolicyProblem("INVALID_CAMPAIGN_RECIPIENTS", "Provide exactly one of dataset_import_id or record_ids.")
-    if payload.dataset_import_id:
-        imported = resolve_import(workspace, payload.dataset_import_id, db)
-        if imported.status != "COMPLETE":
-            raise PolicyProblem("IMPORT_NOT_READY", "Campaign recipients must come from a completed import.")
-        records = list(db.scalars(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.dataset_import_id == imported.id)))
-    else:
-        records = list(db.scalars(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id.in_(payload.record_ids))))
-        if len(records) != len(set(payload.record_ids)):
-            raise PolicyProblem("RECORD_NOT_FOUND", "One or more campaign recipients were not found.")
-    if not records:
-        raise PolicyProblem("CAMPAIGN_RECIPIENTS_EMPTY", "The selected campaign has no recipients.")
-    campaign = Campaign(workspace_id=workspace.id, name=payload.name, purpose=payload.purpose, channel=payload.channel, message_template_id=payload.message_template_id, dataset_import_id=payload.dataset_import_id, status="DRAFT")
-    db.add(campaign)
-    db.flush()
-    for record in records:
-        db.add(CampaignRecipient(campaign_id=campaign.id, record_ref_id=record.id, subject_ref=record.subject_ref))
-    append_event(
+    campaign = create_campaign_service(
         db,
-        workspace.id,
-        "CAMPAIGN_CREATED",
-        {"campaign_id": campaign.id, "purpose": campaign.purpose, "channel": campaign.channel, "recipient_total": len(records)},
-        entity_type="campaign",
-        entity_ref=campaign.id,
+        workspace,
+        name=payload.name,
+        purpose=payload.purpose,
+        channel=payload.channel,
+        message_template_id=payload.message_template_id,
+        dataset_import_id=payload.dataset_import_id,
+        record_ids=payload.record_ids,
     )
     db.commit()
     db.refresh(campaign)
@@ -973,30 +1006,7 @@ def get_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get
 @router.post("/workspaces/{workspace_ref}/campaigns/{campaign_id}/preview", response_model=CampaignResponse, tags=["message-gate"])
 def preview_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get_db)) -> CampaignResponse:
     workspace = resolve_workspace(workspace_ref, db)
-    campaign = resolve_campaign(workspace, campaign_id, db)
-    if campaign.status == "EXECUTED":
-        raise ConflictError("CAMPAIGN_ALREADY_EXECUTED", "An executed campaign cannot be previewed again.")
-    recipients = list(db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id)))
-    for recipient in recipients:
-        record = db.scalar(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == recipient.record_ref_id))
-        result = evaluate_marketing(db, workspace, recipient.subject_ref, campaign.purpose, campaign.channel, record=record, correlation_id=f"campaign:{campaign.id}:preview:{recipient.id}")
-        recipient.preview_decision = result.decision
-        recipient.preview_reason_codes_json = result.reason_codes
-        recipient.previewed_at = result.evaluated_at
-    campaign.status = "PREVIEWED"
-    campaign.previewed_at = datetime.now(timezone.utc)
-    preview_summary: dict[str, int] = {}
-    for recipient in recipients:
-        if recipient.preview_decision:
-            preview_summary[recipient.preview_decision] = preview_summary.get(recipient.preview_decision, 0) + 1
-    append_event(
-        db,
-        workspace.id,
-        "CAMPAIGN_PREVIEWED",
-        {"campaign_id": campaign.id, "decision_summary": preview_summary},
-        entity_type="campaign",
-        entity_ref=campaign.id,
-    )
+    campaign = preview_campaign_service(db, workspace, resolve_campaign(workspace, campaign_id, db))
     db.commit()
     db.refresh(campaign)
     return campaign_response(db, campaign)
@@ -1014,33 +1024,7 @@ def list_campaign_recipients(workspace_ref: str, campaign_id: str, page: int = Q
 @router.post("/workspaces/{workspace_ref}/campaigns/{campaign_id}/execute", response_model=CampaignResponse, tags=["message-gate"])
 def execute_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get_db)) -> CampaignResponse:
     workspace = resolve_workspace(workspace_ref, db)
-    ensure_evidence_trusted(db, workspace.id, "managed_dispatch")
-    campaign = resolve_campaign(workspace, campaign_id, db)
-    if campaign.status != "PREVIEWED":
-        raise ConflictError("CAMPAIGN_PREVIEW_REQUIRED", "Campaign execution requires a completed preview.")
-    recipients = list(db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id)))
-    outbox_total = 0
-    execution_summary: dict[str, int] = {}
-    for recipient in recipients:
-        record = db.scalar(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == recipient.record_ref_id))
-        result = evaluate_marketing(db, workspace, recipient.subject_ref, campaign.purpose, campaign.channel, record=record, correlation_id=f"campaign:{campaign.id}:execute:{recipient.id}")
-        recipient.execution_decision = result.decision
-        recipient.execution_reason_codes_json = result.reason_codes
-        recipient.executed_at = result.evaluated_at
-        execution_summary[result.decision] = execution_summary.get(result.decision, 0) + 1
-        if result.decision == "ALLOW" and recipient.subject_ref:
-            db.add(MockOutbox(workspace_id=workspace.id, campaign_id=campaign.id, campaign_recipient_id=recipient.id, subject_ref=recipient.subject_ref, masked_recipient_reference=masked_subject_ref(recipient.subject_ref), message_template_id=campaign.message_template_id, dispatch_status="QUEUED"))
-            outbox_total += 1
-    campaign.status = "EXECUTED"
-    campaign.executed_at = datetime.now(timezone.utc)
-    append_event(
-        db,
-        workspace.id,
-        "CAMPAIGN_EXECUTED",
-        {"campaign_id": campaign.id, "decision_summary": execution_summary, "outbox_total": outbox_total},
-        entity_type="campaign",
-        entity_ref=campaign.id,
-    )
+    campaign = execute_campaign_service(db, workspace, resolve_campaign(workspace, campaign_id, db))
     db.commit()
     db.refresh(campaign)
     return campaign_response(db, campaign)

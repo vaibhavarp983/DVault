@@ -316,11 +316,18 @@ class OutboxPageResponse(APIModel):
     total: int = Field(ge=0)
 
 
+class RightsCorrectionRequest(BaseModel):
+    field: str = Field(min_length=1, max_length=120)
+    requested_value: str = Field(min_length=1, max_length=500)
+    reason: str | None = Field(default=None, max_length=500)
+
+
 class RightsRequestCreateRequest(BaseModel):
     subject_ref: str = Field(min_length=1, max_length=80)
     request_type: str = Field(min_length=1, max_length=24)
     idempotency_key: str = Field(min_length=1, max_length=120)
     requester_reference: str | None = Field(default=None, max_length=160)
+    correction: RightsCorrectionRequest | None = None
 
 
 class RightsRequestResponse(APIModel):
@@ -332,6 +339,9 @@ class RightsRequestResponse(APIModel):
     correlation_id: str
     requester_reference: str | None
     summary: dict[str, Any]
+    reference: str | None = None
+    due_at: datetime | None = None
+    correction_field: str | None = None
     created_at: datetime
     planned_at: datetime | None
     completed_at: datetime | None
@@ -450,7 +460,9 @@ class AccessArtifactResponse(APIModel):
     id: str
     rights_request_id: str
     status: str
+    kind: str = "ACCESS_SUMMARY"
     source_summaries: list[dict[str, Any]]
+    bundle: dict[str, Any] = Field(default_factory=dict)
     expires_at: datetime | None
     created_at: datetime
     completed_at: datetime | None

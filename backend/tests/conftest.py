@@ -23,9 +23,16 @@ def test_database(tmp_path, monkeypatch: pytest.MonkeyPatch):
     settings = Settings(
         source_store_dir=tmp_path / "source_stores",
         audit_signing_key_path=tmp_path / "keys" / "audit_signing_key.pem",
+        enable_demo_controls=True,
+        enable_failure_injection=True,
+        demo_show_synthetic_contacts=True,
     )
     monkeypatch.setattr("app.source_store.get_settings", lambda: settings)
     monkeypatch.setattr("app.evidence.get_settings", lambda: settings)
+    monkeypatch.setattr("app.demo_api.get_settings", lambda: settings)
+    monkeypatch.setattr("app.demo_projection.get_settings", lambda: settings)
+    monkeypatch.setattr("app.demo_failures.get_settings", lambda: settings)
+    monkeypatch.setattr("app.demo_reset.get_settings", lambda: settings)
     with TestSession() as session:
         seed_database(session)
     yield TestSession, test_engine

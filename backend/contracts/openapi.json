@@ -3,6 +3,11 @@
     "schemas": {
       "AccessArtifactResponse": {
         "properties": {
+          "bundle": {
+            "additionalProperties": true,
+            "title": "Bundle",
+            "type": "object"
+          },
           "completed_at": {
             "anyOf": [
               {
@@ -34,6 +39,11 @@
           },
           "id": {
             "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "ACCESS_SUMMARY",
+            "title": "Kind",
             "type": "string"
           },
           "rights_request_id": {
@@ -870,6 +880,25 @@
           "file"
         ],
         "title": "Body_create_import_api_v1_workspaces__workspace_ref__sources__source_id__imports_post",
+        "type": "object"
+      },
+      "Body_import_demo_file_api_v1_workspaces__workspace_ref__demo_imports_post": {
+        "properties": {
+          "file": {
+            "format": "binary",
+            "title": "File",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "file"
+        ],
+        "title": "Body_import_demo_file_api_v1_workspaces__workspace_ref__demo_imports_post",
         "type": "object"
       },
       "BreachAffectedResponse": {
@@ -2313,6 +2342,2595 @@
           "total"
         ],
         "title": "DataQualityPageResponse",
+        "type": "object"
+      },
+      "DemoActivePolicyResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/DemoPolicyRule"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "version",
+          "status",
+          "rules"
+        ],
+        "title": "DemoActivePolicyResponse",
+        "type": "object"
+      },
+      "DemoArtifactRefResponse": {
+        "properties": {
+          "downloadUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Downloadurl"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status"
+        ],
+        "title": "DemoArtifactRefResponse",
+        "type": "object"
+      },
+      "DemoAuditEventResponse": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "prevHash": {
+            "title": "Prevhash",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "action",
+          "target",
+          "category",
+          "severity",
+          "hash",
+          "prevHash"
+        ],
+        "title": "DemoAuditEventResponse",
+        "type": "object"
+      },
+      "DemoBreachAssessmentRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "notifiable": {
+            "title": "Notifiable",
+            "type": "boolean"
+          },
+          "reasonCode": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Reasoncode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notifiable",
+          "reasonCode"
+        ],
+        "title": "DemoBreachAssessmentRequest",
+        "type": "object"
+      },
+      "DemoBreachCloseRequest": {
+        "properties": {
+          "note": {
+            "maxLength": 500,
+            "minLength": 8,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "DemoBreachCloseRequest",
+        "type": "object"
+      },
+      "DemoBreachCreateRequest": {
+        "properties": {
+          "containmentSummary": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Containmentsummary"
+          },
+          "description": {
+            "maxLength": 4000,
+            "minLength": 3,
+            "title": "Description",
+            "type": "string"
+          },
+          "detectedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detectedat"
+          },
+          "severity": {
+            "default": "MEDIUM",
+            "maxLength": 16,
+            "title": "Severity",
+            "type": "string"
+          },
+          "sourceIds": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Sourceids",
+            "type": "array"
+          },
+          "subjectRefs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Subjectrefs",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description"
+        ],
+        "title": "DemoBreachCreateRequest",
+        "type": "object"
+      },
+      "DemoBreachResponse": {
+        "properties": {
+          "affectedSources": {
+            "title": "Affectedsources",
+            "type": "integer"
+          },
+          "affectedSubjects": {
+            "title": "Affectedsubjects",
+            "type": "integer"
+          },
+          "assessmentDueAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessmentdueat"
+          },
+          "assessmentTimeliness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessmenttimeliness"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "detectedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detectedat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "incidentRef": {
+            "title": "Incidentref",
+            "type": "string"
+          },
+          "linkedIntegrityIncidentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedintegrityincidentid"
+          },
+          "notifiable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifiable"
+          },
+          "notificationStatus": {
+            "title": "Notificationstatus",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "scopeStatus": {
+            "title": "Scopestatus",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timerState": {
+            "title": "Timerstate",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "incidentRef",
+          "title",
+          "description",
+          "origin",
+          "severity",
+          "status",
+          "scopeStatus",
+          "detectedAt",
+          "assessmentDueAt",
+          "timerState",
+          "notifiable",
+          "assessmentTimeliness",
+          "affectedSubjects",
+          "affectedSources",
+          "notificationStatus"
+        ],
+        "title": "DemoBreachResponse",
+        "type": "object"
+      },
+      "DemoCampaignCreateRequest": {
+        "properties": {
+          "channel": {
+            "default": "whatsapp",
+            "maxLength": 48,
+            "title": "Channel",
+            "type": "string"
+          },
+          "importId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Importid"
+          },
+          "name": {
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          },
+          "purpose": {
+            "default": "marketing",
+            "maxLength": 80,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "recordIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordids"
+          },
+          "subjectRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subjectref"
+          },
+          "templateId": {
+            "default": "course-update-v1",
+            "maxLength": 100,
+            "title": "Templateid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "DemoCampaignCreateRequest",
+        "type": "object"
+      },
+      "DemoCampaignRecipientResponse": {
+        "properties": {
+          "campaignId": {
+            "title": "Campaignid",
+            "type": "string"
+          },
+          "customerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customerid"
+          },
+          "decision": {
+            "title": "Decision",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campaignId",
+          "customerId",
+          "email",
+          "decision",
+          "reason",
+          "status"
+        ],
+        "title": "DemoCampaignRecipientResponse",
+        "type": "object"
+      },
+      "DemoCampaignResponse": {
+        "properties": {
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "scheduledFor": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduledfor"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "channel",
+          "scheduledFor",
+          "status",
+          "message"
+        ],
+        "title": "DemoCampaignResponse",
+        "type": "object"
+      },
+      "DemoCheckpointRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "DemoCheckpointRequest",
+        "type": "object"
+      },
+      "DemoCheckpointResponse": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "eventsCovered": {
+            "title": "Eventscovered",
+            "type": "integer"
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "eventsCovered",
+          "hash",
+          "status"
+        ],
+        "title": "DemoCheckpointResponse",
+        "type": "object"
+      },
+      "DemoConsentRequest": {
+        "properties": {
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "granted"
+        ],
+        "title": "DemoConsentRequest",
+        "type": "object"
+      },
+      "DemoCorrectionRequest": {
+        "properties": {
+          "field": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Field",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requestedValue": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Requestedvalue",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "requestedValue"
+        ],
+        "title": "DemoCorrectionRequest",
+        "type": "object"
+      },
+      "DemoCustomerResponse": {
+        "properties": {
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "segment": {
+            "title": "Segment",
+            "type": "string"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "sourceIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sourceids",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "synthetic": {
+            "title": "Synthetic",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "company",
+          "email",
+          "phone",
+          "location",
+          "segment",
+          "since",
+          "status",
+          "owner",
+          "sourceIds",
+          "synthetic"
+        ],
+        "title": "DemoCustomerResponse",
+        "type": "object"
+      },
+      "DemoDocumentResponse": {
+        "properties": {
+          "collection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collection"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "customerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customerid"
+          },
+          "customerIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Customerids",
+            "type": "array"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/DemoFieldResponse"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "importState": {
+            "title": "Importstate",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "modifiedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modifiedat"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "preview": {
+            "additionalProperties": true,
+            "title": "Preview",
+            "type": "object"
+          },
+          "reviewStatus": {
+            "title": "Reviewstatus",
+            "type": "string"
+          },
+          "schema": {
+            "items": {
+              "$ref": "#/components/schemas/DemoSchemaFieldResponse"
+            },
+            "title": "Schema",
+            "type": "array"
+          },
+          "sensitivity": {
+            "title": "Sensitivity",
+            "type": "string"
+          },
+          "sizeKb": {
+            "title": "Sizekb",
+            "type": "number"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "string"
+          },
+          "subjectCount": {
+            "title": "Subjectcount",
+            "type": "integer"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "sourceId",
+          "customerId",
+          "customerIds",
+          "subjectCount",
+          "sizeKb",
+          "modifiedAt",
+          "createdAt",
+          "importState",
+          "sensitivity",
+          "reviewStatus",
+          "confidence",
+          "tags",
+          "snippet",
+          "fields",
+          "schema",
+          "missing",
+          "preview"
+        ],
+        "title": "DemoDocumentResponse",
+        "type": "object"
+      },
+      "DemoEvaluateRequest": {
+        "properties": {
+          "channel": {
+            "maxLength": 48,
+            "minLength": 1,
+            "title": "Channel",
+            "type": "string"
+          },
+          "purpose": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Purpose",
+            "type": "string"
+          },
+          "recordRefId": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordrefid"
+          },
+          "subjectRef": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Subjectref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectRef",
+          "purpose",
+          "channel"
+        ],
+        "title": "DemoEvaluateRequest",
+        "type": "object"
+      },
+      "DemoFailureRequest": {
+        "properties": {
+          "kind": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Kind",
+            "type": "string"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "DemoFailureRequest",
+        "type": "object"
+      },
+      "DemoFieldResponse": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "field",
+          "category",
+          "confidence"
+        ],
+        "title": "DemoFieldResponse",
+        "type": "object"
+      },
+      "DemoFlagsResponse": {
+        "properties": {
+          "failureInjectionEnabled": {
+            "title": "Failureinjectionenabled",
+            "type": "boolean"
+          },
+          "resetAvailable": {
+            "title": "Resetavailable",
+            "type": "boolean"
+          },
+          "syntheticContactsAvailable": {
+            "title": "Syntheticcontactsavailable",
+            "type": "boolean"
+          },
+          "userSubjectRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usersubjectref"
+          }
+        },
+        "required": [
+          "failureInjectionEnabled",
+          "resetAvailable",
+          "syntheticContactsAvailable",
+          "userSubjectRef"
+        ],
+        "title": "DemoFlagsResponse",
+        "type": "object"
+      },
+      "DemoHoldCreateRequest": {
+        "properties": {
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
+          "reasonCode": {
+            "default": "LEGAL_OBLIGATION",
+            "maxLength": 80,
+            "title": "Reasoncode",
+            "type": "string"
+          },
+          "recordRefId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordrefid"
+          },
+          "reviewNote": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewnote"
+          },
+          "sourceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceid"
+          },
+          "subjectRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subjectref"
+          }
+        },
+        "title": "DemoHoldCreateRequest",
+        "type": "object"
+      },
+      "DemoHoldReleaseRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "DemoHoldReleaseRequest",
+        "type": "object"
+      },
+      "DemoHoldResponse": {
+        "properties": {
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reasonCode": {
+            "title": "Reasoncode",
+            "type": "string"
+          },
+          "recordRefId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recordrefid"
+          },
+          "reviewNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewnote"
+          },
+          "sourceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceid"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subjectRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subjectref"
+          }
+        },
+        "required": [
+          "id",
+          "subjectRef",
+          "sourceId",
+          "recordRefId",
+          "reasonCode",
+          "status",
+          "expiresAt",
+          "createdAt"
+        ],
+        "title": "DemoHoldResponse",
+        "type": "object"
+      },
+      "DemoIncidentResolveRequest": {
+        "properties": {
+          "decision": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Decision",
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 8,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "note"
+        ],
+        "title": "DemoIncidentResolveRequest",
+        "type": "object"
+      },
+      "DemoIncidentResponse": {
+        "properties": {
+          "detectedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detectedat"
+          },
+          "firstFailureSequence": {
+            "title": "Firstfailuresequence",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "linkedBreachIncidentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedbreachincidentid"
+          },
+          "reasonCode": {
+            "title": "Reasoncode",
+            "type": "string"
+          },
+          "reasonMessage": {
+            "title": "Reasonmessage",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "firstFailureSequence",
+          "reasonCode",
+          "reasonMessage",
+          "detectedAt"
+        ],
+        "title": "DemoIncidentResponse",
+        "type": "object"
+      },
+      "DemoIntegrityResponse": {
+        "properties": {
+          "breachCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Breachcounts",
+            "type": "object"
+          },
+          "checkpointStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkpointstatus"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "evidenceState": {
+            "title": "Evidencestate",
+            "type": "string"
+          },
+          "failureSequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failuresequence"
+          },
+          "failures": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "gateState": {
+            "title": "Gatestate",
+            "type": "string"
+          },
+          "incidentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incidentid"
+          },
+          "incidents": {
+            "items": {
+              "$ref": "#/components/schemas/DemoIncidentResponse"
+            },
+            "title": "Incidents",
+            "type": "array"
+          },
+          "reasonCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoncode"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "trustedThroughSequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trustedthroughsequence"
+          },
+          "verifiedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verifiedat"
+          }
+        },
+        "required": [
+          "status",
+          "evidenceState",
+          "trustedThroughSequence",
+          "failureSequence",
+          "reasonCode",
+          "failures",
+          "gateState",
+          "incidentId",
+          "checkpointStatus",
+          "verifiedAt",
+          "disclaimer",
+          "incidents",
+          "breachCounts"
+        ],
+        "title": "DemoIntegrityResponse",
+        "type": "object"
+      },
+      "DemoJobResponse": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "failureSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failuresummary"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "maxAttempts": {
+            "title": "Maxattempts",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "integer"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/DemoTimelineEntry"
+            },
+            "title": "Timeline",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "status",
+          "progress",
+          "startedAt",
+          "finishedAt",
+          "attempts",
+          "maxAttempts",
+          "timeline"
+        ],
+        "title": "DemoJobResponse",
+        "type": "object"
+      },
+      "DemoPolicyResponse": {
+        "properties": {
+          "area": {
+            "title": "Area",
+            "type": "string"
+          },
+          "customerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customerid"
+          },
+          "decidedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidedat"
+          },
+          "documentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Documentid"
+          },
+          "evidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "policyName": {
+            "title": "Policyname",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "policyName",
+          "area",
+          "outcome",
+          "subject",
+          "customerId",
+          "documentId",
+          "decidedAt",
+          "explanation",
+          "evidence"
+        ],
+        "title": "DemoPolicyResponse",
+        "type": "object"
+      },
+      "DemoPolicyRule": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "DemoPolicyRule",
+        "type": "object"
+      },
+      "DemoRightsCreateRequest": {
+        "properties": {
+          "correction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoCorrectionRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestType": {
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Requesttype",
+            "type": "string"
+          },
+          "requesterReference": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requesterreference"
+          },
+          "subjectRef": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Subjectref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectRef",
+          "requestType"
+        ],
+        "title": "DemoRightsCreateRequest",
+        "type": "object"
+      },
+      "DemoRightsRequestResponse": {
+        "properties": {
+          "artifact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoArtifactRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "customerId": {
+            "title": "Customerid",
+            "type": "string"
+          },
+          "dueAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dueat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "receivedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receivedat"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "sourceProgress": {
+            "items": {
+              "$ref": "#/components/schemas/DemoSourceProgressResponse"
+            },
+            "title": "Sourceprogress",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "customerId",
+          "type",
+          "receivedAt",
+          "dueAt",
+          "status",
+          "sourceProgress",
+          "notes"
+        ],
+        "title": "DemoRightsRequestResponse",
+        "type": "object"
+      },
+      "DemoSchemaFieldResponse": {
+        "properties": {
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "example": {
+            "title": "Example",
+            "type": "string"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "type",
+          "example",
+          "classification"
+        ],
+        "title": "DemoSchemaFieldResponse",
+        "type": "object"
+      },
+      "DemoSnapshotResponse": {
+        "properties": {
+          "activePolicy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoActivePolicyResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "auditEvents": {
+            "items": {
+              "$ref": "#/components/schemas/DemoAuditEventResponse"
+            },
+            "title": "Auditevents",
+            "type": "array"
+          },
+          "breaches": {
+            "items": {
+              "$ref": "#/components/schemas/DemoBreachResponse"
+            },
+            "title": "Breaches",
+            "type": "array"
+          },
+          "campaignRecipients": {
+            "items": {
+              "$ref": "#/components/schemas/DemoCampaignRecipientResponse"
+            },
+            "title": "Campaignrecipients",
+            "type": "array"
+          },
+          "campaigns": {
+            "items": {
+              "$ref": "#/components/schemas/DemoCampaignResponse"
+            },
+            "title": "Campaigns",
+            "type": "array"
+          },
+          "checkpoints": {
+            "items": {
+              "$ref": "#/components/schemas/DemoCheckpointResponse"
+            },
+            "title": "Checkpoints",
+            "type": "array"
+          },
+          "contactMode": {
+            "title": "Contactmode",
+            "type": "string"
+          },
+          "customers": {
+            "items": {
+              "$ref": "#/components/schemas/DemoCustomerResponse"
+            },
+            "title": "Customers",
+            "type": "array"
+          },
+          "demo": {
+            "$ref": "#/components/schemas/DemoFlagsResponse"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DemoDocumentResponse"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "generatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generatedat"
+          },
+          "integrity": {
+            "$ref": "#/components/schemas/DemoIntegrityResponse"
+          },
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/DemoJobResponse"
+            },
+            "title": "Jobs",
+            "type": "array"
+          },
+          "notice": {
+            "title": "Notice",
+            "type": "string"
+          },
+          "policies": {
+            "items": {
+              "$ref": "#/components/schemas/DemoPolicyResponse"
+            },
+            "title": "Policies",
+            "type": "array"
+          },
+          "rightsHolds": {
+            "items": {
+              "$ref": "#/components/schemas/DemoHoldResponse"
+            },
+            "title": "Rightsholds",
+            "type": "array"
+          },
+          "rightsRequests": {
+            "items": {
+              "$ref": "#/components/schemas/DemoRightsRequestResponse"
+            },
+            "title": "Rightsrequests",
+            "type": "array"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/DemoSourceResponse"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/DemoWorkspaceRef"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "workspace",
+          "generatedAt",
+          "notice",
+          "contactMode",
+          "customers",
+          "sources",
+          "documents",
+          "policies",
+          "activePolicy",
+          "campaigns",
+          "campaignRecipients",
+          "rightsRequests",
+          "rightsHolds",
+          "jobs",
+          "auditEvents",
+          "checkpoints",
+          "integrity",
+          "breaches",
+          "demo"
+        ],
+        "title": "DemoSnapshotResponse",
+        "type": "object"
+      },
+      "DemoSourceProgressResponse": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceId",
+          "status"
+        ],
+        "title": "DemoSourceProgressResponse",
+        "type": "object"
+      },
+      "DemoSourceResponse": {
+        "properties": {
+          "documentCount": {
+            "title": "Documentcount",
+            "type": "integer"
+          },
+          "health": {
+            "title": "Health",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "lastSync": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastsync"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "provider",
+          "status",
+          "lastSync",
+          "health",
+          "note",
+          "documentCount"
+        ],
+        "title": "DemoSourceResponse",
+        "type": "object"
+      },
+      "DemoTimelineEntry": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "tone": {
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "label",
+          "tone"
+        ],
+        "title": "DemoTimelineEntry",
+        "type": "object"
+      },
+      "DemoUserActivity": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "action",
+          "actor",
+          "category",
+          "severity"
+        ],
+        "title": "DemoUserActivity",
+        "type": "object"
+      },
+      "DemoUserConsent": {
+        "properties": {
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "id",
+          "purpose",
+          "description",
+          "granted",
+          "required",
+          "updatedAt",
+          "channel",
+          "expiresAt"
+        ],
+        "title": "DemoUserConsent",
+        "type": "object"
+      },
+      "DemoUserDocument": {
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/DemoFieldResponse"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "heldSince": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heldsince"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "retention": {
+            "title": "Retention",
+            "type": "string"
+          },
+          "sensitivity": {
+            "title": "Sensitivity",
+            "type": "string"
+          },
+          "sizeKb": {
+            "title": "Sizekb",
+            "type": "number"
+          },
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "sourceId",
+          "updatedAt",
+          "sizeKb",
+          "sensitivity",
+          "summary",
+          "heldSince",
+          "retention",
+          "fields"
+        ],
+        "title": "DemoUserDocument",
+        "type": "object"
+      },
+      "DemoUserProfile": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "memberSince": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Membersince"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "synthetic": {
+            "title": "Synthetic",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "location",
+          "memberSince",
+          "synthetic"
+        ],
+        "title": "DemoUserProfile",
+        "type": "object"
+      },
+      "DemoUserRequest": {
+        "properties": {
+          "dueAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dueat"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "resolution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/DemoUserStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "submittedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submittedat"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "type",
+          "submittedAt",
+          "dueAt",
+          "status",
+          "steps"
+        ],
+        "title": "DemoUserRequest",
+        "type": "object"
+      },
+      "DemoUserRequestCreate": {
+        "properties": {
+          "correction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoCorrectionRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "DemoUserRequestCreate",
+        "type": "object"
+      },
+      "DemoUserSource": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lastSync": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastsync"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "purpose": {
+            "title": "Purpose",
+            "type": "string"
+          },
+          "recordCount": {
+            "title": "Recordcount",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "category",
+          "status",
+          "lastSync",
+          "recordCount",
+          "purpose"
+        ],
+        "title": "DemoUserSource",
+        "type": "object"
+      },
+      "DemoUserStep": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "status"
+        ],
+        "title": "DemoUserStep",
+        "type": "object"
+      },
+      "DemoUserWorkspaceResponse": {
+        "properties": {
+          "activity": {
+            "items": {
+              "$ref": "#/components/schemas/DemoUserActivity"
+            },
+            "title": "Activity",
+            "type": "array"
+          },
+          "consents": {
+            "items": {
+              "$ref": "#/components/schemas/DemoUserConsent"
+            },
+            "title": "Consents",
+            "type": "array"
+          },
+          "contactMode": {
+            "title": "Contactmode",
+            "type": "string"
+          },
+          "demoSubjectRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demosubjectref"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DemoUserDocument"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "generatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generatedat"
+          },
+          "notice": {
+            "title": "Notice",
+            "type": "string"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemoUserProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/DemoUserRequest"
+            },
+            "title": "Requests",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/DemoUserSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "notice",
+          "contactMode",
+          "demoSubjectRef",
+          "profile",
+          "sources",
+          "consents",
+          "documents",
+          "requests",
+          "activity"
+        ],
+        "title": "DemoUserWorkspaceResponse",
+        "type": "object"
+      },
+      "DemoWorkspaceRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ref",
+          "name"
+        ],
+        "title": "DemoWorkspaceRef",
         "type": "object"
       },
       "DocumentExtractionResponse": {
@@ -4031,8 +6649,52 @@
         "title": "RightsActionResponse",
         "type": "object"
       },
+      "RightsCorrectionRequest": {
+        "properties": {
+          "field": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Field",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requested_value": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Requested Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "requested_value"
+        ],
+        "title": "RightsCorrectionRequest",
+        "type": "object"
+      },
       "RightsRequestCreateRequest": {
         "properties": {
+          "correction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RightsCorrectionRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "idempotency_key": {
             "maxLength": 120,
             "minLength": 1,
@@ -4121,6 +6783,17 @@
             ],
             "title": "Completed At"
           },
+          "correction_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction Field"
+          },
           "correlation_id": {
             "title": "Correlation Id",
             "type": "string"
@@ -4129,6 +6802,18 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
           },
           "id": {
             "title": "Id",
@@ -4149,6 +6834,17 @@
               }
             ],
             "title": "Planned At"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
           },
           "request_type": {
             "title": "Request Type",
@@ -6228,6 +8924,1933 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/demo": {
+      "get": {
+        "operationId": "get_demo_snapshot_api_v1_workspaces__workspace_ref__demo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Demo Snapshot",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/audit/checkpoints": {
+      "post": {
+        "operationId": "create_demo_checkpoint_api_v1_workspaces__workspace_ref__demo_audit_checkpoints_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoCheckpointRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Demo Checkpoint",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/audit/verify": {
+      "post": {
+        "operationId": "verify_demo_audit_api_v1_workspaces__workspace_ref__demo_audit_verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Demo Audit",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/breaches": {
+      "post": {
+        "operationId": "create_demo_breach_api_v1_workspaces__workspace_ref__demo_breaches_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoBreachCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Demo Breach",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/breaches/{breach_id}/assessment": {
+      "post": {
+        "operationId": "assess_demo_breach_api_v1_workspaces__workspace_ref__demo_breaches__breach_id__assessment_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoBreachAssessmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assess Demo Breach",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/breaches/{breach_id}/close": {
+      "post": {
+        "operationId": "close_demo_breach_api_v1_workspaces__workspace_ref__demo_breaches__breach_id__close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoBreachCloseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Demo Breach",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/breaches/{breach_id}/notification-draft": {
+      "post": {
+        "operationId": "draft_demo_breach_api_v1_workspaces__workspace_ref__demo_breaches__breach_id__notification_draft_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft Demo Breach",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/campaigns": {
+      "post": {
+        "operationId": "create_campaign_api_v1_workspaces__workspace_ref__demo_campaigns_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoCampaignCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Campaign",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/campaigns/{campaign_id}/execute": {
+      "post": {
+        "operationId": "execute_campaign_api_v1_workspaces__workspace_ref__demo_campaigns__campaign_id__execute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Campaign",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/campaigns/{campaign_id}/preview": {
+      "post": {
+        "operationId": "preview_campaign_api_v1_workspaces__workspace_ref__demo_campaigns__campaign_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "title": "Campaign Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Campaign",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/documents/{document_id}/review": {
+      "post": {
+        "operationId": "review_document_api_v1_workspaces__workspace_ref__demo_documents__document_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Document",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/failures": {
+      "post": {
+        "operationId": "inject_failure_api_v1_workspaces__workspace_ref__demo_failures_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoFailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Inject Failure",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/failures/clear": {
+      "post": {
+        "operationId": "clear_failure_api_v1_workspaces__workspace_ref__demo_failures_clear_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Failure",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/imports": {
+      "post": {
+        "operationId": "import_demo_file_api_v1_workspaces__workspace_ref__demo_imports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_demo_file_api_v1_workspaces__workspace_ref__demo_imports_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Demo File",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/integrity-incidents/{incident_id}/resolve": {
+      "post": {
+        "operationId": "resolve_demo_incident_api_v1_workspaces__workspace_ref__demo_integrity_incidents__incident_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoIncidentResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Demo Incident",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/jobs/{job_id}/retry": {
+      "post": {
+        "operationId": "retry_job_api_v1_workspaces__workspace_ref__demo_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Job",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/policies/evaluate": {
+      "post": {
+        "operationId": "evaluate_policy_api_v1_workspaces__workspace_ref__demo_policies_evaluate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluate Policy",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/refresh": {
+      "post": {
+        "operationId": "refresh_demo_snapshot_api_v1_workspaces__workspace_ref__demo_refresh_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Demo Snapshot",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/reset": {
+      "post": {
+        "operationId": "reset_demo_api_v1_workspaces__workspace_ref__demo_reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Demo",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/retention-holds": {
+      "post": {
+        "operationId": "create_demo_hold_api_v1_workspaces__workspace_ref__demo_retention_holds_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoHoldCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Demo Hold",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/retention-holds/{hold_id}/release": {
+      "post": {
+        "operationId": "release_demo_hold_api_v1_workspaces__workspace_ref__demo_retention_holds__hold_id__release_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hold_id",
+            "required": true,
+            "schema": {
+              "title": "Hold Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoHoldReleaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release Demo Hold",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/rights-requests": {
+      "post": {
+        "operationId": "create_rights_request_api_v1_workspaces__workspace_ref__demo_rights_requests_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoRightsCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Rights Request",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/rights-requests/{request_id}/artifact/download": {
+      "get": {
+        "operationId": "download_artifact_api_v1_workspaces__workspace_ref__demo_rights_requests__request_id__artifact_download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Artifact",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/rights-requests/{request_id}/execute": {
+      "post": {
+        "operationId": "execute_rights_request_api_v1_workspaces__workspace_ref__demo_rights_requests__request_id__execute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Execute Rights Request",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/rights-requests/{request_id}/plan": {
+      "post": {
+        "operationId": "plan_rights_request_api_v1_workspaces__workspace_ref__demo_rights_requests__request_id__plan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plan Rights Request",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/rights-requests/{request_id}/retry": {
+      "post": {
+        "operationId": "retry_rights_request_api_v1_workspaces__workspace_ref__demo_rights_requests__request_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Rights Request",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user": {
+      "get": {
+        "operationId": "get_user_workspace_api_v1_workspaces__workspace_ref__demo_user_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get User Workspace",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/consents/{purpose}": {
+      "post": {
+        "operationId": "set_user_consent_api_v1_workspaces__workspace_ref__demo_user_consents__purpose__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "purpose",
+            "required": true,
+            "schema": {
+              "title": "Purpose",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoConsentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set User Consent",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/refresh": {
+      "post": {
+        "operationId": "refresh_user_workspace_api_v1_workspaces__workspace_ref__demo_user_refresh_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh User Workspace",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/requests": {
+      "post": {
+        "operationId": "create_user_request_api_v1_workspaces__workspace_ref__demo_user_requests_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoUserRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create User Request",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/requests/{request_id}/retry": {
+      "post": {
+        "operationId": "retry_user_request_api_v1_workspaces__workspace_ref__demo_user_requests__request_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry User Request",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/demo/user/reset": {
+      "post": {
+        "operationId": "reset_user_workspace_api_v1_workspaces__workspace_ref__demo_user_reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contacts",
+            "required": false,
+            "schema": {
+              "default": "masked",
+              "title": "Contacts",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoUserWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset User Workspace",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/documents": {
       "get": {
         "operationId": "list_documents_api_v1_workspaces__workspace_ref__documents_get",
@@ -7772,6 +12395,106 @@
           }
         },
         "summary": "List Rights Actions",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/artifact": {
+      "get": {
+        "operationId": "get_rights_artifact_api_v1_workspaces__workspace_ref__rights_requests__request_id__artifact_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessArtifactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Rights Artifact",
+        "tags": [
+          "rights"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/rights-requests/{request_id}/artifact/download": {
+      "get": {
+        "operationId": "download_rights_artifact_api_v1_workspaces__workspace_ref__rights_requests__request_id__artifact_download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Rights Artifact",
         "tags": [
           "rights"
         ]

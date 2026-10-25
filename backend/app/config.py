@@ -15,6 +15,14 @@ class Settings(BaseSettings):
     audit_signing_key: str | None = None
     audit_signing_key_path: Path = Path("./.keys/audit_signing_key.pem")
     audit_key_id: str = "local-demo-v1"
+    frontend_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173"
+    enable_demo_controls: bool = False
+    demo_show_synthetic_contacts: bool = False
+    demo_user_subject_ref: str | None = None
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.frontend_origins.split(",") if origin.strip()]
 
     @property
     def is_production(self) -> bool:
@@ -27,6 +35,10 @@ class Settings(BaseSettings):
             raise RuntimeError("HMAC_SECRET must be at least 32 characters")
         if self.is_production and not self.audit_signing_key and not self.audit_signing_key_path.exists():
             raise RuntimeError("AUDIT_SIGNING_KEY must be configured in production")
+        if self.is_production and (self.enable_demo_controls or self.enable_failure_injection):
+            raise RuntimeError("Demo controls and failure injection must be disabled in production")
+        if self.is_production and self.demo_show_synthetic_contacts:
+            raise RuntimeError("Synthetic contact display must be disabled in production")
 
 
 @lru_cache
