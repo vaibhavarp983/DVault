@@ -1,0 +1,521 @@
+{
+  "generatedAt": "2026-10-24T17:10:00Z",
+  "notice": "This personal portal uses one synthetic identity and fictional records. Emails use the reserved synthetic.example domain; no real personal data is present.",
+  "profile": {
+    "id": "usr-rowan",
+    "name": "Rowan Ellis",
+    "email": "rowan.ellis@synthetic.example",
+    "phone": "+44 20 7946 0777",
+    "location": "London",
+    "memberSince": "2024-03-12T10:12:00Z",
+    "synthetic": true
+  },
+  "sources": [
+    {
+      "id": "usrc-drive",
+      "name": "Personal drive",
+      "provider": "DVault Drive",
+      "category": "storage",
+      "status": "connected",
+      "lastSync": "2026-10-24T16:40:00Z",
+      "recordCount": 4,
+      "purpose": "Documents you upload and files shared with you"
+    },
+    {
+      "id": "usrc-billing",
+      "name": "Billing history",
+      "provider": "Stripe",
+      "category": "billing",
+      "status": "connected",
+      "lastSync": "2026-10-22T10:15:00Z",
+      "recordCount": 2,
+      "purpose": "Invoices, payment methods and billing history"
+    },
+    {
+      "id": "usrc-messaging",
+      "name": "Support messages",
+      "provider": "WhatsApp Business",
+      "category": "messaging",
+      "status": "degraded",
+      "lastSync": "2026-10-23T09:10:00Z",
+      "recordCount": 1,
+      "purpose": "Support conversations and message history"
+    },
+    {
+      "id": "usrc-forms",
+      "name": "Forms & consents",
+      "provider": "DVault",
+      "category": "forms",
+      "status": "connected",
+      "lastSync": "2026-10-18T11:20:00Z",
+      "recordCount": 2,
+      "purpose": "Consent forms and rights request submissions"
+    }
+  ],
+  "consents": [
+    {
+      "id": "ucns-marketing",
+      "purpose": "Marketing emails",
+      "description": "Occasional product news, offers and invitations to events.",
+      "granted": false,
+      "required": false,
+      "updatedAt": "2026-06-14T10:20:00Z",
+      "channel": "Preference centre"
+    },
+    {
+      "id": "ucns-product",
+      "purpose": "Product updates",
+      "description": "Release notes, feature announcements and service improvements.",
+      "granted": true,
+      "required": false,
+      "updatedAt": "2026-09-01T08:40:00Z",
+      "channel": "Email preferences"
+    },
+    {
+      "id": "ucns-analytics",
+      "purpose": "Analytics & personalisation",
+      "description": "Helps us understand how the workspace is used so we can improve it.",
+      "granted": true,
+      "required": false,
+      "updatedAt": "2024-03-12T10:12:00Z",
+      "channel": "Account creation"
+    },
+    {
+      "id": "ucns-service",
+      "purpose": "Account & service messages",
+      "description": "Security alerts, billing notices and essential service updates.",
+      "granted": true,
+      "required": true,
+      "updatedAt": "2024-03-12T10:12:00Z",
+      "channel": "Account creation"
+    },
+    {
+      "id": "ucns-research",
+      "purpose": "Research panel",
+      "description": "Invitations to short paid research sessions about the product.",
+      "granted": false,
+      "required": false,
+      "updatedAt": "2026-03-12T09:00:00Z",
+      "channel": "Web form",
+      "expiresAt": "2026-09-12T09:00:00Z"
+    }
+  ],
+  "documents": [
+    {
+      "id": "udoc-agreement",
+      "name": "Service agreement — 2026.pdf",
+      "kind": "account",
+      "sourceId": "usrc-drive",
+      "updatedAt": "2026-03-12T10:15:00Z",
+      "sizeKb": 212,
+      "sensitivity": "personal",
+      "summary": "Your signed service agreement and account terms.",
+      "heldSince": "12 Mar 2026",
+      "retention": "Until 24 months after account closure",
+      "fields": [
+        {
+          "field": "Full name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.99
+        },
+        {
+          "field": "Agreement date",
+          "category": "operational",
+          "confidence": 0.96
+        }
+      ]
+    },
+    {
+      "id": "udoc-invoice-mar",
+      "name": "INV-2207 — March invoice.pdf",
+      "kind": "invoice",
+      "sourceId": "usrc-billing",
+      "updatedAt": "2026-03-14T09:20:00Z",
+      "sizeKb": 96,
+      "sensitivity": "confidential",
+      "summary": "Monthly invoice for your personal workspace subscription.",
+      "heldSince": "14 Mar 2026",
+      "retention": "6 years for tax records",
+      "fields": [
+        {
+          "field": "Billing name",
+          "category": "identity",
+          "confidence": 0.97
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Invoice total",
+          "category": "financial",
+          "confidence": 0.99
+        },
+        {
+          "field": "Payment method",
+          "category": "financial",
+          "confidence": 0.9
+        }
+      ]
+    },
+    {
+      "id": "udoc-invoice-sep",
+      "name": "INV-2288 — September invoice.pdf",
+      "kind": "invoice",
+      "sourceId": "usrc-billing",
+      "updatedAt": "2026-09-14T09:10:00Z",
+      "sizeKb": 98,
+      "sensitivity": "confidential",
+      "summary": "September subscription invoice, paid by card ending 4471.",
+      "heldSince": "14 Sep 2026",
+      "retention": "6 years for tax records",
+      "fields": [
+        {
+          "field": "Billing name",
+          "category": "identity",
+          "confidence": 0.97
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Invoice total",
+          "category": "financial",
+          "confidence": 0.99
+        }
+      ]
+    },
+    {
+      "id": "udoc-support-thread",
+      "name": "Support thread — billing query.json",
+      "kind": "message",
+      "sourceId": "usrc-messaging",
+      "updatedAt": "2026-09-18T16:40:00Z",
+      "sizeKb": 42,
+      "sensitivity": "personal",
+      "summary": "A short WhatsApp conversation about a duplicate charge.",
+      "heldSince": "18 Sep 2026",
+      "retention": "12 months after the conversation closes",
+      "fields": [
+        {
+          "field": "Participant name",
+          "category": "identity",
+          "confidence": 0.95
+        },
+        {
+          "field": "Phone number",
+          "category": "contact",
+          "confidence": 0.92
+        },
+        {
+          "field": "Billing topic",
+          "category": "financial",
+          "confidence": 0.82
+        }
+      ]
+    },
+    {
+      "id": "udoc-consent-mar",
+      "name": "Marketing consent — Mar 2024.json",
+      "kind": "consent",
+      "sourceId": "usrc-forms",
+      "updatedAt": "2024-03-12T10:12:00Z",
+      "sizeKb": 8,
+      "sensitivity": "personal",
+      "summary": "Original marketing consent captured during account creation.",
+      "heldSince": "12 Mar 2024",
+      "retention": "As long as consent is relied upon",
+      "fields": [
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.99
+        },
+        {
+          "field": "Consent purpose",
+          "category": "consent",
+          "confidence": 0.98
+        },
+        {
+          "field": "Consent status",
+          "category": "consent",
+          "confidence": 0.97
+        }
+      ]
+    },
+    {
+      "id": "udoc-access-form",
+      "name": "Access request form — U-1042.html",
+      "kind": "form",
+      "sourceId": "usrc-forms",
+      "updatedAt": "2026-09-20T09:15:00Z",
+      "sizeKb": 14,
+      "sensitivity": "confidential",
+      "summary": "Your subject access request and the identity evidence reference.",
+      "heldSince": "20 Sep 2026",
+      "retention": "24 months after the request closes",
+      "fields": [
+        {
+          "field": "Full name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.97
+        },
+        {
+          "field": "Request type",
+          "category": "consent",
+          "confidence": 0.93
+        }
+      ]
+    },
+    {
+      "id": "udoc-note",
+      "name": "Delivery address note.md",
+      "kind": "note",
+      "sourceId": "usrc-drive",
+      "updatedAt": "2026-05-02T11:05:00Z",
+      "sizeKb": 4,
+      "sensitivity": "personal",
+      "summary": "A note you saved with your preferred delivery address.",
+      "heldSince": "2 May 2026",
+      "retention": "Until you delete the note",
+      "fields": [
+        {
+          "field": "Recipient name",
+          "category": "identity",
+          "confidence": 0.9
+        },
+        {
+          "field": "Delivery address",
+          "category": "contact",
+          "confidence": 0.84
+        }
+      ]
+    },
+    {
+      "id": "udoc-export",
+      "name": "Account activity export.csv",
+      "kind": "export",
+      "sourceId": "usrc-drive",
+      "updatedAt": "2026-10-01T13:30:00Z",
+      "sizeKb": 36,
+      "sensitivity": "personal",
+      "summary": "A copy of recent sign-ins and account changes.",
+      "heldSince": "1 Oct 2026",
+      "retention": "Until you delete the export",
+      "fields": [
+        {
+          "field": "Account ID",
+          "category": "identity",
+          "confidence": 0.96
+        },
+        {
+          "field": "Last sign-in",
+          "category": "operational",
+          "confidence": 0.92
+        },
+        {
+          "field": "Device",
+          "category": "operational",
+          "confidence": 0.85
+        }
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "id": "ureq-1046",
+      "reference": "U-1046",
+      "type": "erasure",
+      "submittedAt": "2026-10-05T14:30:00Z",
+      "dueAt": "2026-11-04T14:30:00Z",
+      "status": "failed",
+      "steps": [
+        {
+          "id": "step-submitted-1046",
+          "label": "Submitted",
+          "status": "complete"
+        },
+        {
+          "id": "step-identity-1046",
+          "label": "Identity verified",
+          "status": "complete"
+        },
+        {
+          "id": "step-collect-1046",
+          "label": "Sources collected",
+          "status": "failed",
+          "detail": "Billing export timed out after three attempts."
+        },
+        {
+          "id": "step-review-1046",
+          "label": "Review",
+          "status": "pending"
+        },
+        {
+          "id": "step-response-1046",
+          "label": "Response delivered",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "ureq-1042",
+      "reference": "U-1042",
+      "type": "access",
+      "submittedAt": "2026-09-20T09:15:00Z",
+      "dueAt": "2026-10-20T09:15:00Z",
+      "status": "in-progress",
+      "steps": [
+        {
+          "id": "step-submitted-1042",
+          "label": "Submitted",
+          "status": "complete"
+        },
+        {
+          "id": "step-identity-1042",
+          "label": "Identity verified",
+          "status": "complete"
+        },
+        {
+          "id": "step-collect-1042",
+          "label": "Sources collected",
+          "status": "in-progress",
+          "detail": "Waiting for the support message export."
+        },
+        {
+          "id": "step-review-1042",
+          "label": "Review",
+          "status": "pending"
+        },
+        {
+          "id": "step-response-1042",
+          "label": "Response delivered",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "ureq-1031",
+      "reference": "U-1031",
+      "type": "portability",
+      "submittedAt": "2026-07-02T11:00:00Z",
+      "dueAt": "2026-08-01T11:00:00Z",
+      "status": "complete",
+      "steps": [
+        {
+          "id": "step-submitted-1031",
+          "label": "Submitted",
+          "status": "complete"
+        },
+        {
+          "id": "step-identity-1031",
+          "label": "Identity verified",
+          "status": "complete"
+        },
+        {
+          "id": "step-collect-1031",
+          "label": "Sources collected",
+          "status": "complete"
+        },
+        {
+          "id": "step-review-1031",
+          "label": "Review",
+          "status": "complete"
+        },
+        {
+          "id": "step-response-1031",
+          "label": "Response delivered",
+          "status": "complete"
+        }
+      ],
+      "resolution": "A secure download link was provided on 18 July 2026. The link expired after seven days."
+    }
+  ],
+  "activity": [
+    {
+      "id": "uact-1",
+      "at": "2026-10-23T08:12:00Z",
+      "action": "Erasure request U-1046 needs attention",
+      "actor": "Rights service",
+      "category": "request",
+      "severity": "warning"
+    },
+    {
+      "id": "uact-2",
+      "at": "2026-10-20T09:20:00Z",
+      "action": "Access request U-1042 updated",
+      "actor": "Rights service",
+      "category": "request",
+      "severity": "info"
+    },
+    {
+      "id": "uact-3",
+      "at": "2026-10-05T14:30:00Z",
+      "action": "Erasure request U-1046 submitted",
+      "actor": "Rowan Ellis",
+      "category": "request",
+      "severity": "info"
+    },
+    {
+      "id": "uact-4",
+      "at": "2026-09-20T09:15:00Z",
+      "action": "Access request U-1042 submitted",
+      "actor": "Rowan Ellis",
+      "category": "request",
+      "severity": "info"
+    },
+    {
+      "id": "uact-5",
+      "at": "2026-09-18T16:40:00Z",
+      "action": "Support conversation imported from WhatsApp",
+      "actor": "Sync service",
+      "category": "access",
+      "severity": "warning"
+    },
+    {
+      "id": "uact-6",
+      "at": "2026-09-01T08:40:00Z",
+      "action": "Product updates consent granted",
+      "actor": "Rowan Ellis",
+      "category": "consent",
+      "severity": "info"
+    },
+    {
+      "id": "uact-7",
+      "at": "2026-07-18T12:00:00Z",
+      "action": "Portability request U-1031 completed",
+      "actor": "Rights service",
+      "category": "request",
+      "severity": "info"
+    },
+    {
+      "id": "uact-8",
+      "at": "2026-06-14T10:20:00Z",
+      "action": "Marketing consent withdrawn",
+      "actor": "Rowan Ellis",
+      "category": "consent",
+      "severity": "info"
+    },
+    {
+      "id": "uact-9",
+      "at": "2024-03-12T10:12:00Z",
+      "action": "Account created and required consent recorded",
+      "actor": "System",
+      "category": "system",
+      "severity": "info"
+    }
+  ]
+}

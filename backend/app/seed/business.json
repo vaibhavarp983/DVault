@@ -1,0 +1,2515 @@
+{
+  "seededAt": "2026-10-24T17:10:00Z",
+  "notice": "Every person, company, address and record here is synthetic. Emails use the reserved synthetic.example domain; no real personal data is present.",
+  "customers": [
+    {
+      "id": "cus-arden",
+      "name": "Amara Vale",
+      "company": "Arden & Vale Consulting",
+      "email": "amara.vale@synthetic.example",
+      "phone": "+44 20 7946 0311",
+      "location": "London",
+      "segment": "SMB",
+      "since": "2023-02-14T09:00:00Z",
+      "status": "active",
+      "owner": "Rae Whitlock",
+      "sourceIds": [
+        "src-drive",
+        "src-crm",
+        "src-billing",
+        "src-forms"
+      ],
+      "synthetic": true
+    },
+    {
+      "id": "cus-pike",
+      "name": "Jonah Pike",
+      "company": "Pike & Sons Joinery",
+      "email": "jonah.pike@synthetic.example",
+      "phone": "+44 117 496 0288",
+      "location": "Bristol",
+      "segment": "SMB",
+      "since": "2022-06-03T11:20:00Z",
+      "status": "active",
+      "owner": "Rae Whitlock",
+      "sourceIds": [
+        "src-drive",
+        "src-crm",
+        "src-billing"
+      ],
+      "synthetic": true
+    },
+    {
+      "id": "cus-northwind",
+      "name": "Lena Ortiz",
+      "company": "Northwind Analytics",
+      "email": "lena.ortiz@synthetic.example",
+      "phone": "+44 161 496 0172",
+      "location": "Manchester",
+      "segment": "Enterprise",
+      "since": "2021-09-27T14:05:00Z",
+      "status": "active",
+      "owner": "Idris Bello",
+      "sourceIds": [
+        "src-drive",
+        "src-crm",
+        "src-billing",
+        "src-forms"
+      ],
+      "synthetic": true
+    },
+    {
+      "id": "cus-marsh",
+      "name": "Theo Marsh",
+      "company": "Marsh Legal",
+      "email": "theo.marsh@synthetic.example",
+      "phone": "+44 113 496 0440",
+      "location": "Leeds",
+      "segment": "SMB",
+      "since": "2024-01-19T08:45:00Z",
+      "status": "at-risk",
+      "owner": "Rae Whitlock",
+      "sourceIds": [
+        "src-drive",
+        "src-crm",
+        "src-forms",
+        "src-whatsapp"
+      ],
+      "synthetic": true
+    },
+    {
+      "id": "cus-lumen",
+      "name": "Priya Raman",
+      "company": "Lumen Health Partners",
+      "email": "priya.raman@synthetic.example",
+      "phone": "+44 121 496 0533",
+      "location": "Birmingham",
+      "segment": "Enterprise",
+      "since": "2020-11-08T10:30:00Z",
+      "status": "active",
+      "owner": "Idris Bello",
+      "sourceIds": [
+        "src-drive",
+        "src-crm",
+        "src-billing",
+        "src-forms",
+        "src-whatsapp"
+      ],
+      "synthetic": true
+    },
+    {
+      "id": "cus-clarke",
+      "name": "Owen Clarke",
+      "company": "Clarke Retail Group",
+      "email": "owen.clarke@synthetic.example",
+      "phone": "+44 141 496 0619",
+      "location": "Glasgow",
+      "segment": "SMB",
+      "since": "2023-07-22T15:10:00Z",
+      "status": "active",
+      "owner": "Nina Sørensen",
+      "sourceIds": [
+        "src-drive",
+        "src-crm",
+        "src-billing",
+        "src-forms"
+      ],
+      "synthetic": true
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-drive",
+      "name": "Workspace Drive",
+      "kind": "drive",
+      "provider": "Google Workspace",
+      "status": "connected",
+      "lastSync": "2026-10-24T16:52:00Z",
+      "health": 96
+    },
+    {
+      "id": "src-crm",
+      "name": "Customer CRM",
+      "kind": "crm",
+      "provider": "HubSpot",
+      "status": "connected",
+      "lastSync": "2026-10-24T16:48:00Z",
+      "health": 94
+    },
+    {
+      "id": "src-billing",
+      "name": "Billing Ledger",
+      "kind": "billing",
+      "provider": "Stripe",
+      "status": "connected",
+      "lastSync": "2026-10-24T16:40:00Z",
+      "health": 91
+    },
+    {
+      "id": "src-whatsapp",
+      "name": "WhatsApp Business",
+      "kind": "messaging",
+      "provider": "Meta",
+      "status": "degraded",
+      "lastSync": "2026-10-24T13:12:00Z",
+      "health": 68,
+      "note": "History import paused after a rate limit was returned at 13:12. Retry is available."
+    },
+    {
+      "id": "src-forms",
+      "name": "Web Forms",
+      "kind": "forms",
+      "provider": "DVault",
+      "status": "connected",
+      "lastSync": "2026-10-24T16:55:00Z",
+      "health": 88
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-newsletter-signup",
+      "name": "Newsletter signup — walk-in.csv",
+      "kind": "spreadsheet",
+      "sourceId": "src-forms",
+      "sizeKb": 56,
+      "createdAt": "2026-10-24T16:12:00Z",
+      "modifiedAt": "2026-10-24T16:12:00Z",
+      "importState": "importing",
+      "sensitivity": "public",
+      "reviewStatus": "auto",
+      "confidence": 0.6,
+      "tags": [
+        "marketing",
+        "signup"
+      ],
+      "snippet": "Signup export from an event tablet. Import is in progress.",
+      "missing": [
+        "Consent evidence column",
+        "Row count confirmation"
+      ],
+      "fields": [
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.81
+        },
+        {
+          "field": "Consent status",
+          "category": "consent",
+          "confidence": 0.48
+        }
+      ],
+      "schema": [
+        {
+          "field": "Email address",
+          "type": "email",
+          "example": "contact@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Consent status",
+          "type": "boolean",
+          "example": "true",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-inv-1049",
+      "name": "INV-1049 — Clarke Retail.pdf",
+      "kind": "invoice",
+      "sourceId": "src-billing",
+      "customerId": "cus-clarke",
+      "sizeKb": 131,
+      "createdAt": "2026-10-24T15:47:00Z",
+      "modifiedAt": "2026-10-24T15:47:00Z",
+      "importState": "queued",
+      "sensitivity": "confidential",
+      "reviewStatus": "auto",
+      "confidence": 0.65,
+      "tags": [
+        "invoice",
+        "queued"
+      ],
+      "snippet": "New invoice waiting in the import queue. Classification has not started.",
+      "missing": [
+        "Document text extraction",
+        "Field classification"
+      ],
+      "fields": [
+        {
+          "field": "Billing contact",
+          "category": "contact",
+          "confidence": 0.5,
+          "note": "Not yet extracted"
+        }
+      ],
+      "schema": [
+        {
+          "field": "Billing contact",
+          "type": "string",
+          "example": "—",
+          "classification": "contact"
+        }
+      ]
+    },
+    {
+      "id": "doc-contact-enquiry",
+      "name": "Contact form — website enquiry.html",
+      "kind": "form",
+      "sourceId": "src-forms",
+      "customerId": "cus-clarke",
+      "sizeKb": 16,
+      "createdAt": "2026-10-24T12:08:00Z",
+      "modifiedAt": "2026-10-24T12:08:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "auto",
+      "tags": [
+        "enquiry",
+        "website"
+      ],
+      "snippet": "Website enquiry from Clarke Retail about a multi-site records review.",
+      "fields": [
+        {
+          "field": "Contact name",
+          "category": "identity",
+          "confidence": 0.97
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.99
+        },
+        {
+          "field": "Company name",
+          "category": "identity",
+          "confidence": 0.95
+        },
+        {
+          "field": "Enquiry summary",
+          "category": "operational",
+          "confidence": 0.84
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Contact name",
+          "type": "string",
+          "example": "Owen Clarke",
+          "classification": "identity"
+        },
+        {
+          "field": "Email address",
+          "type": "email",
+          "example": "owen.clarke@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Company name",
+          "type": "string",
+          "example": "Clarke Retail Group",
+          "classification": "identity"
+        },
+        {
+          "field": "Enquiry summary",
+          "type": "string",
+          "example": "—",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-crm-pike",
+      "name": "CRM record — Pike & Sons.json",
+      "kind": "crm-record",
+      "sourceId": "src-crm",
+      "customerId": "cus-pike",
+      "sizeKb": 17,
+      "createdAt": "2022-06-03T11:20:00Z",
+      "modifiedAt": "2026-10-24T09:18:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "auto",
+      "tags": [
+        "crm",
+        "joinery"
+      ],
+      "snippet": "Account record with one active deal and a completed onboarding checklist.",
+      "fields": [
+        {
+          "field": "Account name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Primary contact",
+          "category": "identity",
+          "confidence": 0.96
+        },
+        {
+          "field": "Contact email",
+          "category": "contact",
+          "confidence": 0.98
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Account name",
+          "type": "number",
+          "example": "Jonah Pike",
+          "classification": "identity"
+        },
+        {
+          "field": "Primary contact",
+          "type": "string",
+          "example": "—",
+          "classification": "identity"
+        },
+        {
+          "field": "Contact email",
+          "type": "email",
+          "example": "jonah.pike@synthetic.example",
+          "classification": "contact"
+        }
+      ]
+    },
+    {
+      "id": "doc-wa-marsh",
+      "name": "WhatsApp thread — Theo Marsh.json",
+      "kind": "conversation",
+      "sourceId": "src-whatsapp",
+      "customerId": "cus-marsh",
+      "sizeKb": 78,
+      "createdAt": "2026-09-30T08:15:00Z",
+      "modifiedAt": "2026-10-23T13:12:00Z",
+      "importState": "importing",
+      "sensitivity": "restricted",
+      "reviewStatus": "needs-review",
+      "confidence": 0.72,
+      "tags": [
+        "conversation",
+        "marketing",
+        "paused"
+      ],
+      "snippet": "Two-party thread about a compliance briefing. Three media attachments are referenced but not yet imported.",
+      "missing": [
+        "Media attachments (3)",
+        "Import checkpoint after 12 September"
+      ],
+      "fields": [
+        {
+          "field": "Participant name",
+          "category": "identity",
+          "confidence": 0.9
+        },
+        {
+          "field": "Participant phone",
+          "category": "contact",
+          "confidence": 0.86
+        },
+        {
+          "field": "Message timestamp",
+          "category": "operational",
+          "confidence": 0.8
+        },
+        {
+          "field": "Consent mentioned",
+          "category": "consent",
+          "confidence": 0.61,
+          "note": "Detected in message body only"
+        }
+      ],
+      "schema": [
+        {
+          "field": "Participant name",
+          "type": "string",
+          "example": "Theo Marsh",
+          "classification": "identity"
+        },
+        {
+          "field": "Participant phone",
+          "type": "string",
+          "example": "+44 113 496 0440",
+          "classification": "contact"
+        },
+        {
+          "field": "Message timestamp",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        },
+        {
+          "field": "Consent mentioned",
+          "type": "boolean",
+          "example": "true",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-inv-1046",
+      "name": "INV-1046 — Lumen Health.pdf",
+      "kind": "invoice",
+      "sourceId": "src-billing",
+      "customerId": "cus-lumen",
+      "sizeKb": 173,
+      "createdAt": "2026-10-23T11:03:00Z",
+      "modifiedAt": "2026-10-23T11:03:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "auto",
+      "tags": [
+        "invoice",
+        "health"
+      ],
+      "snippet": "Monthly platform invoice for Lumen Health Partners, including support hours.",
+      "fields": [
+        {
+          "field": "Billing contact",
+          "category": "contact",
+          "confidence": 0.95
+        },
+        {
+          "field": "Invoice total",
+          "category": "financial",
+          "confidence": 0.98
+        },
+        {
+          "field": "VAT number",
+          "category": "identity",
+          "confidence": 0.84
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Billing contact",
+          "type": "string",
+          "example": "—",
+          "classification": "contact"
+        },
+        {
+          "field": "Invoice total",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        },
+        {
+          "field": "VAT number",
+          "type": "number",
+          "example": "—",
+          "classification": "identity"
+        }
+      ]
+    },
+    {
+      "id": "doc-crm-arden",
+      "name": "CRM record — Arden & Vale.json",
+      "kind": "crm-record",
+      "sourceId": "src-crm",
+      "customerId": "cus-arden",
+      "sizeKb": 19,
+      "createdAt": "2023-02-14T09:00:00Z",
+      "modifiedAt": "2026-10-23T09:41:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "auto",
+      "tags": [
+        "crm",
+        "account",
+        "renewal"
+      ],
+      "snippet": "Account record with two open deals and a renewal reminder for November.",
+      "fields": [
+        {
+          "field": "Account name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Primary contact",
+          "category": "identity",
+          "confidence": 0.95
+        },
+        {
+          "field": "Contact email",
+          "category": "contact",
+          "confidence": 0.97
+        },
+        {
+          "field": "Account owner",
+          "category": "operational",
+          "confidence": 0.93
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Account name",
+          "type": "number",
+          "example": "Amara Vale",
+          "classification": "identity"
+        },
+        {
+          "field": "Primary contact",
+          "type": "string",
+          "example": "—",
+          "classification": "identity"
+        },
+        {
+          "field": "Contact email",
+          "type": "email",
+          "example": "amara.vale@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Account owner",
+          "type": "number",
+          "example": "—",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-crm-northwind",
+      "name": "CRM record — Northwind Analytics.json",
+      "kind": "crm-record",
+      "sourceId": "src-crm",
+      "customerId": "cus-northwind",
+      "sizeKb": 24,
+      "createdAt": "2021-09-27T14:05:00Z",
+      "modifiedAt": "2026-10-23T08:15:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "auto",
+      "tags": [
+        "crm",
+        "enterprise",
+        "do-not-market"
+      ],
+      "snippet": "Enterprise account flagged do-not-market in the CRM while the contract remains active.",
+      "fields": [
+        {
+          "field": "Account name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Primary contact",
+          "category": "identity",
+          "confidence": 0.96
+        },
+        {
+          "field": "Contact email",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Marketing flag",
+          "category": "consent",
+          "confidence": 0.9
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Account name",
+          "type": "number",
+          "example": "Lena Ortiz",
+          "classification": "identity"
+        },
+        {
+          "field": "Primary contact",
+          "type": "string",
+          "example": "—",
+          "classification": "identity"
+        },
+        {
+          "field": "Contact email",
+          "type": "email",
+          "example": "lena.ortiz@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Marketing flag",
+          "type": "string",
+          "example": "—",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-crm-lumen",
+      "name": "CRM record — Lumen Health.json",
+      "kind": "crm-record",
+      "sourceId": "src-crm",
+      "customerId": "cus-lumen",
+      "sizeKb": 26,
+      "createdAt": "2020-11-08T10:30:00Z",
+      "modifiedAt": "2026-10-22T15:42:00Z",
+      "importState": "indexed",
+      "sensitivity": "restricted",
+      "reviewStatus": "auto",
+      "tags": [
+        "crm",
+        "health",
+        "enterprise"
+      ],
+      "snippet": "Enterprise account with health-sector restrictions applied to exports.",
+      "fields": [
+        {
+          "field": "Account name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Primary contact",
+          "category": "identity",
+          "confidence": 0.96
+        },
+        {
+          "field": "Contact email",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Sector restriction",
+          "category": "health",
+          "confidence": 0.89
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Account name",
+          "type": "number",
+          "example": "Priya Raman",
+          "classification": "identity"
+        },
+        {
+          "field": "Primary contact",
+          "type": "string",
+          "example": "—",
+          "classification": "identity"
+        },
+        {
+          "field": "Contact email",
+          "type": "email",
+          "example": "priya.raman@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Sector restriction",
+          "type": "string",
+          "example": "—",
+          "classification": "health"
+        }
+      ]
+    },
+    {
+      "id": "doc-inv-1042",
+      "name": "INV-1042 — Arden & Vale.pdf",
+      "kind": "invoice",
+      "sourceId": "src-billing",
+      "customerId": "cus-arden",
+      "sizeKb": 148,
+      "createdAt": "2026-10-22T10:14:00Z",
+      "modifiedAt": "2026-10-22T10:14:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "auto",
+      "tags": [
+        "invoice",
+        "q3",
+        "advisory"
+      ],
+      "snippet": "Invoice INV-1042 for the September advisory retainer, addressed to Arden & Vale Consulting.",
+      "fields": [
+        {
+          "field": "Billing contact",
+          "category": "contact",
+          "confidence": 0.97
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.99
+        },
+        {
+          "field": "Invoice total",
+          "category": "financial",
+          "confidence": 0.99
+        },
+        {
+          "field": "VAT number",
+          "category": "identity",
+          "confidence": 0.82,
+          "note": "Matched against the billing profile"
+        },
+        {
+          "field": "Payment reference",
+          "category": "financial",
+          "confidence": 0.88
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Billing contact",
+          "type": "string",
+          "example": "—",
+          "classification": "contact"
+        },
+        {
+          "field": "Email address",
+          "type": "email",
+          "example": "amara.vale@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Invoice total",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        },
+        {
+          "field": "VAT number",
+          "type": "number",
+          "example": "—",
+          "classification": "identity"
+        },
+        {
+          "field": "Payment reference",
+          "type": "string",
+          "example": "—",
+          "classification": "financial"
+        }
+      ]
+    },
+    {
+      "id": "doc-po-2210",
+      "name": "PO-2210 — Pike & Sons.pdf",
+      "kind": "purchase-order",
+      "sourceId": "src-drive",
+      "customerId": "cus-pike",
+      "sizeKb": 96,
+      "createdAt": "2026-10-21T14:02:00Z",
+      "modifiedAt": "2026-10-21T14:02:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "auto",
+      "tags": [
+        "purchase-order",
+        "workshop"
+      ],
+      "snippet": "Purchase order for workshop fit-out materials, signed by Jonah Pike.",
+      "fields": [
+        {
+          "field": "Supplier contact",
+          "category": "contact",
+          "confidence": 0.94
+        },
+        {
+          "field": "Order total",
+          "category": "financial",
+          "confidence": 0.96
+        },
+        {
+          "field": "Delivery address",
+          "category": "contact",
+          "confidence": 0.91
+        },
+        {
+          "field": "Order date",
+          "category": "operational",
+          "confidence": 0.97
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Supplier contact",
+          "type": "string",
+          "example": "—",
+          "classification": "contact"
+        },
+        {
+          "field": "Order total",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        },
+        {
+          "field": "Delivery address",
+          "type": "string",
+          "example": "Bristol",
+          "classification": "contact"
+        },
+        {
+          "field": "Order date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-note-arden",
+      "name": "Account note — renewal risk.md",
+      "kind": "note",
+      "sourceId": "src-drive",
+      "customerId": "cus-arden",
+      "sizeKb": 8,
+      "createdAt": "2026-10-20T17:05:00Z",
+      "modifiedAt": "2026-10-20T17:05:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "auto",
+      "tags": [
+        "note",
+        "renewal"
+      ],
+      "snippet": "Renewal likely to move to a monthly plan. No personal data beyond the main contact.",
+      "fields": [
+        {
+          "field": "Contact name",
+          "category": "identity",
+          "confidence": 0.86
+        },
+        {
+          "field": "Renewal date",
+          "category": "operational",
+          "confidence": 0.9
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Contact name",
+          "type": "string",
+          "example": "Amara Vale",
+          "classification": "identity"
+        },
+        {
+          "field": "Renewal date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-register-q3",
+      "name": "Q3 governance register.xlsx",
+      "kind": "spreadsheet",
+      "sourceId": "src-drive",
+      "sizeKb": 318,
+      "createdAt": "2026-10-01T13:15:00Z",
+      "modifiedAt": "2026-10-19T10:22:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "register",
+        "q3",
+        "governance"
+      ],
+      "snippet": "Governance register with 42 rows covering processing activities, owners and review dates.",
+      "fields": [
+        {
+          "field": "Processing owner",
+          "category": "operational",
+          "confidence": 0.94
+        },
+        {
+          "field": "Processor name",
+          "category": "identity",
+          "confidence": 0.88
+        },
+        {
+          "field": "Review date",
+          "category": "operational",
+          "confidence": 0.96
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Processing owner",
+          "type": "string",
+          "example": "—",
+          "classification": "operational"
+        },
+        {
+          "field": "Processor name",
+          "type": "string",
+          "example": "Synthetic contact",
+          "classification": "identity"
+        },
+        {
+          "field": "Review date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-email-arden-renewal",
+      "name": "Renewal terms — Arden & Vale.eml",
+      "kind": "email",
+      "sourceId": "src-drive",
+      "customerId": "cus-arden",
+      "sizeKb": 41,
+      "createdAt": "2026-10-19T08:22:00Z",
+      "modifiedAt": "2026-10-19T08:22:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "renewal",
+        "commercial"
+      ],
+      "snippet": "Renewal terms sent to Amara Vale. No consent-impacting content detected.",
+      "fields": [
+        {
+          "field": "Recipient name",
+          "category": "identity",
+          "confidence": 0.95
+        },
+        {
+          "field": "Recipient email",
+          "category": "contact",
+          "confidence": 0.97
+        },
+        {
+          "field": "Renewal amount",
+          "category": "financial",
+          "confidence": 0.93
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Recipient name",
+          "type": "string",
+          "example": "Amara Vale",
+          "classification": "identity"
+        },
+        {
+          "field": "Recipient email",
+          "type": "email",
+          "example": "amara.vale@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Renewal amount",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        }
+      ]
+    },
+    {
+      "id": "doc-msa-northwind",
+      "name": "MSA — Northwind Analytics.docx",
+      "kind": "contract",
+      "sourceId": "src-drive",
+      "customerId": "cus-northwind",
+      "sizeKb": 412,
+      "createdAt": "2025-04-11T09:30:00Z",
+      "modifiedAt": "2026-10-18T16:20:00Z",
+      "importState": "indexed",
+      "sensitivity": "restricted",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "contract",
+        "msa",
+        "transfer"
+      ],
+      "snippet": "Master services agreement covering analytics support. Clause 8 references transfers outside the UK.",
+      "fields": [
+        {
+          "field": "Signatory name",
+          "category": "identity",
+          "confidence": 0.95
+        },
+        {
+          "field": "Signatory email",
+          "category": "contact",
+          "confidence": 0.93
+        },
+        {
+          "field": "Contract value",
+          "category": "financial",
+          "confidence": 0.9
+        },
+        {
+          "field": "Renewal date",
+          "category": "operational",
+          "confidence": 0.96
+        },
+        {
+          "field": "Governing jurisdiction",
+          "category": "operational",
+          "confidence": 0.88
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Signatory name",
+          "type": "string",
+          "example": "Lena Ortiz",
+          "classification": "identity"
+        },
+        {
+          "field": "Signatory email",
+          "type": "email",
+          "example": "lena.ortiz@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Contract value",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        },
+        {
+          "field": "Renewal date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        },
+        {
+          "field": "Governing jurisdiction",
+          "type": "string",
+          "example": "—",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-crm-marsh",
+      "name": "CRM record — Marsh Legal.json",
+      "kind": "crm-record",
+      "sourceId": "src-crm",
+      "customerId": "cus-marsh",
+      "sizeKb": 18,
+      "createdAt": "2024-01-19T08:45:00Z",
+      "modifiedAt": "2026-10-18T11:31:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "needs-review",
+      "confidence": 0.8,
+      "tags": [
+        "crm",
+        "consent",
+        "suppression"
+      ],
+      "snippet": "CRM record shows marketing consent as active while the consent record says withdrawn.",
+      "missing": [
+        "Consent reconciliation"
+      ],
+      "fields": [
+        {
+          "field": "Account name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Primary contact",
+          "category": "identity",
+          "confidence": 0.97
+        },
+        {
+          "field": "Contact email",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Marketing flag",
+          "category": "consent",
+          "confidence": 0.72,
+          "note": "Conflicts with the consent-record source"
+        }
+      ],
+      "schema": [
+        {
+          "field": "Account name",
+          "type": "number",
+          "example": "Theo Marsh",
+          "classification": "identity"
+        },
+        {
+          "field": "Primary contact",
+          "type": "string",
+          "example": "—",
+          "classification": "identity"
+        },
+        {
+          "field": "Contact email",
+          "type": "email",
+          "example": "theo.marsh@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Marketing flag",
+          "type": "string",
+          "example": "—",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-consent-marsh",
+      "name": "Consent withdrawal — Marsh Legal.json",
+      "kind": "consent-record",
+      "sourceId": "src-forms",
+      "customerId": "cus-marsh",
+      "sizeKb": 14,
+      "createdAt": "2026-10-18T11:20:00Z",
+      "modifiedAt": "2026-10-18T11:20:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "needs-review",
+      "confidence": 0.76,
+      "tags": [
+        "consent",
+        "withdrawal",
+        "mismatch"
+      ],
+      "snippet": "Withdrawal recorded from the email reply. The form timestamp is missing, so the source of truth is unresolved.",
+      "missing": [
+        "Withdrawal timestamp",
+        "Preferred contact confirmation"
+      ],
+      "fields": [
+        {
+          "field": "Contact name",
+          "category": "identity",
+          "confidence": 0.94
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.97
+        },
+        {
+          "field": "Consent status",
+          "category": "consent",
+          "confidence": 0.81
+        },
+        {
+          "field": "Withdrawal date",
+          "category": "consent",
+          "confidence": 0.62,
+          "note": "Derived from the email thread"
+        }
+      ],
+      "schema": [
+        {
+          "field": "Contact name",
+          "type": "string",
+          "example": "Theo Marsh",
+          "classification": "identity"
+        },
+        {
+          "field": "Email address",
+          "type": "email",
+          "example": "theo.marsh@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Consent status",
+          "type": "boolean",
+          "example": "true",
+          "classification": "consent"
+        },
+        {
+          "field": "Withdrawal date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-email-consent-marsh",
+      "name": "Re: marketing consent — Marsh Legal.eml",
+      "kind": "email",
+      "sourceId": "src-drive",
+      "customerId": "cus-marsh",
+      "sizeKb": 34,
+      "createdAt": "2026-10-18T11:07:00Z",
+      "modifiedAt": "2026-10-18T11:07:00Z",
+      "importState": "failed",
+      "sensitivity": "confidential",
+      "reviewStatus": "needs-review",
+      "confidence": 0.71,
+      "tags": [
+        "consent",
+        "marketing",
+        "suppression"
+      ],
+      "snippet": "Theo confirms that Marsh Legal no longer wishes to receive compliance briefings. A withdrawal timestamp is not visible in the export.",
+      "missing": [
+        "Withdrawal timestamp",
+        "Consent system confirmation"
+      ],
+      "fields": [
+        {
+          "field": "Sender name",
+          "category": "identity",
+          "confidence": 0.92
+        },
+        {
+          "field": "Sender email",
+          "category": "contact",
+          "confidence": 0.97
+        },
+        {
+          "field": "Consent status",
+          "category": "consent",
+          "confidence": 0.58,
+          "note": "Language implies withdrawal, but is not explicit"
+        },
+        {
+          "field": "Withdrawal date",
+          "category": "consent",
+          "confidence": 0.42,
+          "note": "Date appears only in the email signature"
+        }
+      ],
+      "schema": [
+        {
+          "field": "Sender name",
+          "type": "string",
+          "example": "Theo Marsh",
+          "classification": "identity"
+        },
+        {
+          "field": "Sender email",
+          "type": "email",
+          "example": "theo.marsh@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Consent status",
+          "type": "boolean",
+          "example": "true",
+          "classification": "consent"
+        },
+        {
+          "field": "Withdrawal date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-dsar-lumen",
+      "name": "DSAR intake — Lumen Health.html",
+      "kind": "form",
+      "sourceId": "src-forms",
+      "customerId": "cus-lumen",
+      "sizeKb": 22,
+      "createdAt": "2026-10-18T09:44:00Z",
+      "modifiedAt": "2026-10-18T09:44:00Z",
+      "importState": "indexed",
+      "sensitivity": "restricted",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "rights-request",
+        "dsar",
+        "erasure"
+      ],
+      "snippet": "Erasure request submitted by Priya Raman covering marketing, billing and support records.",
+      "fields": [
+        {
+          "field": "Requester name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Requester email",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Request type",
+          "category": "consent",
+          "confidence": 0.94
+        },
+        {
+          "field": "Received date",
+          "category": "operational",
+          "confidence": 0.99
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Requester name",
+          "type": "string",
+          "example": "Priya Raman",
+          "classification": "identity"
+        },
+        {
+          "field": "Requester email",
+          "type": "email",
+          "example": "priya.raman@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Request type",
+          "type": "string",
+          "example": "—",
+          "classification": "consent"
+        },
+        {
+          "field": "Received date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-vendor-questionnaire",
+      "name": "Vendor security questionnaire — draft.eml",
+      "kind": "email",
+      "sourceId": "src-drive",
+      "sizeKb": 47,
+      "createdAt": "2026-10-17T09:12:00Z",
+      "modifiedAt": "2026-10-17T09:12:00Z",
+      "importState": "failed",
+      "sensitivity": "internal",
+      "reviewStatus": "needs-review",
+      "confidence": 0.64,
+      "tags": [
+        "vendor",
+        "security",
+        "attachment"
+      ],
+      "snippet": "Draft questionnaire with an unverified sender domain and one attachment that could not be checksummed.",
+      "missing": [
+        "Sender verification",
+        "Attachment checksum"
+      ],
+      "fields": [
+        {
+          "field": "Sender email",
+          "category": "contact",
+          "confidence": 0.74
+        },
+        {
+          "field": "Attachment count",
+          "category": "operational",
+          "confidence": 0.6
+        }
+      ],
+      "schema": [
+        {
+          "field": "Sender email",
+          "type": "email",
+          "example": "contact@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Attachment count",
+          "type": "number",
+          "example": "—",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-note-lumen",
+      "name": "Onboarding notes — Lumen Health.md",
+      "kind": "note",
+      "sourceId": "src-drive",
+      "customerId": "cus-lumen",
+      "sizeKb": 9,
+      "createdAt": "2026-10-15T13:10:00Z",
+      "modifiedAt": "2026-10-15T13:10:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "auto",
+      "tags": [
+        "onboarding",
+        "note"
+      ],
+      "snippet": "Onboarding checklist and a short summary of the support handover.",
+      "fields": [
+        {
+          "field": "Contact name",
+          "category": "identity",
+          "confidence": 0.9
+        },
+        {
+          "field": "Support owner",
+          "category": "operational",
+          "confidence": 0.87
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Contact name",
+          "type": "string",
+          "example": "Priya Raman",
+          "classification": "identity"
+        },
+        {
+          "field": "Support owner",
+          "type": "string",
+          "example": "—",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-dsar-marsh",
+      "name": "Access request — Marsh Legal (R-2081).json",
+      "kind": "form",
+      "sourceId": "src-forms",
+      "customerId": "cus-marsh",
+      "sizeKb": 18,
+      "createdAt": "2026-10-12T08:36:00Z",
+      "modifiedAt": "2026-10-12T08:36:00Z",
+      "importState": "indexed",
+      "sensitivity": "restricted",
+      "reviewStatus": "needs-review",
+      "confidence": 0.83,
+      "tags": [
+        "rights-request",
+        "access"
+      ],
+      "snippet": "Subject access request with identity evidence noted separately in the CRM.",
+      "fields": [
+        {
+          "field": "Requester name",
+          "category": "identity",
+          "confidence": 0.97
+        },
+        {
+          "field": "Requester email",
+          "category": "contact",
+          "confidence": 0.96
+        },
+        {
+          "field": "Request type",
+          "category": "consent",
+          "confidence": 0.88
+        }
+      ],
+      "schema": [
+        {
+          "field": "Requester name",
+          "type": "string",
+          "example": "Theo Marsh",
+          "classification": "identity"
+        },
+        {
+          "field": "Requester email",
+          "type": "email",
+          "example": "theo.marsh@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Request type",
+          "type": "string",
+          "example": "—",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-retention-schedule",
+      "name": "Retention schedule 2026.xlsx",
+      "kind": "spreadsheet",
+      "sourceId": "src-drive",
+      "sizeKb": 204,
+      "createdAt": "2026-01-08T09:00:00Z",
+      "modifiedAt": "2026-10-02T14:00:00Z",
+      "importState": "indexed",
+      "sensitivity": "internal",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "retention",
+        "schedule"
+      ],
+      "snippet": "Retention rules by record class, including a 24-month default for commercial records.",
+      "fields": [
+        {
+          "field": "Record class",
+          "category": "operational",
+          "confidence": 0.96
+        },
+        {
+          "field": "Retention owner",
+          "category": "operational",
+          "confidence": 0.9
+        },
+        {
+          "field": "Review date",
+          "category": "operational",
+          "confidence": 0.94
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Record class",
+          "type": "string",
+          "example": "—",
+          "classification": "operational"
+        },
+        {
+          "field": "Retention owner",
+          "type": "string",
+          "example": "—",
+          "classification": "operational"
+        },
+        {
+          "field": "Review date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "operational"
+        }
+      ]
+    },
+    {
+      "id": "doc-inv-1039",
+      "name": "INV-1039 — Pike & Sons.pdf",
+      "kind": "invoice",
+      "sourceId": "src-billing",
+      "customerId": "cus-pike",
+      "sizeKb": 142,
+      "createdAt": "2026-09-28T10:05:00Z",
+      "modifiedAt": "2026-09-28T10:05:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "auto",
+      "tags": [
+        "invoice",
+        "workshop"
+      ],
+      "snippet": "Final invoice for the workshop fit-out, paid on 12 October.",
+      "fields": [
+        {
+          "field": "Billing contact",
+          "category": "contact",
+          "confidence": 0.96
+        },
+        {
+          "field": "Invoice total",
+          "category": "financial",
+          "confidence": 0.99
+        },
+        {
+          "field": "Payment reference",
+          "category": "financial",
+          "confidence": 0.9
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Billing contact",
+          "type": "string",
+          "example": "—",
+          "classification": "contact"
+        },
+        {
+          "field": "Invoice total",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        },
+        {
+          "field": "Payment reference",
+          "type": "string",
+          "example": "—",
+          "classification": "financial"
+        }
+      ]
+    },
+    {
+      "id": "doc-contract-pike",
+      "name": "Works agreement — Pike & Sons.pdf",
+      "kind": "contract",
+      "sourceId": "src-drive",
+      "customerId": "cus-pike",
+      "sizeKb": 289,
+      "createdAt": "2024-02-08T12:00:00Z",
+      "modifiedAt": "2026-09-14T10:40:00Z",
+      "importState": "indexed",
+      "sensitivity": "restricted",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "contract",
+        "works"
+      ],
+      "snippet": "Signed works agreement covering the Bristol workshop fit-out.",
+      "fields": [
+        {
+          "field": "Signatory name",
+          "category": "identity",
+          "confidence": 0.97
+        },
+        {
+          "field": "Signatory email",
+          "category": "contact",
+          "confidence": 0.95
+        },
+        {
+          "field": "Contract value",
+          "category": "financial",
+          "confidence": 0.92
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Signatory name",
+          "type": "string",
+          "example": "Jonah Pike",
+          "classification": "identity"
+        },
+        {
+          "field": "Signatory email",
+          "type": "email",
+          "example": "jonah.pike@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Contract value",
+          "type": "currency",
+          "example": "£2,480.00",
+          "classification": "financial"
+        }
+      ]
+    },
+    {
+      "id": "doc-wa-lumen",
+      "name": "WhatsApp thread — Priya Raman.json",
+      "kind": "conversation",
+      "sourceId": "src-whatsapp",
+      "customerId": "cus-lumen",
+      "sizeKb": 64,
+      "createdAt": "2026-09-02T14:30:00Z",
+      "modifiedAt": "2026-09-12T16:10:00Z",
+      "importState": "missing",
+      "sensitivity": "restricted",
+      "reviewStatus": "needs-review",
+      "confidence": 0.69,
+      "tags": [
+        "conversation",
+        "health",
+        "truncated"
+      ],
+      "snippet": "Health-related support conversation. Export is truncated and needs a fresh sync before it can be reviewed.",
+      "missing": [
+        "Complete conversation export",
+        "Media attachments (2)"
+      ],
+      "fields": [
+        {
+          "field": "Participant name",
+          "category": "identity",
+          "confidence": 0.93
+        },
+        {
+          "field": "Participant phone",
+          "category": "contact",
+          "confidence": 0.87
+        },
+        {
+          "field": "Health detail",
+          "category": "health",
+          "confidence": 0.55,
+          "note": "Clinical phrasing detected with low confidence"
+        }
+      ],
+      "schema": [
+        {
+          "field": "Participant name",
+          "type": "string",
+          "example": "Priya Raman",
+          "classification": "identity"
+        },
+        {
+          "field": "Participant phone",
+          "type": "string",
+          "example": "+44 121 496 0533",
+          "classification": "contact"
+        },
+        {
+          "field": "Health detail",
+          "type": "string",
+          "example": "—",
+          "classification": "health"
+        }
+      ]
+    },
+    {
+      "id": "doc-consent-clarke",
+      "name": "Consent record — Clarke Retail.json",
+      "kind": "consent-record",
+      "sourceId": "src-forms",
+      "customerId": "cus-clarke",
+      "sizeKb": 11,
+      "createdAt": "2026-08-04T15:30:00Z",
+      "modifiedAt": "2026-08-04T15:30:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "auto",
+      "tags": [
+        "consent",
+        "briefing"
+      ],
+      "snippet": "Consent captured from the August briefing sign-up form.",
+      "fields": [
+        {
+          "field": "Contact name",
+          "category": "identity",
+          "confidence": 0.96
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.98
+        },
+        {
+          "field": "Consent status",
+          "category": "consent",
+          "confidence": 0.97
+        }
+      ],
+      "confidence": 0.94,
+      "schema": [
+        {
+          "field": "Contact name",
+          "type": "string",
+          "example": "Owen Clarke",
+          "classification": "identity"
+        },
+        {
+          "field": "Email address",
+          "type": "email",
+          "example": "owen.clarke@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Consent status",
+          "type": "boolean",
+          "example": "true",
+          "classification": "consent"
+        }
+      ]
+    },
+    {
+      "id": "doc-consent-arden",
+      "name": "Consent record — Arden & Vale.json",
+      "kind": "consent-record",
+      "sourceId": "src-forms",
+      "customerId": "cus-arden",
+      "sizeKb": 12,
+      "createdAt": "2026-03-12T10:02:00Z",
+      "modifiedAt": "2026-03-12T10:02:00Z",
+      "importState": "indexed",
+      "sensitivity": "confidential",
+      "reviewStatus": "reviewed",
+      "tags": [
+        "consent",
+        "marketing"
+      ],
+      "snippet": "Marketing consent granted with a recorded timestamp and source form reference.",
+      "fields": [
+        {
+          "field": "Contact name",
+          "category": "identity",
+          "confidence": 0.98
+        },
+        {
+          "field": "Email address",
+          "category": "contact",
+          "confidence": 0.99
+        },
+        {
+          "field": "Consent status",
+          "category": "consent",
+          "confidence": 0.99
+        },
+        {
+          "field": "Consent date",
+          "category": "consent",
+          "confidence": 0.97
+        }
+      ],
+      "confidence": 0.97,
+      "schema": [
+        {
+          "field": "Contact name",
+          "type": "string",
+          "example": "Amara Vale",
+          "classification": "identity"
+        },
+        {
+          "field": "Email address",
+          "type": "email",
+          "example": "amara.vale@synthetic.example",
+          "classification": "contact"
+        },
+        {
+          "field": "Consent status",
+          "type": "boolean",
+          "example": "true",
+          "classification": "consent"
+        },
+        {
+          "field": "Consent date",
+          "type": "date",
+          "example": "2026-10-22",
+          "classification": "consent"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "pol-101",
+      "policyName": "Marketing consent required",
+      "area": "consent",
+      "outcome": "deny",
+      "subject": "Campaign: Autumn compliance briefing → Marsh Legal",
+      "customerId": "cus-marsh",
+      "documentId": "doc-consent-marsh",
+      "decidedAt": "2026-10-24T11:04:00Z",
+      "explanation": "Consent was withdrawn on 18 October. The suppression flag is active, so the recipient is blocked until the CRM record is reconciled.",
+      "evidence": [
+        "Consent withdrawal record modified 18 Oct 2026",
+        "CRM marketing flag still reads active",
+        "Campaign audience includes Marsh Legal"
+      ]
+    },
+    {
+      "id": "pol-102",
+      "policyName": "Financial records — external share",
+      "area": "sharing",
+      "outcome": "review",
+      "subject": "INV-1042 — Arden & Vale",
+      "customerId": "cus-arden",
+      "documentId": "doc-inv-1042",
+      "decidedAt": "2026-10-24T10:52:00Z",
+      "explanation": "The invoice contains bank details. External sharing needs a named approver because the destination is outside the finance group.",
+      "evidence": [
+        "Bank reference detected",
+        "Destination group: external",
+        "No active share exception"
+      ]
+    },
+    {
+      "id": "pol-103",
+      "policyName": "Retention: 24 months",
+      "area": "retention",
+      "outcome": "allow",
+      "subject": "INV-1039 — Pike & Sons",
+      "customerId": "cus-pike",
+      "documentId": "doc-inv-1039",
+      "decidedAt": "2026-10-24T10:18:00Z",
+      "explanation": "Record is 14 months old and inside the retention window. No legal hold is attached.",
+      "evidence": [
+        "Created 28 Sep 2026",
+        "Retention class: commercial",
+        "No legal hold"
+      ]
+    },
+    {
+      "id": "pol-104",
+      "policyName": "Cross-border transfer — EU",
+      "area": "transfer",
+      "outcome": "review",
+      "subject": "MSA — Northwind Analytics",
+      "customerId": "cus-northwind",
+      "documentId": "doc-msa-northwind",
+      "decidedAt": "2026-10-24T09:58:00Z",
+      "explanation": "Clause 8 permits transfers to an EU sub-processor. The current legal basis needs an owner confirmation.",
+      "evidence": [
+        "Clause 8.2 transfer language",
+        "Sub-processor in Ireland",
+        "Owner: Idris Bello"
+      ]
+    },
+    {
+      "id": "pol-105",
+      "policyName": "PII minimisation on export",
+      "area": "minimisation",
+      "outcome": "allow",
+      "subject": "Q3 governance register",
+      "documentId": "doc-register-q3",
+      "decidedAt": "2026-10-23T16:44:00Z",
+      "explanation": "The export contains only owner names and processing roles. No customer identifiers were detected.",
+      "evidence": [
+        "No contact email fields",
+        "No customer identifiers",
+        "42 rows reviewed by rule"
+      ]
+    },
+    {
+      "id": "pol-106",
+      "policyName": "Health data — restricted access",
+      "area": "sharing",
+      "outcome": "deny",
+      "subject": "WhatsApp thread — Priya Raman",
+      "customerId": "cus-lumen",
+      "documentId": "doc-wa-lumen",
+      "decidedAt": "2026-10-23T15:20:00Z",
+      "explanation": "Clinical detail was detected with low confidence. The record is restricted to the health-data group until a human review is complete.",
+      "evidence": [
+        "Health category confidence 0.55",
+        "Source: WhatsApp Business",
+        "No clinical reviewer assigned"
+      ]
+    },
+    {
+      "id": "pol-107",
+      "policyName": "Consent evidence required",
+      "area": "consent",
+      "outcome": "review",
+      "subject": "Consent withdrawal — Marsh Legal",
+      "customerId": "cus-marsh",
+      "documentId": "doc-consent-marsh",
+      "decidedAt": "2026-10-23T14:12:00Z",
+      "explanation": "The withdrawal is recorded, but the timestamp is missing. The record needs a manual decision before the CRM flag can be updated.",
+      "evidence": [
+        "Timestamp field empty",
+        "Email thread referenced",
+        "CRM flag conflict"
+      ]
+    },
+    {
+      "id": "pol-108",
+      "policyName": "Financial records — external share",
+      "area": "sharing",
+      "outcome": "allow",
+      "subject": "Renewal terms — Arden & Vale",
+      "customerId": "cus-arden",
+      "documentId": "doc-email-arden-renewal",
+      "decidedAt": "2026-10-23T11:36:00Z",
+      "explanation": "Renewal terms contain a commercial amount but no bank details. The recipient is the existing billing contact.",
+      "evidence": [
+        "No bank details",
+        "Recipient verified",
+        "Share destination: client domain"
+      ]
+    },
+    {
+      "id": "pol-109",
+      "policyName": "PII minimisation on export",
+      "area": "minimisation",
+      "outcome": "allow",
+      "subject": "Onboarding notes — Lumen Health",
+      "documentId": "doc-note-lumen",
+      "decidedAt": "2026-10-22T09:26:00Z",
+      "explanation": "Only the primary contact name is present. No special-category content was detected.",
+      "evidence": [
+        "One identity field",
+        "No health fields detected",
+        "Internal destination"
+      ]
+    },
+    {
+      "id": "pol-110",
+      "policyName": "Retention: 24 months",
+      "area": "retention",
+      "outcome": "allow",
+      "subject": "CRM record — Northwind Analytics",
+      "customerId": "cus-northwind",
+      "documentId": "doc-crm-northwind",
+      "decidedAt": "2026-10-21T13:05:00Z",
+      "explanation": "CRM record is retained under the active contract. Review is due in September 2027.",
+      "evidence": [
+        "Active contract",
+        "Retention class: account",
+        "Next review Sep 2027"
+      ]
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "cmp-autumn",
+      "name": "Autumn compliance briefing",
+      "channel": "email",
+      "scheduledFor": "2026-10-26T09:00:00Z",
+      "status": "ready",
+      "message": "A short briefing on the 2026 records review: what changed, which records are in scope, and how to raise a question with the DVault team."
+    }
+  ],
+  "campaignRecipients": [
+    {
+      "id": "rec-1",
+      "campaignId": "cmp-autumn",
+      "customerId": "cus-arden",
+      "email": "amara.vale@synthetic.example",
+      "decision": "approve",
+      "reason": "Active marketing consent recorded 12 Mar 2026. No suppression flags.",
+      "status": "pending"
+    },
+    {
+      "id": "rec-2",
+      "campaignId": "cmp-autumn",
+      "customerId": "cus-pike",
+      "email": "jonah.pike@synthetic.example",
+      "decision": "approve",
+      "reason": "Active marketing consent recorded 04 Aug 2026. Billing contact verified.",
+      "status": "pending"
+    },
+    {
+      "id": "rec-3",
+      "campaignId": "cmp-autumn",
+      "customerId": "cus-northwind",
+      "email": "lena.ortiz@synthetic.example",
+      "decision": "review",
+      "reason": "CRM record is flagged do-not-market while a contract is active. Manual check required.",
+      "status": "pending"
+    },
+    {
+      "id": "rec-4",
+      "campaignId": "cmp-autumn",
+      "customerId": "cus-marsh",
+      "email": "theo.marsh@synthetic.example",
+      "decision": "block",
+      "reason": "Marketing consent withdrawn 18 Oct 2026. Suppression flag is active.",
+      "status": "pending"
+    },
+    {
+      "id": "rec-5",
+      "campaignId": "cmp-autumn",
+      "customerId": "cus-lumen",
+      "email": "priya.raman@synthetic.example",
+      "decision": "review",
+      "reason": "Health-sector account. Briefings require a manual relevance check before sending.",
+      "status": "pending"
+    },
+    {
+      "id": "rec-6",
+      "campaignId": "cmp-autumn",
+      "customerId": "cus-clarke",
+      "email": "owen.clarke@synthetic.example",
+      "decision": "approve",
+      "reason": "Active marketing consent recorded 04 Aug 2026. No suppression flags.",
+      "status": "pending"
+    }
+  ],
+  "rightsRequests": [
+    {
+      "id": "rr-2081",
+      "reference": "R-2081",
+      "customerId": "cus-marsh",
+      "type": "access",
+      "receivedAt": "2026-10-12T08:36:00Z",
+      "dueAt": "2026-10-30T08:36:00Z",
+      "status": "in-progress",
+      "sourceProgress": [
+        {
+          "sourceId": "src-drive",
+          "status": "pending",
+          "detail": "Collecting attachments (4 of 7)"
+        },
+        {
+          "sourceId": "src-crm",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-forms",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-whatsapp",
+          "status": "failed",
+          "detail": "Conversation export timed out at 14:40"
+        },
+        {
+          "sourceId": "src-billing",
+          "status": "not-applicable"
+        }
+      ],
+      "notes": "Identity evidence is on file. WhatsApp retry is required before the response can be issued."
+    },
+    {
+      "id": "rr-2084",
+      "reference": "R-2084",
+      "customerId": "cus-lumen",
+      "type": "erasure",
+      "receivedAt": "2026-10-18T09:44:00Z",
+      "dueAt": "2026-11-17T09:44:00Z",
+      "status": "partial",
+      "sourceProgress": [
+        {
+          "sourceId": "src-drive",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-crm",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-billing",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-whatsapp",
+          "status": "pending",
+          "detail": "Source rate-limited. Erasure staged, not applied."
+        },
+        {
+          "sourceId": "src-forms",
+          "status": "not-applicable"
+        }
+      ],
+      "notes": "Three of four sources are complete. WhatsApp erasure is staged and will apply after the sync recovers."
+    },
+    {
+      "id": "rr-2087",
+      "reference": "R-2087",
+      "customerId": "cus-clarke",
+      "type": "portability",
+      "receivedAt": "2026-10-21T14:15:00Z",
+      "dueAt": "2026-11-20T14:15:00Z",
+      "status": "open",
+      "sourceProgress": [
+        {
+          "sourceId": "src-drive",
+          "status": "pending"
+        },
+        {
+          "sourceId": "src-crm",
+          "status": "pending"
+        },
+        {
+          "sourceId": "src-billing",
+          "status": "pending"
+        },
+        {
+          "sourceId": "src-forms",
+          "status": "pending"
+        },
+        {
+          "sourceId": "src-whatsapp",
+          "status": "not-applicable"
+        }
+      ],
+      "notes": "Portable export requested in JSON format. Triage is pending."
+    },
+    {
+      "id": "rr-2079",
+      "reference": "R-2079",
+      "customerId": "cus-arden",
+      "type": "rectification",
+      "receivedAt": "2026-10-02T10:00:00Z",
+      "dueAt": "2026-11-01T10:00:00Z",
+      "status": "complete",
+      "sourceProgress": [
+        {
+          "sourceId": "src-drive",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-crm",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-billing",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-forms",
+          "status": "complete"
+        },
+        {
+          "sourceId": "src-whatsapp",
+          "status": "not-applicable"
+        }
+      ],
+      "notes": "Billing address corrected in all applicable sources. Confirmation sent on 21 October."
+    }
+  ],
+  "jobs": [
+    {
+      "id": "job-index",
+      "name": "Document indexing",
+      "kind": "index",
+      "status": "running",
+      "progress": 68,
+      "startedAt": "2026-10-24T16:55:00Z",
+      "attempts": 1,
+      "maxAttempts": 3,
+      "timeline": [
+        {
+          "at": "2026-10-24T16:55:00Z",
+          "label": "Queued 7 new documents",
+          "tone": "neutral"
+        },
+        {
+          "at": "2026-10-24T16:56:00Z",
+          "label": "Text extraction started",
+          "tone": "neutral"
+        },
+        {
+          "at": "2026-10-24T17:04:00Z",
+          "label": "Classification running",
+          "tone": "neutral"
+        }
+      ]
+    },
+    {
+      "id": "job-whatsapp",
+      "name": "WhatsApp history sync",
+      "kind": "sync",
+      "status": "failed",
+      "progress": 41,
+      "startedAt": "2026-10-24T12:48:00Z",
+      "finishedAt": "2026-10-24T13:12:00Z",
+      "attempts": 3,
+      "maxAttempts": 3,
+      "failureSummary": "Meta returned 429 (rate limit) and paused the export at 12 September. A retry needs a cool-down window.",
+      "timeline": [
+        {
+          "at": "2026-10-24T12:48:00Z",
+          "label": "Attempt 1 started",
+          "tone": "neutral"
+        },
+        {
+          "at": "2026-10-24T12:59:00Z",
+          "label": "Attempt 2 returned 429",
+          "tone": "warning"
+        },
+        {
+          "at": "2026-10-24T13:12:00Z",
+          "label": "Attempt 3 failed — retry exhausted",
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "id": "job-embeddings",
+      "name": "Embedding refresh",
+      "kind": "index",
+      "status": "queued",
+      "progress": 0,
+      "startedAt": "2026-10-24T17:06:00Z",
+      "attempts": 0,
+      "maxAttempts": 3,
+      "timeline": [
+        {
+          "at": "2026-10-24T17:06:00Z",
+          "label": "Waiting for indexing to finish",
+          "tone": "neutral"
+        }
+      ]
+    },
+    {
+      "id": "job-policy-sweep",
+      "name": "Policy evaluation sweep",
+      "kind": "evaluate",
+      "status": "running",
+      "progress": 86,
+      "startedAt": "2026-10-24T16:58:00Z",
+      "attempts": 1,
+      "maxAttempts": 2,
+      "timeline": [
+        {
+          "at": "2026-10-24T16:58:00Z",
+          "label": "Sweep started across 26 records",
+          "tone": "neutral"
+        },
+        {
+          "at": "2026-10-24T17:05:00Z",
+          "label": "Consent rules completed",
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "job-rights-export",
+      "name": "Rights export — R-2079",
+      "kind": "export",
+      "status": "completed",
+      "progress": 100,
+      "startedAt": "2026-10-21T15:20:00Z",
+      "finishedAt": "2026-10-21T15:31:00Z",
+      "attempts": 1,
+      "maxAttempts": 2,
+      "timeline": [
+        {
+          "at": "2026-10-21T15:20:00Z",
+          "label": "Export started",
+          "tone": "neutral"
+        },
+        {
+          "at": "2026-10-21T15:31:00Z",
+          "label": "Export complete — 168 KB",
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "job-checkpoint",
+      "name": "Audit integrity checkpoint",
+      "kind": "checkpoint",
+      "status": "completed",
+      "progress": 100,
+      "startedAt": "2026-10-24T16:04:00Z",
+      "finishedAt": "2026-10-24T16:05:00Z",
+      "attempts": 1,
+      "maxAttempts": 1,
+      "timeline": [
+        {
+          "at": "2026-10-24T16:04:00Z",
+          "label": "Hashing 10 audit events",
+          "tone": "neutral"
+        },
+        {
+          "at": "2026-10-24T16:05:00Z",
+          "label": "Checkpoint sealed and verified",
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "auditEvents": [
+    {
+      "id": "aud-1001",
+      "at": "2026-10-24T09:02:00Z",
+      "actor": "System",
+      "action": "Demo workspace seeded",
+      "target": "DVault (D:)",
+      "category": "system",
+      "severity": "info",
+      "prevHash": "genesis",
+      "hash": "5ab42239a4606324"
+    },
+    {
+      "id": "aud-1002",
+      "at": "2026-10-24T09:05:00Z",
+      "actor": "Sync worker",
+      "action": "Workspace Drive sync completed",
+      "target": "src-drive · 18 documents",
+      "category": "access",
+      "severity": "info",
+      "prevHash": "5ab42239a4606324",
+      "hash": "802342a735fecec6"
+    },
+    {
+      "id": "aud-1003",
+      "at": "2026-10-24T09:12:00Z",
+      "actor": "Rae Whitlock",
+      "action": "Policy set 'Baseline 2026' published",
+      "target": "6 active policies",
+      "category": "policy",
+      "severity": "info",
+      "prevHash": "802342a735fecec6",
+      "hash": "fd6d1770880b2735"
+    },
+    {
+      "id": "aud-1004",
+      "at": "2026-10-24T10:31:00Z",
+      "actor": "Idris Bello",
+      "action": "Campaign drafted — Autumn compliance briefing",
+      "target": "6 recipients",
+      "category": "policy",
+      "severity": "info",
+      "prevHash": "fd6d1770880b2735",
+      "hash": "b2681ed193ad694c"
+    },
+    {
+      "id": "aud-1005",
+      "at": "2026-10-24T11:04:00Z",
+      "actor": "Policy engine",
+      "action": "Marketing consent check blocked a recipient",
+      "target": "Marsh Legal",
+      "category": "policy",
+      "severity": "warning",
+      "prevHash": "b2681ed193ad694c",
+      "hash": "f719a98b5d66d27a"
+    },
+    {
+      "id": "aud-1006",
+      "at": "2026-10-24T12:18:00Z",
+      "actor": "Job runner",
+      "action": "WhatsApp sync retried (attempt 3)",
+      "target": "src-whatsapp",
+      "category": "system",
+      "severity": "warning",
+      "prevHash": "f719a98b5d66d27a",
+      "hash": "d2899f78510a9c0d"
+    },
+    {
+      "id": "aud-1007",
+      "at": "2026-10-24T13:12:00Z",
+      "actor": "Job runner",
+      "action": "WhatsApp sync stalled — rate limit returned",
+      "target": "src-whatsapp",
+      "category": "system",
+      "severity": "critical",
+      "prevHash": "d2899f78510a9c0d",
+      "hash": "bf7f8a00af1f93e5"
+    },
+    {
+      "id": "aud-1008",
+      "at": "2026-10-24T14:40:00Z",
+      "actor": "Nina Sørensen",
+      "action": "Rights request R-2081 escalated for retry",
+      "target": "Marsh Legal",
+      "category": "rights",
+      "severity": "warning",
+      "prevHash": "bf7f8a00af1f93e5",
+      "hash": "856580696088d134"
+    },
+    {
+      "id": "aud-1009",
+      "at": "2026-10-24T15:22:00Z",
+      "actor": "Classification service",
+      "action": "3 documents queued for classification review",
+      "target": "Review queue",
+      "category": "system",
+      "severity": "info",
+      "prevHash": "856580696088d134",
+      "hash": "f323335299cc9713"
+    },
+    {
+      "id": "aud-1010",
+      "at": "2026-10-24T16:05:00Z",
+      "actor": "Audit worker",
+      "action": "Integrity checkpoint sealed",
+      "target": "10 events · verified",
+      "category": "integrity",
+      "severity": "info",
+      "prevHash": "f323335299cc9713",
+      "hash": "aeb0b8c20a0ad763"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-1",
+      "at": "2026-10-24T12:00:00Z",
+      "eventsCovered": 5,
+      "hash": "f719a98b5d66d27a",
+      "status": "verified"
+    },
+    {
+      "id": "cp-2",
+      "at": "2026-10-24T16:05:00Z",
+      "eventsCovered": 10,
+      "hash": "aeb0b8c20a0ad763",
+      "status": "verified"
+    }
+  ]
+}

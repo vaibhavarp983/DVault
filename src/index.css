@@ -1,0 +1,189 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Segoe UI Variable Text', 'Segoe UI', Inter, system-ui, -apple-system, 'Helvetica Neue',
+    sans-serif;
+  --font-mono: 'Cascadia Code', Consolas, 'SFMono-Regular', ui-monospace, monospace;
+
+  --color-canvas: #f5f1e8;
+  --color-surface: #fbf8f2;
+  --color-panel: #fffdf8;
+  --color-panel-muted: #f0ebe0;
+  --color-ink: #24211b;
+  --color-ink-soft: #615a4d;
+  --color-ink-faint: #8b8373;
+  --color-line: #e5ded0;
+  --color-line-strong: #d3c9b5;
+
+  --color-gold: #b7892f;
+  --color-gold-bright: #d3a64b;
+  --color-gold-soft: #f2e7cd;
+  --color-gold-ink: #6f4f17;
+
+  --color-success: #2f7d5d;
+  --color-success-soft: #e2f0e9;
+  --color-warning: #a96c16;
+  --color-warning-soft: #faedd5;
+  --color-danger: #b64235;
+  --color-danger-soft: #f9e5e1;
+  --color-info: #3c6ea0;
+  --color-info-soft: #e4eef7;
+
+  --color-charcoal: #171512;
+  --color-charcoal-soft: #24211c;
+  --color-charcoal-line: #3a352d;
+
+  --radius-window: 0.75rem;
+  --shadow-window:
+    0 28px 70px -24px rgb(15 13 10 / 0.55), 0 8px 24px -12px rgb(15 13 10 / 0.35),
+    0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-panel: 0 1px 2px rgb(36 33 27 / 0.04), 0 12px 30px -22px rgb(36 33 27 / 0.35);
+  --shadow-flyout: 0 24px 60px -20px rgb(10 9 7 / 0.6), 0 2px 10px rgb(10 9 7 / 0.35);
+  --shadow-icon-label: 0 1px 2px rgb(0 0 0 / 0.9), 0 0 12px rgb(0 0 0 / 0.45);
+
+  --animate-window-in: window-in 180ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  --animate-flyout-in: flyout-in 150ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-drift: drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes window-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes flyout-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.5%, 1.5%, 0) scale(1.04);
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-family: var(--font-sans);
+    overflow: hidden;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c9c0ae transparent;
+  }
+
+  ::selection {
+    background: #e9d7ad;
+    color: #24211b;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer utilities {
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: #cdc4b3;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb:hover {
+    background: #b3a892;
+    background-clip: padding-box;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .drag-none {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .window-grid {
+    background-image:
+      linear-gradient(to right, rgb(36 33 27 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(36 33 27 / 0.035) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .wallpaper {
+    background:
+      radial-gradient(ellipse 55% 70% at 72% 32%, rgb(196 150 62 / 0.42), transparent 62%),
+      radial-gradient(ellipse 45% 55% at 18% 78%, rgb(107 79 36 / 0.34), transparent 68%),
+      radial-gradient(ellipse 80% 90% at 50% 110%, rgb(12 11 9 / 0.9), transparent 70%),
+      linear-gradient(148deg, #24211b 0%, #1b1915 48%, #12100d 100%);
+  }
+
+  .acrylic {
+    background-color: rgb(24 22 18 / 0.82);
+    backdrop-filter: blur(24px) saturate(1.15);
+  }
+
+  .acrylic-strong {
+    background-color: rgb(20 18 15 / 0.94);
+    backdrop-filter: blur(30px) saturate(1.2);
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
