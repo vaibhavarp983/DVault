@@ -27,6 +27,8 @@ import { PhoneSourcesApp } from './PhoneSourcesApp'
 import { PhoneProfileApp } from './PhoneProfileApp'
 import { PhoneHelpApp } from './PhoneHelpApp'
 import { PhoneMailApp, PhoneMessagesApp } from './PhoneMessagingApp'
+import { BizSearchApp } from './BizSearchApp'
+import type { Business } from './businesses'
 import type { PhoneApp } from './types'
 
 export function UserPhoneSim() {
@@ -41,6 +43,7 @@ export function UserPhoneSim() {
     refresh,
   } = useUser()
   const [app, setApp] = useState<PhoneApp>('home')
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [locked, setLocked] = useState(false)
   const [now, setNow] = useState(() => new Date())
 
@@ -62,7 +65,7 @@ export function UserPhoneSim() {
 
   const health = data ? selectConsentHealth(data) : undefined
   const summary = data ? selectUserSummary(data) : undefined
-  const screenDarkIcons = !locked && app !== 'home'
+  const screenDarkIcons = !locked && app !== 'home' && app !== 'biz-search'
 
   const toggleLock = () => {
     setLocked((current) => {
@@ -76,7 +79,10 @@ export function UserPhoneSim() {
     setLocked(false)
   }
 
-  const goHome = () => setApp('home')
+  const goHome = () => {
+    setApp('home')
+    setSelectedBusiness(null)
+  }
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-canvas text-ink">
@@ -160,9 +166,12 @@ export function UserPhoneSim() {
             />
           ) : status === 'loading' ? (
             <PhoneSplash />
-          ) : status === 'error' || !data ? (
+          ) : status === 'error' || !data || !data.profile ? (
             <PhoneError
-              message={error ?? 'The personal repository did not respond.'}
+              message={
+                error ??
+                'The workspace has no personal profile yet. Seed the demo data or switch to local mode, then retry.'
+              }
               onRetry={() => void refresh()}
             />
           ) : app === 'home' ? (
@@ -174,8 +183,25 @@ export function UserPhoneSim() {
             />
           ) : (
             <>
-              {app === 'mail' && <PhoneMailApp workspace={data} onBack={goHome} />}
-              {app === 'messages' && <PhoneMessagesApp workspace={data} onBack={goHome} />}
+              {app === 'mail' && (
+                <PhoneMailApp workspace={data} onBack={goHome} contact={selectedBusiness} />
+              )}
+              {app === 'messages' && (
+                <PhoneMessagesApp workspace={data} onBack={goHome} contact={selectedBusiness} />
+              )}
+              {app === 'biz-search' && (
+                <BizSearchApp
+                  onBack={goHome}
+                  onOpenEmail={(business) => {
+                    setSelectedBusiness(business)
+                    setApp('mail')
+                  }}
+                  onOpenMessage={(business) => {
+                    setSelectedBusiness(business)
+                    setApp('messages')
+                  }}
+                />
+              )}
               {app === 'data' && <PhoneDataApp workspace={data} onBack={goHome} />}
               {app === 'consent' && <PhoneConsentApp workspace={data} onBack={goHome} />}
               {app === 'requests' && <PhoneRequestsApp workspace={data} onBack={goHome} />}

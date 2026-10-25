@@ -6,6 +6,7 @@ import {
   HelpCircle,
   Mail,
   MessageSquare,
+  Search,
   ShieldCheck,
   UserRound,
   type LucideIcon,
@@ -29,6 +30,7 @@ const greeting = (hour: number) =>
 const appGradients = {
   mail: 'from-[#7fa9c7] via-[#4f7f9f] to-[#325b78]',
   messages: 'from-[#86b89a] via-[#4f8b6d] to-[#2f654d]',
+  search: 'from-[#e5c98a] via-[#c49a44] to-[#8a6521]',
   data: 'from-[#e2c17f] via-[#c19440] to-[#8a6521]',
   consent: 'from-[#8fb7a0] via-[#5a9576] to-[#356d54]',
   requests: 'from-[#e0b05b] via-[#c08a2f] to-[#8f651c]',
@@ -69,7 +71,7 @@ export function PhoneHome({
         aria-hidden
       />
 
-      <div className="scroll-thin relative flex h-full flex-col overflow-y-auto px-5 pb-7 pt-[50px]">
+      <div className="no-scrollbar relative flex h-full flex-col overflow-y-auto px-5 pb-7 pt-[50px]">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-white/35">
@@ -176,6 +178,12 @@ export function PhoneHome({
               gradient={appGradients.messages}
               onClick={() => onOpenApp('messages')}
               badge={unread}
+            />
+            <AppTile
+              label="Google"
+              icon={Search}
+              gradient={appGradients.search}
+              onClick={() => onOpenApp('biz-search')}
             />
             <AppTile
               label="My data"

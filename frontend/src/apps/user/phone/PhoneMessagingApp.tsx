@@ -14,15 +14,18 @@ import { cn } from '@/lib/cn'
 import { useUser } from '@/store/user-provider'
 import { Badge } from '@/components/ui/badge'
 import { PhoneAppShell } from './PhoneChrome'
+import type { Business } from './businesses'
 
 export function PhoneMessagingApp({
   workspace,
   channel,
   onBack,
+  contact,
 }: {
   workspace: UserWorkspace
   channel: MessageChannel
   onBack: () => void
+  contact?: Business | null
 }) {
   const { sendMessage, markConversationRead, verifyConversation } = useUser()
   const conversations = useMemo(
@@ -54,6 +57,20 @@ export function PhoneMessagingApp({
         action={<Badge tone="gold">{conversations.length}</Badge>}
       >
         <div className="space-y-2 p-3">
+          {contact && (
+            <div className="rounded-2xl border border-gold/30 bg-gold-soft/50 p-3">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-gold-ink">
+                {channel === 'email' ? 'New mail' : 'New message'} · demo contact
+              </p>
+              <p className="mt-1 text-[11px] font-semibold text-ink">{contact.name}</p>
+              <p className="mt-0.5 font-mono text-[8.5px] text-ink-soft">
+                {contact.bizCode} · {contact.email}
+              </p>
+              <p className="mt-1.5 text-[8px] leading-3.5 text-ink-faint">
+                Selected from Google search. Sending stays inside this simulator.
+              </p>
+            </div>
+          )}
           {conversations.map((conversation) => (
             <button
               key={conversation.id}
@@ -185,6 +202,7 @@ export function PhoneMessagingApp({
 export function PhoneMailApp(props: {
   workspace: UserWorkspace
   onBack: () => void
+  contact?: Business | null
 }) {
   return <PhoneMessagingApp {...props} channel="email" />
 }
@@ -192,6 +210,7 @@ export function PhoneMailApp(props: {
 export function PhoneMessagesApp(props: {
   workspace: UserWorkspace
   onBack: () => void
+  contact?: Business | null
 }) {
   return <PhoneMessagingApp {...props} channel="chat" />
 }
