@@ -70,7 +70,8 @@ def test_demo_reset_restores_documents_previews_and_integrity(client) -> None:
     assert len(body["customers"]) == 28
     assert len(body["documents"]) == 11
     assert len(body["policies"]) == 6
-    assert len(body["rightsRequests"]) == 1
+    assert len(body["rightsRequests"]) == 6
+    assert {item["status"] for item in body["rightsRequests"]} == {"open", "in-progress", "complete", "failed", "review"}
     assert len(body["rightsHolds"]) == 1
     assert body["integrity"]["status"] == "verified"
     assert body["integrity"]["gateState"] == "OPEN"
@@ -188,6 +189,49 @@ def test_demo_user_projection_and_consent(client) -> None:
     created = client.post(f"{BASE}/user/requests", json={"type": "ACCESS"})
     assert created.status_code == 201, created.text
     assert len(created.json()["requests"]) >= 2
+
+
+def test_demo_user_projection_covers_every_portal_use_case(client) -> None:
+    _reset(client)
+    body = client.get(f"{BASE}/user").json()
+
+    assert body["profile"]["location"]
+    assert {source["category"] for source in body["sources"]} == {"crm", "forms", "messaging", "storage"}
+    assert {document["kind"] for document in body["documents"]} == {
+        "account", "invoice", "message", "consent", "form", "note", "export",
+    }
+    assert {document["sensitivity"] for document in body["documents"]} == {
+        "personal", "confidential", "restricted",
+    }
+
+    consents = {consent["purpose"]: consent for consent in body["consents"]}
+    assert consents["Service delivery"]["granted"] is True
+    assert consents["Product analytics"]["granted"] is False
+    assert consents["Course updates"]["expiresAt"]
+
+    assert {request["type"] for request in body["requests"]} == {
+        "access", "erasure", "portability", "rectification", "objection",
+    }
+    assert {request["status"] for request in body["requests"]} == {
+        "open", "in-progress", "complete", "failed",
+    }
+    failed = next(request for request in body["requests"] if request["status"] == "failed")
+    assert any(step["status"] == "failed" and step.get("detail") for step in failed["steps"])
+    overdue = next(request for request in body["requests"] if request["status"] == "open")
+    assert overdue["dueAt"] < body["generatedAt"]
+
+    assert {event["category"] for event in body["activity"]} == {"consent", "access", "request", "system"}
+    assert {event["severity"] for event in body["activity"]} == {"info", "warning", "critical"}
+    assert {row["channel"] for row in body["conversations"]} == {"email", "chat"}
+    assert {row["interactionLevel"] for row in body["conversations"]} >= {"LOW", "MEDIUM", "HIGH"}
+
+    granted = client.post(f"{BASE}/user/consents/analytics", json={"granted": True})
+    assert granted.status_code == 200, granted.text
+    assert next(item for item in granted.json()["consents"] if item["purpose"] == "Product analytics")["granted"] is True
+
+    retried = client.post(f"{BASE}/user/requests/{failed['id']}/retry")
+    assert retried.status_code == 200, retried.text
+    assert next(item for item in retried.json()["requests"] if item["id"] == failed["id"])["status"] == "complete"
 
 
 def test_demo_import_sniffs_xlsx_content_and_skips_blank_rows(client) -> None:

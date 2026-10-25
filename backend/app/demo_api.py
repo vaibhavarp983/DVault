@@ -606,6 +606,15 @@ def set_user_consent(workspace_ref: str, purpose: str, payload: DemoConsentReque
             authorization.withdrawn_at = None
             authorization.captured_at = now
         db.flush()
+        suppressions = list(db.scalars(select(SuppressionRecord).where(
+            SuppressionRecord.workspace_id == workspace.id,
+            SuppressionRecord.subject_ref == subject,
+            SuppressionRecord.purpose == purpose,
+            SuppressionRecord.status == "ACTIVE",
+        )))
+        for suppression in suppressions:
+            suppression.status = "REVOKED"
+        db.flush()
         append_event(
             db,
             workspace.id,

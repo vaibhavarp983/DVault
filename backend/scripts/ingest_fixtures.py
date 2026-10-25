@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.db import SessionLocal
 from app.demo_projection import ensure_demo_projections
-from app.demo_seed import ensure_demo_portal_state, ensure_demo_rights_state
+from app.demo_seed import ensure_demo_portal_state, ensure_demo_rights_state, ensure_demo_user_state
 from app.evidence import create_checkpoint
 from app.ingestion import ingest_file
 from app.models import AuditCheckpoint, Source, Workspace
@@ -31,6 +31,7 @@ def main() -> None:
         ensure_demo_policy_state(session, workspace.id)
         rights = ensure_demo_rights_state(session, workspace)
         portal_subject = ensure_demo_portal_state(session, workspace)
+        ensure_demo_user_state(session, workspace)
         ensure_demo_projections(session, workspace)
         session.commit()
         checkpoint = session.scalar(select(AuditCheckpoint).where(

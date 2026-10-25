@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     enable_demo_controls: bool = False
     demo_show_synthetic_contacts: bool = False
     demo_user_subject_ref: str | None = None
+    ocr_provider: str = "none"
+    google_vision_api_key: str | None = None
+    ocr_timeout_seconds: float = 30.0
+    ocr_max_bytes: int = 10 * 1024 * 1024
 
     @property
     def allowed_origins(self) -> list[str]:
@@ -39,6 +43,9 @@ class Settings(BaseSettings):
             raise RuntimeError("Demo controls and failure injection must be disabled in production")
         if self.is_production and self.demo_show_synthetic_contacts:
             raise RuntimeError("Synthetic contact display must be disabled in production")
+        provider = (self.ocr_provider or "none").strip().lower()
+        if self.is_production and provider not in {"", "none", "disabled"} and not self.google_vision_api_key:
+            raise RuntimeError("GOOGLE_VISION_API_KEY must be configured when external OCR is enabled")
 
 
 @lru_cache

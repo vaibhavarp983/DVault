@@ -95,6 +95,8 @@ EVENT_SCHEMAS: dict[str, tuple[set[str], set[str]]] = {
     "RETENTION_SWEEP_COMPLETED": ({"run_id", "policy_version", "scanned", "retained", "reduced", "purged", "restricted", "skipped_hold"}, set()),
     "WITHDRAWAL_TIER_UPDATED": ({"tier_key", "version", "effect", "active"}, set()),
     "WITHDRAWAL_TIER_APPLIED": ({"tier_key", "subject_ref", "purposes", "effect"}, {"retention_run_id"}),
+    "ACCESS_SOURCE_SYNCED": ({"subject_ref", "source_count", "document_count"}, set()),
+    "SECURITY_ALERT_RAISED": ({"subject_ref", "reason_code"}, {"note"}),
 }
 
 

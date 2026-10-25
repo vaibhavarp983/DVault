@@ -127,6 +127,34 @@ ACTION_STATUS = {
     "FAILED": "failed",
     "RESTRICTED": "restricted",
 }
+USER_DOCUMENT_SENSITIVITY = {
+    "consent_record": "restricted",
+    "rights_request": "restricted",
+    "crm_export": "confidential",
+    "spreadsheet": "confidential",
+    "invoice": "confidential",
+    "purchase_order": "confidential",
+    "message_export": "confidential",
+    "email": "personal",
+    "enquiry_form": "personal",
+    "internal_note": "personal",
+    "operational_report": "personal",
+}
+USER_DOCUMENT_RETENTION = {
+    "account": "Account records kept until 24 months after closure",
+    "invoice": "6 years for tax records",
+    "message": "12 months after the conversation closes",
+    "consent": "As long as the consent is relied upon",
+    "form": "24 months after the request closes",
+    "note": "Until the note is deleted or the hold ends",
+    "export": "Until the export expires",
+}
+CRITICAL_ACTIVITY_EVENTS = {
+    "AUDIT_VERIFICATION_FAILED",
+    "INTEGRITY_INCIDENT_OPENED",
+    "MESSAGE_CHAIN_TAMPER_DETECTED",
+    "SECURITY_ALERT_RAISED",
+}
 JOB_STATUS = {
     "RUNNING": "running",
     "COMPLETE": "completed",
@@ -968,10 +996,12 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
     suppressions = list(db.scalars(select(SuppressionRecord).where(SuppressionRecord.workspace_id == workspace.id, SuppressionRecord.subject_ref == subject, SuppressionRecord.status == "ACTIVE")))
     consents = []
     for purpose, label, required, description in CONSENT_CATALOG:
-        authorization = next((row for row in authorizations if row.purpose == purpose and row.status == "ACTIVE"), None)
+        history = [row for row in authorizations if row.purpose == purpose]
+        latest = max(history, key=lambda row: row.withdrawn_at or row.captured_at, default=None)
+        active = next((row for row in history if row.status == "ACTIVE"), None)
         suppressed = any(row.purpose == purpose for row in suppressions)
-        granted = authorization is not None and not suppressed
-        updated = authorization.withdrawn_at or authorization.captured_at if authorization else None
+        granted = active is not None and not suppressed
+        updated = (latest.withdrawn_at or latest.captured_at) if latest else None
         consents.append({
             "id": f"ucns-{purpose}",
             "purpose": label,
@@ -979,8 +1009,8 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
             "granted": granted if not required else True,
             "required": required,
             "updatedAt": _iso(updated or (customer.since if customer else utc_now())),
-            "channel": authorization.channel if authorization else "Preference centre",
-            "expiresAt": _iso(authorization.expires_at) if authorization and authorization.expires_at else None,
+            "channel": latest.channel if latest else "Preference centre",
+            "expiresAt": _iso(active.expires_at) if active and active.expires_at else None,
         })
     import_ids = sorted({record.dataset_import_id for record in records})
     documents = []
@@ -990,7 +1020,7 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
         if document is None:
             continue
         preview = _document_preview(db, document, import_row, list(db.scalars(select(ImportFieldProfile).where(ImportFieldProfile.dataset_import_id == import_id))), contact_mode)
-        kind = {"invoice": "invoice", "purchase_order": "invoice", "consent_record": "consent", "email": "message", "message_export": "message", "enquiry_form": "form", "internal_note": "note", "operational_report": "note", "rights_request": "form", "crm_export": "account", "spreadsheet": "account"}.get(document.document_type, "account")
+        kind = {"invoice": "invoice", "purchase_order": "invoice", "consent_record": "consent", "email": "message", "message_export": "message", "enquiry_form": "form", "internal_note": "note", "operational_report": "export", "rights_request": "form", "crm_export": "account", "spreadsheet": "account"}.get(document.document_type, "account")
         fields = [
             {"field": profile.normalized_field, "category": _category(profile.classification, profile.source_field), "confidence": profile.confidence}
             for profile in db.scalars(select(ImportFieldProfile).where(ImportFieldProfile.dataset_import_id == import_id))
@@ -1002,10 +1032,10 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
             "sourceId": document.source_id,
             "updatedAt": _iso(import_row.completed_at if import_row else document.updated_at),
             "sizeKb": round((import_row.byte_size / 1024) if import_row else 0, 1),
-            "sensitivity": "restricted" if document.document_type in {"consent_record", "rights_request"} else "confidential",
+            "sensitivity": USER_DOCUMENT_SENSITIVITY.get(document.document_type, "confidential"),
             "summary": preview.get("reference") or (f"{len(preview.get('messages', []))} messages" if preview.get("messages") else document.display_title),
-            "heldSince": _iso(document.created_at),
-            "retention": "Synthetic demo retention",
+            "heldSince": _iso(document.document_created_at or document.created_at),
+            "retention": USER_DOCUMENT_RETENTION.get(kind, "Synthetic demo retention"),
             "fields": fields,
         })
     requests = list(db.scalars(select(RightsRequest).where(RightsRequest.workspace_id == workspace.id, RightsRequest.subject_ref == subject).order_by(RightsRequest.created_at.desc())))
@@ -1014,6 +1044,38 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
         actions = request_actions(db, request.id)
         status = RIGHTS_STATUS.get(request.status, "open")
         phone_status = "complete" if status == "complete" else "failed" if status == "failed" else "in-progress" if status in {"in-progress", "partial", "review"} else "open"
+        failed_action = next((action for action in actions if action.status == "FAILED"), None)
+        restricted_action = next((action for action in actions if action.status == "RESTRICTED"), None)
+        if request.status == "COMPLETE":
+            source_step = {"id": "sources", "label": "Sources collected", "status": "complete", "detail": f"{len(actions)} source actions"}
+            review_step = {"id": "review", "label": "Review", "status": "complete"}
+            delivery_step = {"id": "delivery", "label": "Response delivered", "status": "complete"}
+        elif request.status in {"FAILED", "PARTIAL"}:
+            source_step = {
+                "id": "sources",
+                "label": "Sources collected",
+                "status": "failed",
+                "detail": (failed_action.error_message if failed_action else None) or "One or more source actions failed; retry is available.",
+            }
+            review_step = {"id": "review", "label": "Review", "status": "pending"}
+            delivery_step = {"id": "delivery", "label": "Response delivered", "status": "pending"}
+        elif request.status == "NEEDS_REVIEW":
+            source_step = {"id": "sources", "label": "Sources collected", "status": "complete", "detail": f"{len(actions)} source actions"}
+            review_step = {
+                "id": "review",
+                "label": "Review",
+                "status": "in-progress",
+                "detail": (restricted_action.error_message if restricted_action else None) or (request.summary_json or {}).get("message"),
+            }
+            delivery_step = {"id": "delivery", "label": "Response delivered", "status": "pending"}
+        elif request.status in {"PLANNING", "EXECUTING"}:
+            source_step = {"id": "sources", "label": "Sources collected", "status": "in-progress", "detail": f"{len(actions)} source actions planned"}
+            review_step = {"id": "review", "label": "Review", "status": "pending"}
+            delivery_step = {"id": "delivery", "label": "Response delivered", "status": "pending"}
+        else:
+            source_step = {"id": "sources", "label": "Sources collected", "status": "pending"}
+            review_step = {"id": "review", "label": "Review", "status": "pending"}
+            delivery_step = {"id": "delivery", "label": "Response delivered", "status": "pending"}
         request_items.append({
             "id": request.id,
             "reference": request.reference or f"U-{request.id[:4].upper()}",
@@ -1024,9 +1086,9 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
             "steps": [
                 {"id": "submitted", "label": "Submitted", "status": "complete"},
                 {"id": "identity", "label": "Identity verified", "status": "complete"},
-                {"id": "sources", "label": "Sources collected", "status": "complete" if actions else "failed" if request.status in {"NEEDS_REVIEW", "FAILED"} else "in-progress", "detail": f"{len(actions)} source actions"},
-                {"id": "review", "label": "Review", "status": "in-progress" if request.status == "NEEDS_REVIEW" else "complete"},
-                {"id": "delivery", "label": "Response delivered", "status": "complete" if request.status == "COMPLETE" else "failed" if request.status == "FAILED" else "in-progress"},
+                source_step,
+                review_step,
+                delivery_step,
             ],
             "resolution": (request.summary_json or {}).get("message") if request.status in {"COMPLETE", "PARTIAL", "FAILED", "NEEDS_REVIEW"} else None,
         })
@@ -1035,13 +1097,33 @@ def build_user_workspace(db: Session, workspace: Workspace, subject_ref: str | N
         payload = _audit_payload(event)
         if payload.get("subject_ref") != subject:
             continue
+        if "AUTHORIZATION" in event.event_type:
+            category = "consent"
+        elif event.event_type.startswith("RIGHTS_"):
+            category = "request"
+        elif event.event_type.startswith(("IMPORT_", "ACCESS_")):
+            category = "access"
+        else:
+            category = "system"
+        if event.event_type in CRITICAL_ACTIVITY_EVENTS or event.event_type.startswith("BREACH_"):
+            severity = "critical"
+        elif (
+            "WITHDRAWN" in event.event_type
+            or "FAILED" in event.event_type
+            or "RESTRICTED" in event.event_type
+            or event.event_type == "RETENTION_HOLD_CREATED"
+            or payload.get("status") in {"FAILED", "PARTIAL", "NEEDS_REVIEW"}
+        ):
+            severity = "warning"
+        else:
+            severity = "info"
         activity.append({
             "id": event.id,
             "at": _iso(event.occurred_at),
             "action": event.event_type.replace("_", " ").title(),
             "actor": event.actor_reference or "DVault",
-            "category": "consent" if "AUTHORIZATION" in event.event_type else "request" if event.event_type.startswith("RIGHTS_") else "access" if event.event_type.startswith("IMPORT_") else "system",
-            "severity": "warning" if "WITHDRAWN" in event.event_type else "info",
+            "category": category,
+            "severity": severity,
         })
         if len(activity) >= 50:
             break
