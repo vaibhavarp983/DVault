@@ -1,5 +1,6 @@
 import {
   CheckCircle2,
+  EyeOff,
   Mail,
   MapPin,
   Phone,
@@ -12,8 +13,10 @@ import { selectUserSummary } from '@/data/user-selectors'
 import { formatDate, initials } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { useUser } from '@/store/user-provider'
+import { useNameSafe } from '@/store/use-name-safe'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Toggle } from '@/components/ui/toggle'
 import { PhoneAppShell } from './PhoneChrome'
 
 export function PhoneProfileApp({
@@ -24,8 +27,13 @@ export function PhoneProfileApp({
   onBack: () => void
 }) {
   const { mode, apiBaseUrl, reset } = useUser()
+  const nameSafe = useNameSafe()
   const [resetting, setResetting] = useState(false)
   const summary = selectUserSummary(workspace)
+  const protectedThread = workspace.conversations?.find(
+    (conversation) => conversation.subjectRef === workspace.demoSubjectRef,
+  )
+  const exampleAlias = protectedThread ? nameSafe.aliasFor(protectedThread) : null
 
   const restore = async () => {
     setResetting(true)
@@ -62,6 +70,41 @@ export function PhoneProfileApp({
           <p className="mt-2.5 border-t border-line pt-2 text-[8px] text-ink-faint">
             Member since {formatDate(workspace.profile.memberSince)}
           </p>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-panel p-3.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[10px] font-semibold text-ink">
+                <EyeOff className="size-3.5 text-gold" /> Name Safe
+              </p>
+              <p className="mt-1.5 text-[9px] leading-4 text-ink-soft">
+                Hide your name from businesses. They see a random customer code instead.
+              </p>
+            </div>
+            <Toggle
+              checked={nameSafe.enabled}
+              onChange={(checked) => nameSafe.setEnabled(checked, workspace.demoSubjectRef)}
+              disabled={!workspace.demoSubjectRef}
+              label="Name Safe"
+            />
+          </div>
+          {nameSafe.enabled && (
+            <div className="mt-2.5 rounded-lg border border-gold/20 bg-gold-soft/40 px-2.5 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[8px] uppercase tracking-[0.1em] text-ink-faint">
+                  Businesses see
+                </span>
+                <span className="font-mono text-[10px] font-semibold text-gold-ink">
+                  {exampleAlias ?? 'CST-XXXX'}
+                </span>
+              </div>
+              <p className="mt-1 text-[8px] leading-3.5 text-ink-faint">
+                A new code is created for each conversation. Turning Name Safe off shows your name
+                again.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-line bg-panel p-3.5">

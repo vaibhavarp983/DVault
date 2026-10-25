@@ -29,6 +29,7 @@ import { formatDateTime, formatRelative } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { isOverlayConversationId } from '@/data/local-messaging-store'
 import { useDemo } from '@/store/demo-provider'
+import { useNameSafe } from '@/store/use-name-safe'
 import type { WindowPayload } from '@/store/window-provider'
 import { Badge, type BadgeTone } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -69,6 +70,7 @@ export function MessagingApp({
     updateRetentionPolicy,
     updateWithdrawalTier,
   } = useDemo()
+  const nameSafe = useNameSafe()
   const farFuture = useMemo(() => new Date(Date.now() + 86_400_000), [])
   void farFuture
   const [actingAsCode, setActingAsCode] = useState(ARANYA_BUSINESS.code)
@@ -110,6 +112,9 @@ export function MessagingApp({
     conversations.find((entry) => entry.id === selectedId) ??
     conversations.find((entry) => entry.id === payload?.conversationId) ??
     conversations[0]
+  const selectedAlias = selected ? nameSafe.aliasFor(selected) : null
+  const customerLabel = (conversation: Conversation) =>
+    nameSafe.aliasFor(conversation) ?? conversation.customerName
 
   useEffect(() => {
     if (payload?.conversationId) {
@@ -317,7 +322,7 @@ export function MessagingApp({
               >
                 <div className="flex items-center gap-2">
                   <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-ink">
-                    {conversation.customerName}
+                    {customerLabel(conversation)}
                   </span>
                   <span className="shrink-0 text-[9px] text-ink-faint">
                     {formatRelative(conversation.lastActivityAt)}
@@ -384,10 +389,12 @@ export function MessagingApp({
                   {mode === 'api' && isOverlayConversationId(selected.id) && (
                     <Badge tone="outline">Session-only</Badge>
                   )}
+                  {selectedAlias && <Badge tone="outline">Name Safe</Badge>}
                   {selected.holdActive && <Badge tone="gold">Retention hold</Badge>}
                 </div>
                 <p className="mt-0.5 truncate text-[10px] text-ink-faint">
-                  {selected.customerName} · {selected.channel} · {selected.messageCount} messages ·
+                  {customerLabel(selected)} {'\u00b7'} {selected.channel} {'\u00b7'}{' '}
+                  {selected.messageCount} messages {'\u00b7'}
                   last activity {formatDateTime(selected.lastActivityAt)}
                 </p>
               </div>
@@ -424,7 +431,9 @@ export function MessagingApp({
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-[10.5px] font-semibold text-ink">
-                      {message.authorLabel}
+                      {message.sender === 'CUSTOMER' && selectedAlias
+                        ? selectedAlias
+                        : message.authorLabel}
                     </span>
                     <span className="text-[9px] text-ink-faint">
                       {formatDateTime(message.sentAt)}

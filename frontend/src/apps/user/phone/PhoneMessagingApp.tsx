@@ -25,6 +25,7 @@ import type { UserWorkspace } from '@/domain/user'
 import { formatDateTime, formatRelative } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { useUser } from '@/store/user-provider'
+import { useNameSafe } from '@/store/use-name-safe'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PhoneAppShell } from './PhoneChrome'
@@ -44,6 +45,7 @@ export function PhoneMessagingApp({
 }) {
   const { addBizConversation, sendMessage, markConversationRead, verifyConversation, mode } =
     useUser()
+  const nameSafe = useNameSafe()
   const conversations = useMemo(
     () => (workspace.conversations ?? []).filter((entry) => entry.channel === channel),
     [workspace.conversations, channel],
@@ -77,6 +79,7 @@ export function PhoneMessagingApp({
   const selectedBusiness = selected
     ? businessForConversation(selected.businessCode, selected.businessName)
     : null
+  const selectedAlias = selected ? nameSafe.aliasFor(selected) : null
 
   useEffect(() => {
     setDraft('')
@@ -302,6 +305,12 @@ export function PhoneMessagingApp({
                 <MapPin className="size-2.5 shrink-0" />
                 {selectedBusiness?.address}
               </p>
+              {selectedAlias && (
+                <p className="mt-0.5 flex items-center gap-1 truncate text-[8px] font-medium text-gold-ink">
+                  <ShieldCheck className="size-2.5 shrink-0" />
+                  Business sees {selectedAlias}
+                </p>
+              )}
             </div>
           </div>
           {selected.holdActive && (

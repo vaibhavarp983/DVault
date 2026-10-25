@@ -1,8 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { setNameSafeEnabled } from '@/data/name-safe'
 import { UserProvider } from '@/store/user-provider'
 import { UserPhoneSim } from './UserPhoneSim'
+
+beforeEach(() => {
+  setNameSafeEnabled(false)
+})
 
 function renderWithDeepLink(path: string) {
   return render(
@@ -47,7 +52,26 @@ describe('google business integration', () => {
     await openGoogleListing()
     fireEvent.click(screen.getByRole('button', { name: action }))
     expect(await screen.findByText(title)).toBeInTheDocument()
-    const body = screen.getByPlaceholderText('Write your message…') as HTMLTextAreaElement
+    const body = screen.getByPlaceholderText(/Write your message/i) as HTMLTextAreaElement
     expect(body.value).toMatch(/general enquiry/i)
+  })
+})
+
+describe('name safe', () => {
+  it('enables protection from the profile and shows the business-facing code', async () => {
+    renderWithDeepLink('/user')
+    fireEvent.click(await screen.findByRole('button', { name: 'Open profile' }))
+
+    const toggle = await screen.findByRole('switch', { name: 'Name Safe' })
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+
+    fireEvent.click(toggle)
+
+    expect(screen.getByRole('switch', { name: 'Name Safe' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.getByText('Businesses see')).toBeInTheDocument()
+    expect(screen.getByText(/^CST-[A-Z0-9]{4}$/)).toBeInTheDocument()
   })
 })
