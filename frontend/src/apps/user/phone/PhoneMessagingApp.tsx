@@ -19,6 +19,7 @@ import {
   resolveBizCode,
   type BizBusiness,
 } from '@/data/business-directory'
+import { isOverlayConversationId } from '@/data/local-messaging-store'
 import type { BizMessageType, MessageChannel } from '@/domain/messaging'
 import type { UserWorkspace } from '@/domain/user'
 import { formatDateTime, formatRelative } from '@/lib/format'
@@ -44,7 +45,8 @@ export function PhoneMessagingApp({
   initialBizCode?: string | null
   initialMessageType?: BizMessageType
 }) {
-  const { addBizConversation, sendMessage, markConversationRead, verifyConversation } = useUser()
+  const { addBizConversation, sendMessage, markConversationRead, verifyConversation, mode } =
+    useUser()
   const conversations = useMemo(
     () => (workspace.conversations ?? []).filter((entry) => entry.channel === channel),
     [workspace.conversations, channel],
@@ -231,6 +233,9 @@ export function PhoneMessagingApp({
                   </span>
                   <span className="mt-1 flex flex-wrap items-center gap-1">
                     {typeLabel && <Badge tone="outline">{typeLabel}</Badge>}
+                    {mode === 'api' && isOverlayConversationId(conversation.id) && (
+                      <Badge tone="outline">Session-only</Badge>
+                    )}
                     {conversation.unreadForCustomer > 0 && (
                       <Badge tone="gold">{conversation.unreadForCustomer} new</Badge>
                     )}
@@ -297,6 +302,9 @@ export function PhoneMessagingApp({
                 </p>
                 {selected.messageType && (
                   <Badge tone="gold">{BIZ_MESSAGE_TEMPLATES[selected.messageType].label}</Badge>
+                )}
+                {mode === 'api' && isOverlayConversationId(selected.id) && (
+                  <Badge tone="outline">Session-only</Badge>
                 )}
               </div>
               <p className="truncate text-[8.5px] text-ink-soft">

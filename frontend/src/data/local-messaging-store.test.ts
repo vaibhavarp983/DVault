@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   LOCAL_DEMO_SUBJECT,
+  isOverlayConversationId,
+  localBizOverlaySnapshot,
   localCreateBizConversation,
   localMarkRead,
   localMessagingSnapshot,
   localSendMessage,
+  mergeLocalBizOverlay,
   resetLocalMessagingStore,
   subscribeMessaging,
 } from './local-messaging-store'
@@ -84,5 +87,62 @@ describe('local business messaging', () => {
     unsubscribe()
     localSendMessage(conversation.id, 'See you tomorrow.', 'BUSINESS')
     expect(calls).toHaveLength(2)
+  })
+
+  it('exposes only newly created business threads in the API overlay', () => {
+    const seeded = localMessagingSnapshot(LOCAL_DEMO_SUBJECT).conversations
+    expect(seeded.length).toBeGreaterThan(0)
+    expect(localBizOverlaySnapshot().conversations).toHaveLength(0)
+
+    const conversation = createBizChat()
+    const overlay = localBizOverlaySnapshot()
+    expect(overlay.conversations.map((entry) => entry.id)).toEqual([conversation.id])
+    expect(isOverlayConversationId(conversation.id)).toBe(true)
+    expect(isOverlayConversationId(seeded[0]!.id)).toBe(false)
+  })
+
+  it('does not reuse the seeded Aranya thread when creating an overlay thread', () => {
+    const seeded = localMessagingSnapshot(LOCAL_DEMO_SUBJECT).conversations.find(
+      (entry) => entry.businessCode === 'BIZ-ARANYA' && entry.channel === 'email',
+    )!
+    const overlay = localCreateBizConversation(
+      {
+        bizCode: 'BIZ-ARANYA',
+        channel: 'email',
+        messageType: 'GENERAL_ENQUIRY',
+        body: 'Starting a separate session-only thread.',
+      },
+      { overlayOnly: true },
+    )
+    expect(overlay.id).not.toBe(seeded.id)
+    expect(isOverlayConversationId(overlay.id)).toBe(true)
+  })
+
+  it('merges overlay threads into API conversations without dropping either side', () => {
+    const overlay = createBizChat()
+    const apiConversation = {
+      ...overlay,
+      id: 'conv-api-thread',
+      subjectRef: 'api-subject',
+      customerName: 'API customer',
+    }
+    const merged = mergeLocalBizOverlay({
+      conversations: [apiConversation],
+      messageIntegrity: {
+        status: 'VERIFIED',
+        conversationTotal: 1,
+        messageTotal: 0,
+        verifiedConversations: 1,
+        flaggedConversations: 0,
+        flaggedMessages: 0,
+        headHash: 'genesis',
+      },
+    })
+    expect(merged.conversations?.map((entry) => entry.id)).toEqual([
+      overlay.id,
+      apiConversation.id,
+    ])
+    expect(merged.messageIntegrity?.conversationTotal).toBe(2)
+    expect(merged.messageIntegrity?.flaggedConversations).toBe(0)
   })
 })

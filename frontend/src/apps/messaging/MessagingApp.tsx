@@ -27,6 +27,7 @@ import type {
 } from '@/domain/messaging'
 import { formatDateTime, formatRelative } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { isOverlayConversationId } from '@/data/local-messaging-store'
 import { useDemo } from '@/store/demo-provider'
 import type { WindowPayload } from '@/store/window-provider'
 import { Badge, type BadgeTone } from '@/components/ui/badge'
@@ -57,6 +58,7 @@ export function MessagingApp({
     data,
     status,
     refreshing,
+    mode,
     createConversation,
     sendMessage,
     markConversationRead,
@@ -332,6 +334,9 @@ export function MessagingApp({
                   {conversation.messageType && (
                     <Badge tone="gold">{BIZ_MESSAGE_TEMPLATES[conversation.messageType].label}</Badge>
                   )}
+                  {mode === 'api' && isOverlayConversationId(conversation.id) && (
+                    <Badge tone="outline">Session-only</Badge>
+                  )}
                   {conversation.holdActive && <Badge tone="gold">Hold</Badge>}
                   {conversation.unreadForBusiness > 0 && (
                     <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[9px] font-semibold text-white">
@@ -375,6 +380,9 @@ export function MessagingApp({
                   </Badge>
                   {selected.messageType && (
                     <Badge tone="gold">{BIZ_MESSAGE_TEMPLATES[selected.messageType].label}</Badge>
+                  )}
+                  {mode === 'api' && isOverlayConversationId(selected.id) && (
+                    <Badge tone="outline">Session-only</Badge>
                   )}
                   {selected.holdActive && <Badge tone="gold">Retention hold</Badge>}
                 </div>

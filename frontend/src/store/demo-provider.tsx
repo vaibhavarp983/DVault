@@ -30,7 +30,14 @@ import type {
 } from '@/data/repository'
 import type { WithdrawalTierKey } from '@/domain/messaging'
 import {
+  isOverlayConversationId,
+  localArchiveConversation,
+  localBizOverlaySnapshot,
+  localMarkRead,
   localMessagingSnapshot,
+  localSendMessage,
+  localVerifyConversation,
+  mergeLocalBizOverlay,
   subscribeMessaging,
   type LocalMessagingSnapshot,
 } from '@/data/local-messaging-store'
@@ -52,6 +59,7 @@ type DemoAction =
   | { type: 'error'; error: string }
   | { type: 'refreshing'; refreshing: boolean }
   | { type: 'sync-messaging'; snapshot: LocalMessagingSnapshot }
+  | { type: 'sync-local-biz'; snapshot: LocalMessagingSnapshot }
 
 function reducer(state: DemoState, action: DemoAction): DemoState {
   switch (action.type) {
@@ -75,6 +83,13 @@ function reducer(state: DemoState, action: DemoAction): DemoState {
               withdrawalTiers: action.snapshot.withdrawalTiers,
               messageIntegrity: action.snapshot.messageIntegrity,
             },
+          }
+        : state
+    case 'sync-local-biz':
+      return state.data
+        ? {
+            ...state,
+            data: mergeLocalBizOverlay(state.data, action.snapshot),
           }
         : state
   }
@@ -219,8 +234,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'refreshing', refreshing: true })
       try {
         const data = await action()
-        dispatch({ type: 'ready', data })
-        success?.(data)
+        const merged = dataMode === 'api' ? mergeLocalBizOverlay(data) : data
+        dispatch({ type: 'ready', data: merged })
+        success?.(merged)
       } catch (error) {
         handleError(error)
       }
@@ -234,7 +250,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     demoRepository
       .load()
       .then((data) => {
-        if (!cancelled) dispatch({ type: 'ready', data })
+        if (!cancelled) {
+          dispatch({
+            type: 'ready',
+            data: dataMode === 'api' ? mergeLocalBizOverlay(data) : data,
+          })
+        }
       })
       .catch((error: unknown) => {
         if (!cancelled) dispatch({ type: 'error', error: describeError(error) })
@@ -245,9 +266,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (dataMode !== 'local') return
     return subscribeMessaging(() => {
-      dispatch({ type: 'sync-messaging', snapshot: localMessagingSnapshot() })
+      if (dataMode === 'local') {
+        dispatch({ type: 'sync-messaging', snapshot: localMessagingSnapshot() })
+        return
+      }
+      dispatch({ type: 'sync-local-biz', snapshot: localBizOverlaySnapshot() })
     })
   }, [])
 
@@ -604,6 +628,21 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const sendMessage = useCallback(
     async (conversationId: string, body: string) => {
+      if (dataMode === 'api' && isOverlayConversationId(conversationId)) {
+        try {
+          localSendMessage(conversationId, body, 'BUSINESS')
+          dispatch({ type: 'sync-local-biz', snapshot: localBizOverlaySnapshot() })
+          notify({
+            title: 'Message recorded',
+            body: 'The customer will see it in their phone app.',
+            tone: 'success',
+            appId: 'messages',
+          })
+        } catch (error) {
+          handleError(error)
+        }
+        return
+      }
       await apply(
         () => demoRepository.sendMessage(conversationId, body),
         () =>
@@ -615,25 +654,68 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           }),
       )
     },
-    [apply, notify],
+    [apply, handleError, notify],
   )
 
   const markConversationRead = useCallback(
     async (conversationId: string) => {
+      if (dataMode === 'api' && isOverlayConversationId(conversationId)) {
+        try {
+          localMarkRead(conversationId, 'business')
+          dispatch({ type: 'sync-local-biz', snapshot: localBizOverlaySnapshot() })
+        } catch (error) {
+          handleError(error)
+        }
+        return
+      }
       await apply(() => demoRepository.markConversationRead(conversationId))
     },
-    [apply],
+    [apply, handleError],
   )
 
   const archiveConversation = useCallback(
     async (conversationId: string) => {
+      if (dataMode === 'api' && isOverlayConversationId(conversationId)) {
+        try {
+          localArchiveConversation(conversationId)
+          dispatch({ type: 'sync-local-biz', snapshot: localBizOverlaySnapshot() })
+        } catch (error) {
+          handleError(error)
+        }
+        return
+      }
       await apply(() => demoRepository.archiveConversation(conversationId))
     },
-    [apply],
+    [apply, handleError],
   )
 
   const verifyConversation = useCallback(
     async (conversationId: string) => {
+      if (dataMode === 'api' && isOverlayConversationId(conversationId)) {
+        try {
+          localVerifyConversation(conversationId)
+          const snapshot = localBizOverlaySnapshot()
+          dispatch({ type: 'sync-local-biz', snapshot })
+          const conversation = snapshot.conversations.find(
+            (entry) => entry.id === conversationId,
+          )
+          notify({
+            title:
+              conversation?.integrityState === 'FLAGGED'
+                ? 'Chain integrity flagged'
+                : 'Chain verified',
+            body:
+              conversation?.integrityState === 'FLAGGED'
+                ? 'A message hash does not match. Review the flag before dispatch.'
+                : 'Every message hash in this thread matches its predecessor.',
+            tone: conversation?.integrityState === 'FLAGGED' ? 'danger' : 'success',
+            appId: 'messages',
+          })
+        } catch (error) {
+          handleError(error)
+        }
+        return
+      }
       await apply(
         () => demoRepository.verifyConversation(conversationId),
         (data) => {
@@ -653,7 +735,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         },
       )
     },
-    [apply, notify],
+    [apply, handleError, notify],
   )
 
   const verifyMessages = useCallback(async () => {
