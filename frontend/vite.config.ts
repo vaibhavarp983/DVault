@@ -15,5 +15,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    env: {
+      VITE_API_BASE_URL: '',
+      VITE_WORKSPACE_REF: 'default',
+      VITE_ENABLE_DEMO_CONTROLS: 'true',
+    },
   },
 })

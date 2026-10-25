@@ -25,6 +25,7 @@ export const LOCAL_CUSTOMER_NAME = 'Rowan Ellis'
 export const LOCAL_SECONDARY_SUBJECT = 'SUBJ-DEMO-UNHELD'
 const LOCAL_WORKSPACE_ID = 'local-workspace'
 const SYNC_CHANNEL = 'dvault-biz-messaging-v1'
+const OVERLAY_PREFIXES = ['conv-biz-', 'conv-live-'] as const
 
 interface LocalMessagingState {
   conversations: Conversation[]
@@ -394,16 +395,54 @@ function clone<T>(value: T): T {
   return structuredClone(value)
 }
 
-export function localMessagingSnapshot(subjectRef?: string): LocalMessagingSnapshot {
-  const conversations = state.conversations
-    .filter((conversation) => !subjectRef || conversation.subjectRef === subjectRef)
-    .map((conversation) => clone(conversation))
-    .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
+function snapshotFor(conversations: Conversation[]): LocalMessagingSnapshot {
   return {
     conversations,
     retentionPolicy: clone(state.policy),
     retentionRuns: clone(state.runs),
     withdrawalTiers: clone(state.tiers),
+    messageIntegrity: integrityFor(conversations),
+  }
+}
+
+export function isOverlayConversationId(conversationId: string): boolean {
+  return OVERLAY_PREFIXES.some((prefix) => conversationId.startsWith(prefix))
+}
+
+export function localMessagingSnapshot(subjectRef?: string): LocalMessagingSnapshot {
+  const conversations = state.conversations
+    .filter((conversation) => !subjectRef || conversation.subjectRef === subjectRef)
+    .map((conversation) => clone(conversation))
+    .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
+  return snapshotFor(conversations)
+}
+
+export function localBizOverlaySnapshot(): LocalMessagingSnapshot {
+  const conversations = state.conversations
+    .filter((conversation) => isOverlayConversationId(conversation.id))
+    .map((conversation) => clone(conversation))
+    .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
+  return snapshotFor(conversations)
+}
+
+export function mergeLocalBizOverlay<
+  T extends {
+    conversations?: Conversation[]
+    messageIntegrity?: MessageIntegrity | null
+  },
+>(
+  data: T,
+  snapshot: LocalMessagingSnapshot = localBizOverlaySnapshot(),
+): T {
+  if (snapshot.conversations.length === 0) return data
+  const overlayIds = new Set(snapshot.conversations.map((conversation) => conversation.id))
+  const conversations = [
+    ...snapshot.conversations,
+    ...(data.conversations ?? []).filter((conversation) => !overlayIds.has(conversation.id)),
+  ].sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
+  return {
+    ...data,
+    conversations,
     messageIntegrity: integrityFor(conversations),
   }
 }
@@ -466,7 +505,10 @@ export function localCreateConversation(payload: ConversationDraft): void {
   emitLocalChange()
 }
 
-export function localCreateBizConversation(payload: BizConversationDraft): Conversation {
+export function localCreateBizConversation(
+  payload: BizConversationDraft,
+  options: { overlayOnly?: boolean } = {},
+): Conversation {
   const business = resolveBizCode(payload.bizCode)
   if (!business) throw new Error('That business code was not found.')
   const channel = payload.channel === 'email' ? 'email' : 'chat'
@@ -475,7 +517,8 @@ export function localCreateBizConversation(payload: BizConversationDraft): Conve
     (conversation) =>
       conversation.subjectRef === LOCAL_DEMO_SUBJECT &&
       conversation.channel === channel &&
-      conversation.businessCode === business.code,
+      conversation.businessCode === business.code &&
+      (!options.overlayOnly || isOverlayConversationId(conversation.id)),
   )
   const conversation =
     existing ??
