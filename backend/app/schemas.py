@@ -76,6 +76,15 @@ class DashboardResponse(APIModel):
     mock_outbox_total: int = 0
     rights_requests_requiring_review: int = 0
     rights_requests_partial: int = 0
+    audit_integrity_status: str = "UNVERIFIED"
+    evidence_state: str = "UNVERIFIED"
+    audit_trusted_through_sequence: int | None = None
+    audit_untrusted_event_total: int = 0
+    integrity_gate_state: str = "OPEN"
+    open_integrity_incident_total: int = 0
+    open_breach_incident_total: int = 0
+    overdue_breach_assessment_total: int = 0
+    breach_notification_draft_total: int = 0
 
 
 class ImportResponse(APIModel):
@@ -445,6 +454,239 @@ class AccessArtifactResponse(APIModel):
     expires_at: datetime | None
     created_at: datetime
     completed_at: datetime | None
+
+
+class AuditEventResponse(APIModel):
+    id: str
+    sequence: int
+    event_type: str
+    entity_type: str | None
+    entity_ref: str | None
+    payload: dict[str, Any]
+    payload_sha256: str
+    previous_hash: str
+    event_hash: str
+    occurred_at: datetime
+    recorded_at: datetime
+    actor_reference: str | None
+    trust_state: str
+
+
+class AuditEventPageResponse(APIModel):
+    items: list[AuditEventResponse]
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+    total: int = Field(ge=0)
+
+
+class AuditVerifyRequest(BaseModel):
+    checkpoint_sequence: int | None = Field(default=None, ge=1)
+
+
+class AuditFailureResponse(APIModel):
+    sequence: int
+    reason_code: str
+    detail: str
+
+
+class AuditVerifyResponse(APIModel):
+    status: str
+    evidence_state: str
+    checked_event_total: int
+    verified_through_sequence: int | None
+    failure_sequence: int | None
+    untrusted_from_sequence: int | None
+    reason_code: str | None
+    reason_message: str | None
+    failures: list[AuditFailureResponse]
+    checkpoint_sequence: int | None
+    checkpoint_status: str | None
+    checkpoint_signed: bool | None
+    gate_state: str
+    incident_id: str | None
+    verified_at: datetime
+    disclaimer: str
+
+
+class AuditCheckpointCreateRequest(BaseModel):
+    note: str | None = Field(default=None, max_length=320)
+
+
+class AuditCheckpointResponse(APIModel):
+    id: str
+    sequence: int
+    head_hash: str
+    signature: str
+    public_key: str
+    key_id: str
+    algorithm: str
+    note: str | None
+    created_at: datetime
+
+
+class AuditChainSummary(APIModel):
+    head_sequence: int
+    head_hash: str | None
+    event_total: int
+    first_recorded_at: datetime | None
+
+
+class AuditCheckpointStatus(APIModel):
+    sequence: int | None
+    head_hash: str | None
+    key_id: str | None
+    signed_at: datetime | None
+    verification_status: str | None
+
+
+class AuditVerificationSummary(APIModel):
+    status: str
+    evidence_state: str
+    verified_through_sequence: int | None
+    failure_sequence: int | None
+    reason_code: str | None
+    verified_at: datetime | None
+
+
+class EvidenceGateSummary(APIModel):
+    state: str
+    incident_id: str | None
+    failure_sequence: int | None
+    reason_code: str | None
+    untrusted_from_sequence: int | None
+
+
+class AuditStatusResponse(APIModel):
+    workspace_id: str
+    chain: AuditChainSummary
+    checkpoint: AuditCheckpointStatus
+    verification: AuditVerificationSummary
+    gate: EvidenceGateSummary
+    incidents: dict[str, int]
+    breaches: dict[str, int]
+    disclaimer: str
+
+
+class IntegrityIncidentResponse(APIModel):
+    id: str
+    status: str
+    first_failure_sequence: int
+    reason_code: str
+    reason_message: str
+    verification_id: str | None
+    linked_breach_incident_id: str | None
+    detected_at: datetime
+    last_detected_at: datetime
+    acknowledged_at: datetime | None
+    resolved_at: datetime | None
+    resolution_decision: str | None
+    resolution_note: str | None
+
+
+class IntegrityIncidentResolveRequest(BaseModel):
+    decision: str = Field(min_length=1, max_length=32)
+    note: str = Field(min_length=8, max_length=500)
+
+
+class BreachCreateRequest(BaseModel):
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=3, max_length=4000)
+    origin: str = Field(default="MANUAL", max_length=32)
+    origin_ref: str | None = Field(default=None, max_length=120)
+    severity: str = Field(default="MEDIUM", max_length=16)
+    detected_at: datetime | None = None
+    subject_refs: list[str] = Field(default_factory=list, max_length=500)
+    source_ids: list[str] = Field(default_factory=list, max_length=100)
+    containment_summary: str | None = Field(default=None, max_length=2000)
+    created_by_reference: str | None = Field(default=None, max_length=160)
+
+
+class BreachAssessmentRequest(BaseModel):
+    notifiable: bool
+    reason_code: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=500)
+
+
+class BreachCloseRequest(BaseModel):
+    note: str = Field(min_length=8, max_length=500)
+
+
+class BreachAffectedSubjectResponse(APIModel):
+    subject_ref: str
+    resolution_status: str
+    record_count: int
+    sources: list[str]
+
+
+class BreachAffectedSourceResponse(APIModel):
+    source_id: str
+    source_key: str
+    display_name: str
+    affected_record_count: int
+    affected_subject_count: int
+
+
+class BreachAffectedResponse(APIModel):
+    breach_id: str
+    incident_ref: str
+    scope_status: str
+    subjects: list[BreachAffectedSubjectResponse]
+    sources: list[BreachAffectedSourceResponse]
+    generated_at: datetime
+    disclaimer: str
+
+
+class BreachNotificationDraftResponse(APIModel):
+    status: str
+    subject: str | None
+    body: str | None
+    generated_at: datetime | None
+    disclaimer: str
+
+
+class BreachResponse(APIModel):
+    id: str
+    incident_ref: str
+    title: str
+    description: str
+    origin: str
+    origin_ref: str | None
+    severity: str
+    status: str
+    scope_status: str
+    detected_at: datetime
+    assessment_due_at: datetime
+    assessed_at: datetime | None
+    notifiable: bool | None
+    assessment_reason_code: str | None
+    assessment_note: str | None
+    assessment_timeliness: str | None
+    timer_state: str
+    assessment_status: str
+    notification_status: str
+    notification_drafted_at: datetime | None
+    notification_subject: str | None
+    containment_summary: str | None
+    close_note: str | None
+    linked_integrity_incident_id: str | None
+    created_by_reference: str | None
+    created_at: datetime
+    updated_at: datetime
+    closed_at: datetime | None
+    affected_subject_total: int = 0
+    affected_source_total: int = 0
+
+
+class BreachDetailResponse(BreachResponse):
+    notification: BreachNotificationDraftResponse | None = None
+    affected: BreachAffectedResponse | None = None
+
+
+class BreachPageResponse(APIModel):
+    items: list[BreachResponse]
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+    total: int = Field(ge=0)
 
 
 class ErrorDetail(APIModel):

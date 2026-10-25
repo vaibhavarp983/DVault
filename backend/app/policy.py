@@ -7,6 +7,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.evidence import append_event
 from app.models import AuthorizationRecord, DataRecordRef, DatasetImport, Policy, PolicyDecision, SuppressionRecord, Workspace
 
 POLICY_KEY = "marketing-authorization"
@@ -143,13 +144,32 @@ def evaluate_marketing(
                 else:
                     result = _decision("REVIEW", ["AUTHORIZATION_EVIDENCE_MISSING"], rules, policy, now, correlation_id)
     if persist:
-        db.add(PolicyDecision(
+        decision_row = PolicyDecision(
             workspace_id=workspace.id, operation=operation, subject_ref=subject_ref, purpose=purpose, channel=channel,
             decision=result.decision, evaluated_rules_json=result.evaluated_rules, reason_codes_json=result.reason_codes,
             policy_id=result.policy_id, policy_version=result.policy_version, correlation_id=result.correlation_id,
             context_fingerprint=_context_fingerprint(operation, subject_ref, purpose, channel, match_status), evaluated_at=result.evaluated_at,
-        ))
+        )
+        db.add(decision_row)
         db.flush()
+        append_event(
+            db,
+            workspace.id,
+            "POLICY_DECISION_RECORDED",
+            {
+                "subject_ref": subject_ref,
+                "operation": operation,
+                "purpose": purpose,
+                "channel": channel,
+                "decision": result.decision,
+                "reason_codes": result.reason_codes,
+                "policy_version": result.policy_version,
+                "correlation_id": result.correlation_id,
+            },
+            entity_type="policy_decision",
+            entity_ref=decision_row.id,
+            occurred_at=result.evaluated_at,
+        )
     return result
 
 

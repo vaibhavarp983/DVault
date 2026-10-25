@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import SessionLocal
+from app.evidence import create_checkpoint
 from app.ingestion import ingest_file
-from app.models import DataRecordRef, RetentionHold, RightsRequest, Source, Workspace
+from app.models import AuditCheckpoint, DataRecordRef, RetentionHold, RightsRequest, Source, Workspace
 from app.policy import ensure_demo_policy_state
 from app.rights import create_request, execute_request, plan_request
 
@@ -79,7 +80,13 @@ def main() -> None:
         ensure_demo_policy_state(session, workspace.id)
         rights = ensure_demo_rights_state(session, workspace)
         session.commit()
-    print(json.dumps({"imports": results, "demo_rights": rights}, sort_keys=True))
+        checkpoint = session.scalar(select(AuditCheckpoint).where(
+            AuditCheckpoint.workspace_id == workspace.id,
+        ).order_by(AuditCheckpoint.sequence.desc()).limit(1))
+        if checkpoint is None:
+            checkpoint = create_checkpoint(session, workspace.id, "Synthetic demo baseline checkpoint")
+            session.commit()
+    print(json.dumps({"imports": results, "demo_rights": rights, "checkpoint_sequence": checkpoint.sequence if checkpoint else None}, sort_keys=True))
 
 
 if __name__ == "__main__":

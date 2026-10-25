@@ -8,6 +8,7 @@ from uuid import uuid4
 from sqlalchemy import and_, false, func, or_, select
 from sqlalchemy.orm import Session
 
+from app.evidence import append_event, ensure_evidence_trusted, iso_utc, sha256_hex
 from app.models import (
     AuthorizationRecord,
     DataRecordRef,
@@ -69,6 +70,19 @@ def create_request(
     )
     db.add(request)
     db.flush()
+    append_event(
+        db,
+        workspace.id,
+        "RIGHTS_REQUEST_CREATED",
+        {
+            "request_id": request.id,
+            "subject_ref": subject_ref,
+            "request_type": normalized_type,
+            "idempotency_key_sha256": sha256_hex(idempotency_key),
+        },
+        entity_type="rights_request",
+        entity_ref=request.id,
+    )
     return request, False
 
 
@@ -78,7 +92,8 @@ def _event(db: Session, job: Job, event_type: str, message: str, action: RightsR
     db.flush()
 
 
-def _set_request_status(request: RightsRequest, actions: list[RightsRequestAction]) -> None:
+def _set_request_status(db: Session, request: RightsRequest, actions: list[RightsRequestAction]) -> None:
+    previous = request.status
     counts: dict[str, int] = {}
     for action in actions:
         counts[action.status] = counts.get(action.status, 0) + 1
@@ -103,9 +118,19 @@ def _set_request_status(request: RightsRequest, actions: list[RightsRequestActio
     request.summary_json = {"message": message, "action_summary": counts, "completed_actions": succeeded, "total_actions": len(actions)}
     if request.status in {"COMPLETE", "PARTIAL", "FAILED", "NEEDS_REVIEW"}:
         request.completed_at = now_utc()
+        if request.status != previous:
+            append_event(
+                db,
+                request.workspace_id,
+                "RIGHTS_REQUEST_COMPLETED",
+                {"request_id": request.id, "status": request.status, "action_summary": counts},
+                entity_type="rights_request",
+                entity_ref=request.id,
+            )
 
 
 def plan_request(db: Session, workspace: Workspace, request: RightsRequest) -> RightsRequest:
+    ensure_evidence_trusted(db, workspace.id, "rights_planning")
     if request.status not in {"CREATED", "NEEDS_REVIEW"}:
         return request
     request.status = "PLANNING"
@@ -136,6 +161,14 @@ def plan_request(db: Session, workspace: Workspace, request: RightsRequest) -> R
     db.flush()
     actions = request_actions(db, request.id)
     request.summary_json = {"message": "Source actions planned and ready for execution.", "action_summary": {"PENDING": len(actions)}, "completed_actions": 0, "total_actions": len(actions)}
+    append_event(
+        db,
+        workspace.id,
+        "RIGHTS_REQUEST_PLANNED",
+        {"request_id": request.id, "action_total": len(actions), "source_ids": sorted(grouped)},
+        entity_type="rights_request",
+        entity_ref=request.id,
+    )
     return request
 
 
@@ -164,6 +197,28 @@ def _active_holds(db: Session, workspace_id: str, subject_ref: str, source_id: s
     )))
 
 
+def _emit_action_event(db: Session, request: RightsRequest, action: RightsRequestAction) -> None:
+    payload = {
+        "request_id": request.id,
+        "action_id": action.id,
+        "source_id": action.source_id,
+        "action_type": action.action_type,
+        "status": action.status,
+        "attempt_count": action.attempt_count,
+    }
+    erased = action.result_json.get("erased_record_count")
+    if action.action_type == "ERASURE" and isinstance(erased, int):
+        payload["erased_record_count"] = erased
+    append_event(
+        db,
+        request.workspace_id,
+        "RIGHTS_ACTION_COMPLETED",
+        payload,
+        entity_type="rights_request_action",
+        entity_ref=action.id,
+    )
+
+
 def _run_action(db: Session, workspace: Workspace, request: RightsRequest, action: RightsRequestAction, job: Job) -> None:
     source = db.scalar(select(Source).where(Source.workspace_id == workspace.id, Source.id == action.source_id))
     records = list(db.scalars(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.source_id == action.source_id, DataRecordRef.subject_ref == request.subject_ref)))
@@ -176,6 +231,7 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
         action.error_message = "The source is no longer available."
         action.completed_at = now_utc()
         _event(db, job, "ACTION_FAILED", "Source is no longer available.", action, {"code": action.error_code})
+        _emit_action_event(db, request, action)
         return
     if action.action_type == "ERASURE":
         holds = _active_holds(db, workspace.id, request.subject_ref, source.id, records)
@@ -187,6 +243,7 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
             action.result_json = {"hold_count": len(holds), "reason_codes": sorted({hold.reason_code for hold in holds})}
             action.completed_at = now_utc()
             _event(db, job, "ACTION_RESTRICTED", "Erasure action routed to review because a retention hold is active.", action, action.result_json)
+            _emit_action_event(db, request, action)
             return
     if source.configuration_metadata.get("phase4_failure"):
         action.status = "FAILED"
@@ -196,6 +253,7 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
         action.result_json = {"source_key": source.source_key}
         action.completed_at = now_utc()
         _event(db, job, "ACTION_FAILED", "Synthetic connector failure recorded.", action, {"code": action.error_code})
+        _emit_action_event(db, request, action)
         return
     action.status = "RUNNING"
     action.error_code = None
@@ -217,10 +275,28 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
                 authorization.status = "WITHDRAWN"
                 authorization.withdrawn_at = now_utc()
                 withdrawn += 1
-                existing = db.scalar(select(SuppressionRecord).where(SuppressionRecord.workspace_id == workspace.id, SuppressionRecord.subject_ref == request.subject_ref, SuppressionRecord.purpose == authorization.purpose, SuppressionRecord.channel == authorization.channel, SuppressionRecord.status == "ACTIVE"))
-                if existing is None:
-                    db.add(SuppressionRecord(workspace_id=workspace.id, subject_ref=request.subject_ref, purpose=authorization.purpose, channel=authorization.channel, status="ACTIVE", source="rights_workflow", effective_at=now_utc()))
+                suppression = db.scalar(select(SuppressionRecord).where(SuppressionRecord.workspace_id == workspace.id, SuppressionRecord.subject_ref == request.subject_ref, SuppressionRecord.purpose == authorization.purpose, SuppressionRecord.channel == authorization.channel, SuppressionRecord.status == "ACTIVE"))
+                if suppression is None:
+                    suppression = SuppressionRecord(workspace_id=workspace.id, subject_ref=request.subject_ref, purpose=authorization.purpose, channel=authorization.channel, status="ACTIVE", source="rights_workflow", effective_at=now_utc())
+                    db.add(suppression)
                     suppressions += 1
+                db.flush()
+                append_event(
+                    db,
+                    workspace.id,
+                    "AUTHORIZATION_WITHDRAWN",
+                    {
+                        "subject_ref": request.subject_ref,
+                        "authorization_id": authorization.id,
+                        "purpose": authorization.purpose,
+                        "channel": authorization.channel,
+                        "suppression_id": suppression.id,
+                        "withdrawn_at": iso_utc(authorization.withdrawn_at),
+                    },
+                    entity_type="authorization",
+                    entity_ref=authorization.id,
+                    occurred_at=authorization.withdrawn_at,
+                )
             db.flush()
             confirmed = db.scalar(select(func.count(SuppressionRecord.id)).where(SuppressionRecord.workspace_id == workspace.id, SuppressionRecord.subject_ref == request.subject_ref, SuppressionRecord.status == "ACTIVE")) or 0
             action.result_json = {"source_key": source.source_key, "scope": "WORKSPACE_AUTHORIZATIONS", "withdrawn_authorizations": withdrawn, "created_suppressions": suppressions, "confirmed_active_suppressions": confirmed}
@@ -228,6 +304,7 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
         action.retry_eligible = False
         action.completed_at = now_utc()
         _event(db, job, "ACTION_COMPLETED", f"{action.action_type} completed for {source.display_name}.", action, action.result_json)
+        _emit_action_event(db, request, action)
     except Exception as exc:
         action.status = "FAILED"
         action.retry_eligible = True
@@ -236,6 +313,7 @@ def _run_action(db: Session, workspace: Workspace, request: RightsRequest, actio
         action.result_json = {"source_key": source.source_key, "error_class": type(exc).__name__}
         action.completed_at = now_utc()
         _event(db, job, "ACTION_FAILED", "The source connector reported an unexpected failure.", action, {"code": action.error_code})
+        _emit_action_event(db, request, action)
 
 
 def _refresh_access_artifact(db: Session, request: RightsRequest, actions: list[RightsRequestAction]) -> None:
@@ -253,9 +331,24 @@ def _refresh_access_artifact(db: Session, request: RightsRequest, actions: list[
         artifact.status = "READY" if request.status == "COMPLETE" else "PARTIAL"
         artifact.source_summaries_json = summaries
         artifact.completed_at = now_utc()
+    db.flush()
+    append_event(
+        db,
+        request.workspace_id,
+        "ACCESS_ARTIFACT_READY",
+        {
+            "request_id": request.id,
+            "artifact_id": artifact.id,
+            "status": artifact.status,
+            "source_keys": sorted({summary.get("source_key") for summary in summaries if summary.get("source_key")}),
+        },
+        entity_type="rights_access_artifact",
+        entity_ref=artifact.id,
+    )
 
 
 def execute_request(db: Session, workspace: Workspace, request: RightsRequest, retry: bool = False) -> Job:
+    ensure_evidence_trusted(db, workspace.id, "rights_execution")
     if request.status == "CREATED":
         raise RightsProblem("RIGHTS_REQUEST_PLANNING_REQUIRED", "Plan the request before executing it.")
     if request.status == "COMPLETE":
@@ -273,7 +366,7 @@ def execute_request(db: Session, workspace: Workspace, request: RightsRequest, r
     for action in eligible:
         _run_action(db, workspace, request, action, job)
     actions = request_actions(db, request.id)
-    _set_request_status(request, actions)
+    _set_request_status(db, request, actions)
     _refresh_access_artifact(db, request, actions)
     job.action_completed = len([action for action in eligible if action.status == "SUCCEEDED"])
     job.status = request.status

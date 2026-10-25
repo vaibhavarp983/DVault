@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     hmac_secret: str = "development-only-secret-change-before-deployment"
     source_store_dir: Path = Path("./source_stores")
     enable_failure_injection: bool = False
+    audit_signing_key: str | None = None
+    audit_signing_key_path: Path = Path("./.keys/audit_signing_key.pem")
+    audit_key_id: str = "local-demo-v1"
 
     @property
     def is_production(self) -> bool:
@@ -22,6 +25,8 @@ class Settings(BaseSettings):
             raise RuntimeError("HMAC_SECRET must be configured in production")
         if len(self.hmac_secret) < 32:
             raise RuntimeError("HMAC_SECRET must be at least 32 characters")
+        if self.is_production and not self.audit_signing_key and not self.audit_signing_key_path.exists():
+            raise RuntimeError("AUDIT_SIGNING_KEY must be configured in production")
 
 
 @lru_cache

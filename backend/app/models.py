@@ -419,3 +419,136 @@ class JobEvent(Base):
     message: Mapped[str] = mapped_column(String(320))
     details_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+    __table_args__ = (UniqueConstraint("workspace_id", "sequence", name="uq_audit_event_sequence"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    sequence: Mapped[int] = mapped_column(Integer, index=True)
+    event_type: Mapped[str] = mapped_column(String(64), index=True)
+    entity_type: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    entity_ref: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    payload_schema: Mapped[str] = mapped_column(String(48), default="dvault-audit-payload-v1")
+    canonical_payload: Mapped[str] = mapped_column(Text)
+    payload_sha256: Mapped[str] = mapped_column(String(64))
+    previous_hash: Mapped[str] = mapped_column(String(64))
+    event_hash: Mapped[str] = mapped_column(String(64), index=True)
+    actor_reference: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+
+class AuditCheckpoint(Base):
+    __tablename__ = "audit_checkpoints"
+    __table_args__ = (UniqueConstraint("workspace_id", "sequence", name="uq_audit_checkpoint_sequence"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    head_hash: Mapped[str] = mapped_column(String(64))
+    signature: Mapped[str] = mapped_column(Text)
+    public_key: Mapped[str] = mapped_column(String(64))
+    key_id: Mapped[str] = mapped_column(String(64))
+    algorithm: Mapped[str] = mapped_column(String(24), default="Ed25519")
+    note: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class AuditVerification(Base):
+    __tablename__ = "audit_verifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    status: Mapped[str] = mapped_column(String(24), index=True)
+    evidence_state: Mapped[str] = mapped_column(String(32))
+    checked_event_total: Mapped[int] = mapped_column(Integer, default=0)
+    verified_through_sequence: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    failure_sequence: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    untrusted_from_sequence: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reason_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    reason_message: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    failures_json: Mapped[list] = mapped_column(JSON, default=list)
+    checkpoint_sequence: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    checkpoint_status: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    checkpoint_signed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, index=True)
+
+
+class IntegrityIncident(Base):
+    __tablename__ = "integrity_incidents"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    status: Mapped[str] = mapped_column(String(24), index=True, default="OPEN")
+    first_failure_sequence: Mapped[int] = mapped_column(Integer)
+    reason_code: Mapped[str] = mapped_column(String(80))
+    reason_message: Mapped[str] = mapped_column(String(320))
+    verification_id: Mapped[str | None] = mapped_column(ForeignKey("audit_verifications.id"), nullable=True)
+    linked_breach_incident_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    last_detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolution_decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    resolution_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class BreachIncident(Base):
+    __tablename__ = "breach_incidents"
+    __table_args__ = (UniqueConstraint("workspace_id", "incident_ref", name="uq_breach_incident_ref"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    incident_ref: Mapped[str] = mapped_column(String(40))
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text)
+    origin: Mapped[str] = mapped_column(String(32), index=True, default="MANUAL")
+    origin_ref: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    severity: Mapped[str] = mapped_column(String(16), default="MEDIUM")
+    status: Mapped[str] = mapped_column(String(32), index=True, default="DRAFT")
+    scope_status: Mapped[str] = mapped_column(String(24), default="KNOWN")
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    assessment_due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    assessed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    notifiable: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    assessment_reason_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    assessment_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    assessment_timeliness: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    notification_status: Mapped[str] = mapped_column(String(24), default="NONE")
+    notification_drafted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    notification_subject: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    notification_body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    containment_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    close_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    linked_integrity_incident_id: Mapped[str | None] = mapped_column(ForeignKey("integrity_incidents.id"), nullable=True)
+    created_by_reference: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class BreachAffectedSubject(Base):
+    __tablename__ = "breach_affected_subjects"
+    __table_args__ = (UniqueConstraint("breach_incident_id", "subject_ref", name="uq_breach_subject"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    breach_incident_id: Mapped[str] = mapped_column(ForeignKey("breach_incidents.id"), index=True)
+    subject_ref: Mapped[str] = mapped_column(String(80))
+    resolution_status: Mapped[str] = mapped_column(String(24), default="UNRESOLVED")
+    record_count: Mapped[int] = mapped_column(Integer, default=0)
+    sources_json: Mapped[list] = mapped_column(JSON, default=list)
+
+
+class BreachAffectedSource(Base):
+    __tablename__ = "breach_affected_sources"
+    __table_args__ = (UniqueConstraint("breach_incident_id", "source_id", name="uq_breach_source"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    breach_incident_id: Mapped[str] = mapped_column(ForeignKey("breach_incidents.id"), index=True)
+    source_id: Mapped[str] = mapped_column(ForeignKey("sources.id"), index=True)
+    affected_record_count: Mapped[int] = mapped_column(Integer, default=0)
+    affected_subject_count: Mapped[int] = mapped_column(Integer, default=0)
+    note: Mapped[str | None] = mapped_column(String(320), nullable=True)

@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.evidence import append_event
 from app.models import (
     DataQualityFinding,
     DataRecordRef,
@@ -419,6 +420,21 @@ def ingest_file(db: Session, workspace: Workspace, source: Source, filename: str
         document.processing_status = "catalogued"
         source.last_synced_at = datetime.now(timezone.utc)
         add_quality_findings(db, workspace, source, import_row, profiles, candidate_count)
+        append_event(
+            db,
+            workspace.id,
+            "IMPORT_COMPLETED",
+            {
+                "source_id": source.id,
+                "source_key": source.source_key,
+                "import_id": import_row.id,
+                "row_count": len(records),
+                "document_type": document.document_type,
+            },
+            entity_type="dataset_import",
+            entity_ref=import_row.id,
+            occurred_at=import_row.completed_at,
+        )
         db.commit()
         db.refresh(import_row)
         return import_row, False

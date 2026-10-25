@@ -6,6 +6,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api import ConflictError, ForbiddenError, NotFoundError, ServiceUnavailableError, router
+from app.breach import BreachProblem
+from app.evidence import EvidenceProblem
 from app.ingestion import IngestionProblem
 from app.policy import PolicyProblem
 from app.rights import RightsProblem
@@ -46,6 +48,16 @@ async def policy_handler(_: Request, exc: PolicyProblem) -> JSONResponse:
 
 @app.exception_handler(RightsProblem)
 async def rights_handler(_: Request, exc: RightsProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message)
+
+
+@app.exception_handler(EvidenceProblem)
+async def evidence_handler(_: Request, exc: EvidenceProblem) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, exc.message, exc.details)
+
+
+@app.exception_handler(BreachProblem)
+async def breach_handler(_: Request, exc: BreachProblem) -> JSONResponse:
     return error_response(exc.status_code, exc.code, exc.message)
 
 

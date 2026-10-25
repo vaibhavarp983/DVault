@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from datetime import datetime, timezone
@@ -7,24 +8,57 @@ from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.breach import (
+    DISCLAIMER as BREACH_DISCLAIMER,
+    affected_counts,
+    assess_breach,
+    assessment_status,
+    breach_affected,
+    breach_timer_state,
+    close_breach,
+    draft_notification,
+    register_breach,
+)
 from app.config import get_settings
 from app.db import engine, get_db
+from app.evidence import (
+    DISCLAIMER as EVIDENCE_DISCLAIMER,
+    EvidenceProblem,
+    append_event,
+    audit_status,
+    create_checkpoint,
+    ensure_evidence_trusted,
+    evidence_gate,
+    iso_utc,
+    resolve_integrity_incident,
+    sha256_hex,
+    trusted_through_sequence,
+    verify_chain,
+)
 from app.ingestion import IngestionProblem, ingest_file, mask_value, normalize_field
 from app.models import (
-    AuthorizationRecord, Campaign, CampaignRecipient, DataQualityFinding, DataRecordRef, DatasetImport, Document,
-    DocumentExtraction, FixtureManifest, ImportFieldProfile, Job, JobEvent, MatchCandidate, MockOutbox, Policy,
-    RetentionHold, RightsAccessArtifact, RightsRequest, RightsRequestAction, Source, PolicyDecision,
+    AuditCheckpoint, AuditEvent, AuthorizationRecord, BreachAffectedSource, BreachAffectedSubject,
+    BreachIncident, Campaign, CampaignRecipient, DataQualityFinding, DataRecordRef, DatasetImport, Document,
+    DocumentExtraction, FixtureManifest, ImportFieldProfile, IntegrityIncident, Job, JobEvent, MatchCandidate,
+    MockOutbox, Policy, RetentionHold, RightsAccessArtifact, RightsRequest, RightsRequestAction, Source, PolicyDecision,
     SuppressionRecord, Workspace,
 )
 from app.policy import PolicyProblem, ensure_default_policy, evaluate_marketing, masked_subject_ref
 from app.rights import RightsProblem, create_request as create_rights_request, execute_request, plan_request, release_hold, request_actions
 from app.schemas import (
     AccessArtifactResponse,
-    AuthorizationCreateRequest, AuthorizationResponse, CampaignCreateRequest, CampaignRecipientPageResponse,
+    AuditCheckpointCreateRequest, AuditCheckpointResponse, AuditCheckpointStatus, AuditChainSummary,
+    AuditEventPageResponse, AuditEventResponse, AuditFailureResponse, AuditStatusResponse, AuditVerificationSummary,
+    AuditVerifyRequest, AuditVerifyResponse,
+    AuthorizationCreateRequest, AuthorizationResponse, BreachAffectedResponse, BreachAffectedSourceResponse,
+    BreachAffectedSubjectResponse, BreachAssessmentRequest, BreachCloseRequest, BreachCreateRequest, BreachDetailResponse,
+    BreachNotificationDraftResponse, BreachPageResponse, BreachResponse,
+    CampaignCreateRequest, CampaignRecipientPageResponse,
     CampaignRecipientResponse, CampaignResponse,
     DashboardResponse, DataQualityFindingResponse, DataQualityPageResponse, DocumentExtractionResponse, DocumentResponse,
-    FailureInjectionRequest, FailureInjectionResponse,
-    FieldProfileResponse, HealthResponse, ImportPageResponse, ImportResponse, MatchCandidatePageResponse,
+    EvidenceGateSummary, FailureInjectionRequest, FailureInjectionResponse,
+    FieldProfileResponse, HealthResponse, ImportPageResponse, ImportResponse, IntegrityIncidentResolveRequest,
+    IntegrityIncidentResponse, MatchCandidatePageResponse,
     MatchCandidateResponse, OutboxPageResponse, OutboxResponse, PageResponse, PolicyDecisionResponse,
     PolicyEvaluationRequest, PolicyResponse, RecordPageResponse, RecordResponse, SchemaPreviewResponse,
     SourceResponse, WithdrawalRequest, WorkspaceResponse, JobDetailResponse, JobEventResponse, JobPageResponse,
@@ -35,7 +69,7 @@ from app.schemas import (
 from app.source_store import SourceStore
 
 router = APIRouter(prefix="/api/v1")
-REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "rights_requests", "rights_request_actions", "retention_holds", "rights_access_artifacts", "jobs", "job_events", "alembic_version"}
+REQUIRED_TABLES = {"workspaces", "sources", "documents", "fixture_manifests", "api_contract_versions", "dataset_imports", "import_field_profiles", "data_record_refs", "identity_tokens", "match_candidates", "data_quality_findings", "document_extractions", "policies", "authorization_records", "suppression_records", "policy_decisions", "campaigns", "campaign_recipients", "mock_outbox", "rights_requests", "rights_request_actions", "retention_holds", "rights_access_artifacts", "jobs", "job_events", "audit_events", "audit_checkpoints", "audit_verifications", "integrity_incidents", "breach_incidents", "breach_affected_subjects", "breach_affected_sources", "alembic_version"}
 
 
 class NotFoundError(Exception):
@@ -188,6 +222,76 @@ def hold_response(item: RetentionHold) -> RetentionHoldResponse:
     )
 
 
+def audit_event_response(event: AuditEvent, trusted_through: int | None) -> AuditEventResponse:
+    try:
+        payload = json.loads(event.canonical_payload)
+    except (TypeError, ValueError):
+        payload = {"malformed": True}
+    if trusted_through is None:
+        trust = "UNVERIFIED"
+    else:
+        trust = "TRUSTED" if event.sequence <= trusted_through else "UNTRUSTED"
+    return AuditEventResponse(
+        id=event.id, sequence=event.sequence, event_type=event.event_type, entity_type=event.entity_type,
+        entity_ref=event.entity_ref, payload=payload, payload_sha256=event.payload_sha256,
+        previous_hash=event.previous_hash, event_hash=event.event_hash, occurred_at=event.occurred_at,
+        recorded_at=event.recorded_at, actor_reference=event.actor_reference, trust_state=trust,
+    )
+
+
+def audit_checkpoint_response(checkpoint: AuditCheckpoint) -> AuditCheckpointResponse:
+    return AuditCheckpointResponse(
+        id=checkpoint.id, sequence=checkpoint.sequence, head_hash=checkpoint.head_hash,
+        signature=checkpoint.signature, public_key=checkpoint.public_key, key_id=checkpoint.key_id,
+        algorithm=checkpoint.algorithm, note=checkpoint.note, created_at=checkpoint.created_at,
+    )
+
+
+def incident_response(incident: IntegrityIncident) -> IntegrityIncidentResponse:
+    return IntegrityIncidentResponse(
+        id=incident.id, status=incident.status, first_failure_sequence=incident.first_failure_sequence,
+        reason_code=incident.reason_code, reason_message=incident.reason_message,
+        verification_id=incident.verification_id, linked_breach_incident_id=incident.linked_breach_incident_id,
+        detected_at=incident.detected_at, last_detected_at=incident.last_detected_at,
+        acknowledged_at=incident.acknowledged_at, resolved_at=incident.resolved_at,
+        resolution_decision=incident.resolution_decision, resolution_note=incident.resolution_note,
+    )
+
+
+def breach_response(db: Session, breach: BreachIncident) -> BreachResponse:
+    subject_total, source_total = affected_counts(db, breach.id)
+    return BreachResponse(
+        id=breach.id, incident_ref=breach.incident_ref, title=breach.title, description=breach.description,
+        origin=breach.origin, origin_ref=breach.origin_ref, severity=breach.severity, status=breach.status,
+        scope_status=breach.scope_status, detected_at=breach.detected_at, assessment_due_at=breach.assessment_due_at,
+        assessed_at=breach.assessed_at, notifiable=breach.notifiable, assessment_reason_code=breach.assessment_reason_code,
+        assessment_note=breach.assessment_note, assessment_timeliness=breach.assessment_timeliness,
+        timer_state=breach_timer_state(breach), assessment_status=assessment_status(breach),
+        notification_status=breach.notification_status, notification_drafted_at=breach.notification_drafted_at,
+        notification_subject=breach.notification_subject, containment_summary=breach.containment_summary,
+        close_note=breach.close_note, linked_integrity_incident_id=breach.linked_integrity_incident_id,
+        created_by_reference=breach.created_by_reference, created_at=breach.created_at, updated_at=breach.updated_at,
+        closed_at=breach.closed_at, affected_subject_total=subject_total, affected_source_total=source_total,
+    )
+
+
+def breach_detail_response(db: Session, breach: BreachIncident) -> BreachDetailResponse:
+    base = breach_response(db, breach)
+    affected = breach_affected(db, breach)
+    notification = None
+    if breach.notification_status == "DRAFTED":
+        notification = BreachNotificationDraftResponse(
+            status="DRAFT", subject=breach.notification_subject, body=breach.notification_body,
+            generated_at=breach.notification_drafted_at,
+            disclaimer=BREACH_DISCLAIMER,
+        )
+    return BreachDetailResponse(
+        **base.model_dump(),
+        notification=notification,
+        affected=BreachAffectedResponse(**affected),
+    )
+
+
 @router.get("/health", response_model=HealthResponse, tags=["system"])
 def health(db: Session = Depends(get_db)) -> HealthResponse:
     try:
@@ -278,6 +382,23 @@ def capture_authorization(workspace_ref: str, payload: AuthorizationCreateReques
         raise PolicyProblem("INVALID_AUTHORIZATION_EXPIRY", "expires_at must be later than captured_at")
     item = AuthorizationRecord(workspace_id=workspace.id, subject_ref=payload.subject_ref, purpose=payload.purpose, channel=payload.channel, status="ACTIVE", evidence_document_id=payload.evidence_document_id, evidence_source=payload.evidence_source, notice_version=payload.notice_version, captured_at=payload.captured_at, expires_at=payload.expires_at)
     db.add(item)
+    db.flush()
+    append_event(
+        db,
+        workspace.id,
+        "AUTHORIZATION_CAPTURED",
+        {
+            "subject_ref": item.subject_ref,
+            "authorization_id": item.id,
+            "purpose": item.purpose,
+            "channel": item.channel,
+            "notice_version": item.notice_version,
+            "expires_at": iso_utc(item.expires_at) if item.expires_at else None,
+        },
+        entity_type="authorization",
+        entity_ref=item.id,
+        occurred_at=item.captured_at,
+    )
     db.commit()
     db.refresh(item)
     return authorization_response(item)
@@ -303,7 +424,25 @@ def withdraw_authorization(workspace_ref: str, authorization_id: str, payload: W
         now = datetime.now(timezone.utc)
         item.status = "WITHDRAWN"
         item.withdrawn_at = now
-        db.add(SuppressionRecord(workspace_id=workspace.id, subject_ref=item.subject_ref, purpose=item.purpose, channel=item.channel, status="ACTIVE", source=payload.source, effective_at=now))
+        suppression = SuppressionRecord(workspace_id=workspace.id, subject_ref=item.subject_ref, purpose=item.purpose, channel=item.channel, status="ACTIVE", source=payload.source, effective_at=now)
+        db.add(suppression)
+        db.flush()
+        append_event(
+            db,
+            workspace.id,
+            "AUTHORIZATION_WITHDRAWN",
+            {
+                "subject_ref": item.subject_ref,
+                "authorization_id": item.id,
+                "purpose": item.purpose,
+                "channel": item.channel,
+                "suppression_id": suppression.id,
+                "withdrawn_at": iso_utc(now),
+            },
+            entity_type="authorization",
+            entity_ref=item.id,
+            occurred_at=now,
+        )
         db.commit()
     db.refresh(item)
     return authorization_response(item)
@@ -404,6 +543,22 @@ def create_retention_hold(workspace_ref: str, payload: RetentionHoldCreateReques
         raise NotFoundError("record")
     hold = RetentionHold(workspace_id=workspace.id, subject_ref=payload.subject_ref, source_id=payload.source_id, record_ref_id=payload.record_ref_id, status="ACTIVE", reason_code=payload.reason_code, review_note=payload.review_note, expires_at=payload.expires_at)
     db.add(hold)
+    db.flush()
+    append_event(
+        db,
+        workspace.id,
+        "RETENTION_HOLD_CREATED",
+        {
+            "hold_id": hold.id,
+            "reason_code": hold.reason_code,
+            "subject_ref": hold.subject_ref,
+            "source_id": hold.source_id,
+            "record_ref_id": hold.record_ref_id,
+            "expires_at": iso_utc(hold.expires_at) if hold.expires_at else None,
+        },
+        entity_type="retention_hold",
+        entity_ref=hold.id,
+    )
     db.commit()
     db.refresh(hold)
     return hold_response(hold)
@@ -427,6 +582,20 @@ def release_retention_hold(workspace_ref: str, hold_id: str, payload: RetentionH
     if hold is None:
         raise NotFoundError("retention_hold")
     release_hold(hold, payload.note)
+    released_at = hold.released_at
+    append_event(
+        db,
+        workspace.id,
+        "RETENTION_HOLD_RELEASED",
+        {
+            "hold_id": hold.id,
+            "released_at": iso_utc(released_at),
+            **({"note_sha256": sha256_hex(payload.note)} if payload.note else {}),
+        },
+        entity_type="retention_hold",
+        entity_ref=hold.id,
+        occurred_at=released_at,
+    )
     db.commit()
     db.refresh(hold)
     return hold_response(hold)
@@ -451,6 +620,299 @@ def get_job(workspace_ref: str, job_id: str, db: Session = Depends(get_db)) -> J
         raise NotFoundError("job")
     timeline = list(db.scalars(select(JobEvent).where(JobEvent.job_id == job.id).order_by(JobEvent.sequence)))
     return JobDetailResponse(**job_response(job).model_dump(), timeline=[JobEventResponse(id=event.id, sequence=event.sequence, event_type=event.event_type, action_id=event.action_id, message=event.message, details=event.details_json, created_at=event.created_at) for event in timeline])
+
+
+def resolve_integrity_incident_row(workspace: Workspace, incident_id: str, db: Session) -> IntegrityIncident:
+    incident = db.scalar(select(IntegrityIncident).where(
+        IntegrityIncident.workspace_id == workspace.id,
+        IntegrityIncident.id == incident_id,
+    ))
+    if incident is None:
+        raise NotFoundError("integrity_incident")
+    return incident
+
+
+@router.get("/workspaces/{workspace_ref}/audit/events", response_model=AuditEventPageResponse, tags=["audit"])
+def list_audit_events(
+    workspace_ref: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    event_type: str | None = None,
+    from_sequence: int | None = Query(default=None, ge=1),
+    to_sequence: int | None = Query(default=None, ge=1),
+    trust_state: str | None = None,
+    db: Session = Depends(get_db),
+) -> AuditEventPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [AuditEvent.workspace_id == workspace.id]
+    if event_type:
+        filters.append(AuditEvent.event_type == event_type.upper())
+    if from_sequence:
+        filters.append(AuditEvent.sequence >= from_sequence)
+    if to_sequence:
+        filters.append(AuditEvent.sequence <= to_sequence)
+    events = list(db.scalars(select(AuditEvent).where(*filters).order_by(AuditEvent.sequence)))
+    trusted = trusted_through_sequence(db, workspace.id)
+    items = [audit_event_response(event, trusted) for event in events]
+    if trust_state:
+        wanted = trust_state.upper()
+        items = [item for item in items if item.trust_state == wanted]
+    total = len(items)
+    return AuditEventPageResponse(items=items[(page - 1) * page_size: page * page_size], page=page, page_size=page_size, total=total)
+
+
+@router.get("/workspaces/{workspace_ref}/audit/events/{event_id}", response_model=AuditEventResponse, tags=["audit"])
+def get_audit_event(workspace_ref: str, event_id: str, db: Session = Depends(get_db)) -> AuditEventResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    event = db.scalar(select(AuditEvent).where(AuditEvent.workspace_id == workspace.id, AuditEvent.id == event_id))
+    if event is None:
+        raise NotFoundError("audit_event")
+    return audit_event_response(event, trusted_through_sequence(db, workspace.id))
+
+
+@router.post("/workspaces/{workspace_ref}/audit/verify", response_model=AuditVerifyResponse, tags=["audit"])
+def verify_audit_chain(workspace_ref: str, payload: AuditVerifyRequest, db: Session = Depends(get_db)) -> AuditVerifyResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    verification = verify_chain(db, workspace.id, payload.checkpoint_sequence)
+    db.commit()
+    db.refresh(verification)
+    gate = evidence_gate(db, workspace.id)
+    return AuditVerifyResponse(
+        status=verification.status,
+        evidence_state=verification.evidence_state,
+        checked_event_total=verification.checked_event_total,
+        verified_through_sequence=verification.verified_through_sequence,
+        failure_sequence=verification.failure_sequence,
+        untrusted_from_sequence=verification.untrusted_from_sequence,
+        reason_code=verification.reason_code,
+        reason_message=verification.reason_message,
+        failures=[AuditFailureResponse(**failure) for failure in verification.failures_json],
+        checkpoint_sequence=verification.checkpoint_sequence,
+        checkpoint_status=verification.checkpoint_status,
+        checkpoint_signed=verification.checkpoint_signed,
+        gate_state=gate.state,
+        incident_id=gate.incident_id,
+        verified_at=verification.verified_at,
+        disclaimer=EVIDENCE_DISCLAIMER,
+    )
+
+
+@router.get("/workspaces/{workspace_ref}/audit/status", response_model=AuditStatusResponse, tags=["audit"])
+def get_audit_status(workspace_ref: str, db: Session = Depends(get_db)) -> AuditStatusResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    data = audit_status(db, workspace.id)
+    latest = data["verification"]
+    checkpoint = data["checkpoint"]
+    gate = data["gate"]
+    return AuditStatusResponse(
+        workspace_id=workspace.id,
+        chain=AuditChainSummary(
+            head_sequence=data["chain_head_sequence"],
+            head_hash=data["chain_head_hash"],
+            event_total=data["event_total"],
+            first_recorded_at=data["first_recorded_at"],
+        ),
+        checkpoint=AuditCheckpointStatus(
+            sequence=checkpoint.sequence if checkpoint else None,
+            head_hash=checkpoint.head_hash if checkpoint else None,
+            key_id=checkpoint.key_id if checkpoint else None,
+            signed_at=checkpoint.created_at if checkpoint else None,
+            verification_status=latest.checkpoint_status if latest else None,
+        ),
+        verification=AuditVerificationSummary(
+            status=latest.status if latest else "UNVERIFIED",
+            evidence_state=latest.evidence_state if latest else "UNVERIFIED",
+            verified_through_sequence=latest.verified_through_sequence if latest else None,
+            failure_sequence=latest.failure_sequence if latest else None,
+            reason_code=latest.reason_code if latest else None,
+            verified_at=latest.verified_at if latest else None,
+        ),
+        gate=EvidenceGateSummary(
+            state=gate.state,
+            incident_id=gate.incident_id,
+            failure_sequence=gate.failure_sequence,
+            reason_code=gate.reason_code,
+            untrusted_from_sequence=gate.untrusted_from_sequence,
+        ),
+        incidents=data["incidents"],
+        breaches=data["breaches"],
+        disclaimer=data["disclaimer"],
+    )
+
+
+@router.get("/workspaces/{workspace_ref}/audit/checkpoints", response_model=list[AuditCheckpointResponse], tags=["audit"])
+def list_audit_checkpoints(workspace_ref: str, db: Session = Depends(get_db)) -> list[AuditCheckpointResponse]:
+    workspace = resolve_workspace(workspace_ref, db)
+    rows = db.scalars(select(AuditCheckpoint).where(AuditCheckpoint.workspace_id == workspace.id).order_by(AuditCheckpoint.sequence))
+    return [audit_checkpoint_response(checkpoint) for checkpoint in rows]
+
+
+@router.post("/workspaces/{workspace_ref}/audit/checkpoints", response_model=AuditCheckpointResponse, status_code=201, tags=["audit"])
+def create_audit_checkpoint(workspace_ref: str, payload: AuditCheckpointCreateRequest, db: Session = Depends(get_db)) -> AuditCheckpointResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    try:
+        checkpoint = create_checkpoint(db, workspace.id, payload.note)
+    except EvidenceProblem:
+        # Persist the verification, incident, and linked breach opened by the failed attempt.
+        db.commit()
+        raise
+    db.commit()
+    db.refresh(checkpoint)
+    return audit_checkpoint_response(checkpoint)
+
+
+@router.get("/workspaces/{workspace_ref}/audit/checkpoints/{sequence}", response_model=AuditCheckpointResponse, tags=["audit"])
+def get_audit_checkpoint(workspace_ref: str, sequence: int, db: Session = Depends(get_db)) -> AuditCheckpointResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    checkpoint = db.scalar(select(AuditCheckpoint).where(
+        AuditCheckpoint.workspace_id == workspace.id,
+        AuditCheckpoint.sequence == sequence,
+    ))
+    if checkpoint is None:
+        raise NotFoundError("audit_checkpoint")
+    return audit_checkpoint_response(checkpoint)
+
+
+@router.get("/workspaces/{workspace_ref}/audit/integrity-incidents", response_model=list[IntegrityIncidentResponse], tags=["audit"])
+def list_integrity_incidents(workspace_ref: str, status: str | None = None, db: Session = Depends(get_db)) -> list[IntegrityIncidentResponse]:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [IntegrityIncident.workspace_id == workspace.id]
+    if status:
+        filters.append(IntegrityIncident.status == status.upper())
+    rows = db.scalars(select(IntegrityIncident).where(*filters).order_by(IntegrityIncident.detected_at.desc()))
+    return [incident_response(incident) for incident in rows]
+
+
+@router.get("/workspaces/{workspace_ref}/audit/integrity-incidents/{incident_id}", response_model=IntegrityIncidentResponse, tags=["audit"])
+def get_integrity_incident(workspace_ref: str, incident_id: str, db: Session = Depends(get_db)) -> IntegrityIncidentResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    return incident_response(resolve_integrity_incident_row(workspace, incident_id, db))
+
+
+@router.post("/workspaces/{workspace_ref}/audit/integrity-incidents/{incident_id}/resolve", response_model=IntegrityIncidentResponse, tags=["audit"])
+def resolve_incident(workspace_ref: str, incident_id: str, payload: IntegrityIncidentResolveRequest, db: Session = Depends(get_db)) -> IntegrityIncidentResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    incident = resolve_integrity_incident_row(workspace, incident_id, db)
+    try:
+        resolve_integrity_incident(db, incident, payload.decision, payload.note)
+    except EvidenceProblem:
+        # Persist any verification evidence produced by a failed RESTORE_VERIFIED attempt.
+        db.commit()
+        raise
+    db.commit()
+    db.refresh(incident)
+    return incident_response(incident)
+
+
+def resolve_breach_row(workspace: Workspace, breach_id: str, db: Session) -> BreachIncident:
+    breach = db.scalar(select(BreachIncident).where(
+        BreachIncident.workspace_id == workspace.id,
+        BreachIncident.id == breach_id,
+    ))
+    if breach is None:
+        raise NotFoundError("breach")
+    return breach
+
+
+@router.post("/workspaces/{workspace_ref}/breaches", response_model=BreachDetailResponse, status_code=201, tags=["breach"])
+def create_breach(workspace_ref: str, payload: BreachCreateRequest, db: Session = Depends(get_db)) -> BreachDetailResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    breach = register_breach(
+        db,
+        workspace,
+        title=payload.title,
+        description=payload.description,
+        origin=payload.origin.upper(),
+        origin_ref=payload.origin_ref,
+        severity=payload.severity.upper(),
+        detected_at=payload.detected_at,
+        subject_refs=payload.subject_refs,
+        source_ids=payload.source_ids,
+        containment_summary=payload.containment_summary,
+        created_by_reference=payload.created_by_reference,
+    )
+    db.commit()
+    db.refresh(breach)
+    return breach_detail_response(db, breach)
+
+
+@router.get("/workspaces/{workspace_ref}/breaches", response_model=BreachPageResponse, tags=["breach"])
+def list_breaches(
+    workspace_ref: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    status: str | None = None,
+    origin: str | None = None,
+    subject_ref: str | None = None,
+    source_id: str | None = None,
+    overdue: bool = False,
+    db: Session = Depends(get_db),
+) -> BreachPageResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    filters = [BreachIncident.workspace_id == workspace.id]
+    if status:
+        filters.append(BreachIncident.status == status.upper())
+    if origin:
+        filters.append(BreachIncident.origin == origin.upper())
+    if subject_ref:
+        filters.append(BreachIncident.id.in_(select(BreachAffectedSubject.breach_incident_id).where(
+            BreachAffectedSubject.subject_ref == subject_ref,
+        )))
+    if source_id:
+        filters.append(BreachIncident.id.in_(select(BreachAffectedSource.breach_incident_id).where(
+            BreachAffectedSource.source_id == source_id,
+        )))
+    if overdue:
+        filters.extend([
+            BreachIncident.status != "CLOSED",
+            BreachIncident.assessed_at.is_(None),
+            BreachIncident.assessment_due_at < datetime.now(timezone.utc),
+        ])
+    total = db.scalar(select(func.count(BreachIncident.id)).where(*filters)) or 0
+    rows = db.scalars(select(BreachIncident).where(*filters).order_by(BreachIncident.detected_at.desc()).offset((page - 1) * page_size).limit(page_size))
+    return BreachPageResponse(items=[breach_response(db, breach) for breach in rows], page=page, page_size=page_size, total=total)
+
+
+@router.get("/workspaces/{workspace_ref}/breaches/{breach_id}", response_model=BreachDetailResponse, tags=["breach"])
+def get_breach(workspace_ref: str, breach_id: str, db: Session = Depends(get_db)) -> BreachDetailResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    return breach_detail_response(db, resolve_breach_row(workspace, breach_id, db))
+
+
+@router.get("/workspaces/{workspace_ref}/breaches/{breach_id}/affected", response_model=BreachAffectedResponse, tags=["breach"])
+def get_breach_affected(workspace_ref: str, breach_id: str, db: Session = Depends(get_db)) -> BreachAffectedResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    return BreachAffectedResponse(**breach_affected(db, resolve_breach_row(workspace, breach_id, db)))
+
+
+@router.post("/workspaces/{workspace_ref}/breaches/{breach_id}/assessment", response_model=BreachDetailResponse, tags=["breach"])
+def assess_breach_route(workspace_ref: str, breach_id: str, payload: BreachAssessmentRequest, db: Session = Depends(get_db)) -> BreachDetailResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    breach = resolve_breach_row(workspace, breach_id, db)
+    assess_breach(db, breach, payload.notifiable, payload.reason_code, payload.note)
+    db.commit()
+    db.refresh(breach)
+    return breach_detail_response(db, breach)
+
+
+@router.post("/workspaces/{workspace_ref}/breaches/{breach_id}/notification-draft", response_model=BreachDetailResponse, tags=["breach"])
+def draft_breach_notification(workspace_ref: str, breach_id: str, db: Session = Depends(get_db)) -> BreachDetailResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    breach = resolve_breach_row(workspace, breach_id, db)
+    draft_notification(db, breach)
+    db.commit()
+    db.refresh(breach)
+    return breach_detail_response(db, breach)
+
+
+@router.post("/workspaces/{workspace_ref}/breaches/{breach_id}/close", response_model=BreachDetailResponse, tags=["breach"])
+def close_breach_route(workspace_ref: str, breach_id: str, payload: BreachCloseRequest, db: Session = Depends(get_db)) -> BreachDetailResponse:
+    workspace = resolve_workspace(workspace_ref, db)
+    breach = resolve_breach_row(workspace, breach_id, db)
+    close_breach(db, breach, payload.note)
+    db.commit()
+    db.refresh(breach)
+    return breach_detail_response(db, breach)
 
 
 def resolve_campaign(workspace: Workspace, campaign_id: str, db: Session) -> Campaign:
@@ -481,6 +943,14 @@ def create_campaign(workspace_ref: str, payload: CampaignCreateRequest, db: Sess
     db.flush()
     for record in records:
         db.add(CampaignRecipient(campaign_id=campaign.id, record_ref_id=record.id, subject_ref=record.subject_ref))
+    append_event(
+        db,
+        workspace.id,
+        "CAMPAIGN_CREATED",
+        {"campaign_id": campaign.id, "purpose": campaign.purpose, "channel": campaign.channel, "recipient_total": len(records)},
+        entity_type="campaign",
+        entity_ref=campaign.id,
+    )
     db.commit()
     db.refresh(campaign)
     return campaign_response(db, campaign)
@@ -515,6 +985,18 @@ def preview_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends
         recipient.previewed_at = result.evaluated_at
     campaign.status = "PREVIEWED"
     campaign.previewed_at = datetime.now(timezone.utc)
+    preview_summary: dict[str, int] = {}
+    for recipient in recipients:
+        if recipient.preview_decision:
+            preview_summary[recipient.preview_decision] = preview_summary.get(recipient.preview_decision, 0) + 1
+    append_event(
+        db,
+        workspace.id,
+        "CAMPAIGN_PREVIEWED",
+        {"campaign_id": campaign.id, "decision_summary": preview_summary},
+        entity_type="campaign",
+        entity_ref=campaign.id,
+    )
     db.commit()
     db.refresh(campaign)
     return campaign_response(db, campaign)
@@ -532,20 +1014,33 @@ def list_campaign_recipients(workspace_ref: str, campaign_id: str, page: int = Q
 @router.post("/workspaces/{workspace_ref}/campaigns/{campaign_id}/execute", response_model=CampaignResponse, tags=["message-gate"])
 def execute_campaign(workspace_ref: str, campaign_id: str, db: Session = Depends(get_db)) -> CampaignResponse:
     workspace = resolve_workspace(workspace_ref, db)
+    ensure_evidence_trusted(db, workspace.id, "managed_dispatch")
     campaign = resolve_campaign(workspace, campaign_id, db)
     if campaign.status != "PREVIEWED":
         raise ConflictError("CAMPAIGN_PREVIEW_REQUIRED", "Campaign execution requires a completed preview.")
     recipients = list(db.scalars(select(CampaignRecipient).where(CampaignRecipient.campaign_id == campaign.id)))
+    outbox_total = 0
+    execution_summary: dict[str, int] = {}
     for recipient in recipients:
         record = db.scalar(select(DataRecordRef).where(DataRecordRef.workspace_id == workspace.id, DataRecordRef.id == recipient.record_ref_id))
         result = evaluate_marketing(db, workspace, recipient.subject_ref, campaign.purpose, campaign.channel, record=record, correlation_id=f"campaign:{campaign.id}:execute:{recipient.id}")
         recipient.execution_decision = result.decision
         recipient.execution_reason_codes_json = result.reason_codes
         recipient.executed_at = result.evaluated_at
+        execution_summary[result.decision] = execution_summary.get(result.decision, 0) + 1
         if result.decision == "ALLOW" and recipient.subject_ref:
             db.add(MockOutbox(workspace_id=workspace.id, campaign_id=campaign.id, campaign_recipient_id=recipient.id, subject_ref=recipient.subject_ref, masked_recipient_reference=masked_subject_ref(recipient.subject_ref), message_template_id=campaign.message_template_id, dispatch_status="QUEUED"))
+            outbox_total += 1
     campaign.status = "EXECUTED"
     campaign.executed_at = datetime.now(timezone.utc)
+    append_event(
+        db,
+        workspace.id,
+        "CAMPAIGN_EXECUTED",
+        {"campaign_id": campaign.id, "decision_summary": execution_summary, "outbox_total": outbox_total},
+        entity_type="campaign",
+        entity_ref=campaign.id,
+    )
     db.commit()
     db.refresh(campaign)
     return campaign_response(db, campaign)
@@ -755,13 +1250,17 @@ def get_dashboard(workspace_ref: str, db: Session = Depends(get_db)) -> Dashboar
     active_job_total = db.scalar(select(func.count(Job.id)).where(Job.workspace_id == workspace.id, Job.status.in_(("RUNNING", "EXECUTING")))) or 0
     rights_review_total = db.scalar(select(func.count(RightsRequest.id)).where(RightsRequest.workspace_id == workspace.id, RightsRequest.status == "NEEDS_REVIEW")) or 0
     rights_partial_total = db.scalar(select(func.count(RightsRequest.id)).where(RightsRequest.workspace_id == workspace.id, RightsRequest.status == "PARTIAL")) or 0
+    evidence = audit_status(db, workspace.id)
+    latest_verification = evidence["verification"]
+    trusted_through = trusted_through_sequence(db, workspace.id)
+    untrusted_total = 0 if trusted_through is None else max(0, evidence["event_total"] - trusted_through)
     return DashboardResponse(
         workspace_id=workspace.id,
         source_total=source_total,
         document_total=document_total,
         sources_by_status={status: count for status, count in source_rows},
         documents_by_type={document_type: count for document_type, count in document_rows},
-        workflow_summary={"pending_rights_requests": pending_rights_total, "active_jobs": active_job_total, "policy_decisions": sum(count for _, count in decision_rows), "integrity_alerts": 0},
+        workflow_summary={"pending_rights_requests": pending_rights_total, "active_jobs": active_job_total, "policy_decisions": sum(count for _, count in decision_rows), "integrity_alerts": evidence["incidents"]["open"]},
         import_total=import_total,
         record_total=record_total,
         records_requiring_review=review_total,
@@ -774,4 +1273,13 @@ def get_dashboard(workspace_ref: str, db: Session = Depends(get_db)) -> Dashboar
         mock_outbox_total=outbox_total,
         rights_requests_requiring_review=rights_review_total,
         rights_requests_partial=rights_partial_total,
+        audit_integrity_status=latest_verification.status if latest_verification else "UNVERIFIED",
+        evidence_state=latest_verification.evidence_state if latest_verification else "UNVERIFIED",
+        audit_trusted_through_sequence=trusted_through,
+        audit_untrusted_event_total=untrusted_total,
+        integrity_gate_state=evidence["gate"].state,
+        open_integrity_incident_total=evidence["incidents"]["open"],
+        open_breach_incident_total=evidence["breaches"]["open"],
+        overdue_breach_assessment_total=evidence["breaches"]["assessment_overdue"],
+        breach_notification_draft_total=evidence["breaches"]["drafts_pending"],
     )

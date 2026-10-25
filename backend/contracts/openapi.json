@@ -65,6 +65,642 @@
         "title": "AccessArtifactResponse",
         "type": "object"
       },
+      "AuditChainSummary": {
+        "properties": {
+          "event_total": {
+            "title": "Event Total",
+            "type": "integer"
+          },
+          "first_recorded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Recorded At"
+          },
+          "head_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Hash"
+          },
+          "head_sequence": {
+            "title": "Head Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "head_sequence",
+          "head_hash",
+          "event_total",
+          "first_recorded_at"
+        ],
+        "title": "AuditChainSummary",
+        "type": "object"
+      },
+      "AuditCheckpointCreateRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "AuditCheckpointCreateRequest",
+        "type": "object"
+      },
+      "AuditCheckpointResponse": {
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "head_hash": {
+            "title": "Head Hash",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "key_id": {
+            "title": "Key Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "public_key": {
+            "title": "Public Key",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "signature": {
+            "title": "Signature",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "head_hash",
+          "signature",
+          "public_key",
+          "key_id",
+          "algorithm",
+          "note",
+          "created_at"
+        ],
+        "title": "AuditCheckpointResponse",
+        "type": "object"
+      },
+      "AuditCheckpointStatus": {
+        "properties": {
+          "head_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Hash"
+          },
+          "key_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Id"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "signed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed At"
+          },
+          "verification_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Status"
+          }
+        },
+        "required": [
+          "sequence",
+          "head_hash",
+          "key_id",
+          "signed_at",
+          "verification_status"
+        ],
+        "title": "AuditCheckpointStatus",
+        "type": "object"
+      },
+      "AuditEventPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "AuditEventPageResponse",
+        "type": "object"
+      },
+      "AuditEventResponse": {
+        "properties": {
+          "actor_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Reference"
+          },
+          "entity_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Ref"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Type"
+          },
+          "event_hash": {
+            "title": "Event Hash",
+            "type": "string"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "payload_sha256": {
+            "title": "Payload Sha256",
+            "type": "string"
+          },
+          "previous_hash": {
+            "title": "Previous Hash",
+            "type": "string"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "trust_state": {
+            "title": "Trust State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "event_type",
+          "entity_type",
+          "entity_ref",
+          "payload",
+          "payload_sha256",
+          "previous_hash",
+          "event_hash",
+          "occurred_at",
+          "recorded_at",
+          "actor_reference",
+          "trust_state"
+        ],
+        "title": "AuditEventResponse",
+        "type": "object"
+      },
+      "AuditFailureResponse": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sequence",
+          "reason_code",
+          "detail"
+        ],
+        "title": "AuditFailureResponse",
+        "type": "object"
+      },
+      "AuditStatusResponse": {
+        "properties": {
+          "breaches": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Breaches",
+            "type": "object"
+          },
+          "chain": {
+            "$ref": "#/components/schemas/AuditChainSummary"
+          },
+          "checkpoint": {
+            "$ref": "#/components/schemas/AuditCheckpointStatus"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "gate": {
+            "$ref": "#/components/schemas/EvidenceGateSummary"
+          },
+          "incidents": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Incidents",
+            "type": "object"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/AuditVerificationSummary"
+          },
+          "workspace_id": {
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "chain",
+          "checkpoint",
+          "verification",
+          "gate",
+          "incidents",
+          "breaches",
+          "disclaimer"
+        ],
+        "title": "AuditStatusResponse",
+        "type": "object"
+      },
+      "AuditVerificationSummary": {
+        "properties": {
+          "evidence_state": {
+            "title": "Evidence State",
+            "type": "string"
+          },
+          "failure_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Sequence"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "verified_through_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Through Sequence"
+          }
+        },
+        "required": [
+          "status",
+          "evidence_state",
+          "verified_through_sequence",
+          "failure_sequence",
+          "reason_code",
+          "verified_at"
+        ],
+        "title": "AuditVerificationSummary",
+        "type": "object"
+      },
+      "AuditVerifyRequest": {
+        "properties": {
+          "checkpoint_sequence": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkpoint Sequence"
+          }
+        },
+        "title": "AuditVerifyRequest",
+        "type": "object"
+      },
+      "AuditVerifyResponse": {
+        "properties": {
+          "checked_event_total": {
+            "title": "Checked Event Total",
+            "type": "integer"
+          },
+          "checkpoint_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkpoint Sequence"
+          },
+          "checkpoint_signed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkpoint Signed"
+          },
+          "checkpoint_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkpoint Status"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "evidence_state": {
+            "title": "Evidence State",
+            "type": "string"
+          },
+          "failure_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Sequence"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/AuditFailureResponse"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "gate_state": {
+            "title": "Gate State",
+            "type": "string"
+          },
+          "incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Id"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "reason_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Message"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "untrusted_from_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Untrusted From Sequence"
+          },
+          "verified_at": {
+            "format": "date-time",
+            "title": "Verified At",
+            "type": "string"
+          },
+          "verified_through_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Through Sequence"
+          }
+        },
+        "required": [
+          "status",
+          "evidence_state",
+          "checked_event_total",
+          "verified_through_sequence",
+          "failure_sequence",
+          "untrusted_from_sequence",
+          "reason_code",
+          "reason_message",
+          "failures",
+          "checkpoint_sequence",
+          "checkpoint_status",
+          "checkpoint_signed",
+          "gate_state",
+          "incident_id",
+          "verified_at",
+          "disclaimer"
+        ],
+        "title": "AuditVerifyResponse",
+        "type": "object"
+      },
       "AuthorizationCreateRequest": {
         "properties": {
           "captured_at": {
@@ -234,6 +870,887 @@
           "file"
         ],
         "title": "Body_create_import_api_v1_workspaces__workspace_ref__sources__source_id__imports_post",
+        "type": "object"
+      },
+      "BreachAffectedResponse": {
+        "properties": {
+          "breach_id": {
+            "title": "Breach Id",
+            "type": "string"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "incident_ref": {
+            "title": "Incident Ref",
+            "type": "string"
+          },
+          "scope_status": {
+            "title": "Scope Status",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/BreachAffectedSourceResponse"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/BreachAffectedSubjectResponse"
+            },
+            "title": "Subjects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "breach_id",
+          "incident_ref",
+          "scope_status",
+          "subjects",
+          "sources",
+          "generated_at",
+          "disclaimer"
+        ],
+        "title": "BreachAffectedResponse",
+        "type": "object"
+      },
+      "BreachAffectedSourceResponse": {
+        "properties": {
+          "affected_record_count": {
+            "title": "Affected Record Count",
+            "type": "integer"
+          },
+          "affected_subject_count": {
+            "title": "Affected Subject Count",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_key": {
+            "title": "Source Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_key",
+          "display_name",
+          "affected_record_count",
+          "affected_subject_count"
+        ],
+        "title": "BreachAffectedSourceResponse",
+        "type": "object"
+      },
+      "BreachAffectedSubjectResponse": {
+        "properties": {
+          "record_count": {
+            "title": "Record Count",
+            "type": "integer"
+          },
+          "resolution_status": {
+            "title": "Resolution Status",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "subject_ref": {
+            "title": "Subject Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_ref",
+          "resolution_status",
+          "record_count",
+          "sources"
+        ],
+        "title": "BreachAffectedSubjectResponse",
+        "type": "object"
+      },
+      "BreachAssessmentRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "notifiable": {
+            "title": "Notifiable",
+            "type": "boolean"
+          },
+          "reason_code": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Reason Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notifiable",
+          "reason_code"
+        ],
+        "title": "BreachAssessmentRequest",
+        "type": "object"
+      },
+      "BreachCloseRequest": {
+        "properties": {
+          "note": {
+            "maxLength": 500,
+            "minLength": 8,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "BreachCloseRequest",
+        "type": "object"
+      },
+      "BreachCreateRequest": {
+        "properties": {
+          "containment_summary": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Containment Summary"
+          },
+          "created_by_reference": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Reference"
+          },
+          "description": {
+            "maxLength": 4000,
+            "minLength": 3,
+            "title": "Description",
+            "type": "string"
+          },
+          "detected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected At"
+          },
+          "origin": {
+            "default": "MANUAL",
+            "maxLength": 32,
+            "title": "Origin",
+            "type": "string"
+          },
+          "origin_ref": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Ref"
+          },
+          "severity": {
+            "default": "MEDIUM",
+            "maxLength": 16,
+            "title": "Severity",
+            "type": "string"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "subject_refs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Subject Refs",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description"
+        ],
+        "title": "BreachCreateRequest",
+        "type": "object"
+      },
+      "BreachDetailResponse": {
+        "properties": {
+          "affected": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BreachAffectedResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "affected_source_total": {
+            "default": 0,
+            "title": "Affected Source Total",
+            "type": "integer"
+          },
+          "affected_subject_total": {
+            "default": 0,
+            "title": "Affected Subject Total",
+            "type": "integer"
+          },
+          "assessed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessed At"
+          },
+          "assessment_due_at": {
+            "format": "date-time",
+            "title": "Assessment Due At",
+            "type": "string"
+          },
+          "assessment_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Note"
+          },
+          "assessment_reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Reason Code"
+          },
+          "assessment_status": {
+            "title": "Assessment Status",
+            "type": "string"
+          },
+          "assessment_timeliness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Timeliness"
+          },
+          "close_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close Note"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "containment_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Containment Summary"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Reference"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "detected_at": {
+            "format": "date-time",
+            "title": "Detected At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "incident_ref": {
+            "title": "Incident Ref",
+            "type": "string"
+          },
+          "linked_integrity_incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked Integrity Incident Id"
+          },
+          "notifiable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifiable"
+          },
+          "notification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BreachNotificationDraftResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notification_drafted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Drafted At"
+          },
+          "notification_status": {
+            "title": "Notification Status",
+            "type": "string"
+          },
+          "notification_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Subject"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "origin_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Ref"
+          },
+          "scope_status": {
+            "title": "Scope Status",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timer_state": {
+            "title": "Timer State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "incident_ref",
+          "title",
+          "description",
+          "origin",
+          "origin_ref",
+          "severity",
+          "status",
+          "scope_status",
+          "detected_at",
+          "assessment_due_at",
+          "assessed_at",
+          "notifiable",
+          "assessment_reason_code",
+          "assessment_note",
+          "assessment_timeliness",
+          "timer_state",
+          "assessment_status",
+          "notification_status",
+          "notification_drafted_at",
+          "notification_subject",
+          "containment_summary",
+          "close_note",
+          "linked_integrity_incident_id",
+          "created_by_reference",
+          "created_at",
+          "updated_at",
+          "closed_at"
+        ],
+        "title": "BreachDetailResponse",
+        "type": "object"
+      },
+      "BreachNotificationDraftResponse": {
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "disclaimer": {
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "required": [
+          "status",
+          "subject",
+          "body",
+          "generated_at",
+          "disclaimer"
+        ],
+        "title": "BreachNotificationDraftResponse",
+        "type": "object"
+      },
+      "BreachPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BreachResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "BreachPageResponse",
+        "type": "object"
+      },
+      "BreachResponse": {
+        "properties": {
+          "affected_source_total": {
+            "default": 0,
+            "title": "Affected Source Total",
+            "type": "integer"
+          },
+          "affected_subject_total": {
+            "default": 0,
+            "title": "Affected Subject Total",
+            "type": "integer"
+          },
+          "assessed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessed At"
+          },
+          "assessment_due_at": {
+            "format": "date-time",
+            "title": "Assessment Due At",
+            "type": "string"
+          },
+          "assessment_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Note"
+          },
+          "assessment_reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Reason Code"
+          },
+          "assessment_status": {
+            "title": "Assessment Status",
+            "type": "string"
+          },
+          "assessment_timeliness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Timeliness"
+          },
+          "close_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close Note"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "containment_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Containment Summary"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Reference"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "detected_at": {
+            "format": "date-time",
+            "title": "Detected At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "incident_ref": {
+            "title": "Incident Ref",
+            "type": "string"
+          },
+          "linked_integrity_incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked Integrity Incident Id"
+          },
+          "notifiable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifiable"
+          },
+          "notification_drafted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Drafted At"
+          },
+          "notification_status": {
+            "title": "Notification Status",
+            "type": "string"
+          },
+          "notification_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Subject"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "origin_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Ref"
+          },
+          "scope_status": {
+            "title": "Scope Status",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timer_state": {
+            "title": "Timer State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "incident_ref",
+          "title",
+          "description",
+          "origin",
+          "origin_ref",
+          "severity",
+          "status",
+          "scope_status",
+          "detected_at",
+          "assessment_due_at",
+          "assessed_at",
+          "notifiable",
+          "assessment_reason_code",
+          "assessment_note",
+          "assessment_timeliness",
+          "timer_state",
+          "assessment_status",
+          "notification_status",
+          "notification_drafted_at",
+          "notification_subject",
+          "containment_summary",
+          "close_note",
+          "linked_integrity_incident_id",
+          "created_by_reference",
+          "created_at",
+          "updated_at",
+          "closed_at"
+        ],
+        "title": "BreachResponse",
         "type": "object"
       },
       "CampaignCreateRequest": {
@@ -539,6 +2056,32 @@
             "title": "Active Suppression Total",
             "type": "integer"
           },
+          "audit_integrity_status": {
+            "default": "UNVERIFIED",
+            "title": "Audit Integrity Status",
+            "type": "string"
+          },
+          "audit_trusted_through_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit Trusted Through Sequence"
+          },
+          "audit_untrusted_event_total": {
+            "default": 0,
+            "title": "Audit Untrusted Event Total",
+            "type": "integer"
+          },
+          "breach_notification_draft_total": {
+            "default": 0,
+            "title": "Breach Notification Draft Total",
+            "type": "integer"
+          },
           "campaign_total": {
             "default": 0,
             "title": "Campaign Total",
@@ -555,14 +2098,39 @@
             "title": "Documents By Type",
             "type": "object"
           },
+          "evidence_state": {
+            "default": "UNVERIFIED",
+            "title": "Evidence State",
+            "type": "string"
+          },
           "import_total": {
             "default": 0,
             "title": "Import Total",
             "type": "integer"
           },
+          "integrity_gate_state": {
+            "default": "OPEN",
+            "title": "Integrity Gate State",
+            "type": "string"
+          },
           "mock_outbox_total": {
             "default": 0,
             "title": "Mock Outbox Total",
+            "type": "integer"
+          },
+          "open_breach_incident_total": {
+            "default": 0,
+            "title": "Open Breach Incident Total",
+            "type": "integer"
+          },
+          "open_integrity_incident_total": {
+            "default": 0,
+            "title": "Open Integrity Incident Total",
+            "type": "integer"
+          },
+          "overdue_breach_assessment_total": {
+            "default": 0,
+            "title": "Overdue Breach Assessment Total",
             "type": "integer"
           },
           "policy_decision_summary": {
@@ -873,6 +2441,67 @@
         "title": "DocumentResponse",
         "type": "object"
       },
+      "EvidenceGateSummary": {
+        "properties": {
+          "failure_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Sequence"
+          },
+          "incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Id"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "untrusted_from_sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Untrusted From Sequence"
+          }
+        },
+        "required": [
+          "state",
+          "incident_id",
+          "failure_sequence",
+          "reason_code",
+          "untrusted_from_sequence"
+        ],
+        "title": "EvidenceGateSummary",
+        "type": "object"
+      },
       "FailureInjectionRequest": {
         "properties": {
           "enabled": {
@@ -1174,6 +2803,147 @@
           "completed_at"
         ],
         "title": "ImportResponse",
+        "type": "object"
+      },
+      "IntegrityIncidentResolveRequest": {
+        "properties": {
+          "decision": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Decision",
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 8,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "note"
+        ],
+        "title": "IntegrityIncidentResolveRequest",
+        "type": "object"
+      },
+      "IntegrityIncidentResponse": {
+        "properties": {
+          "acknowledged_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged At"
+          },
+          "detected_at": {
+            "format": "date-time",
+            "title": "Detected At",
+            "type": "string"
+          },
+          "first_failure_sequence": {
+            "title": "First Failure Sequence",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_detected_at": {
+            "format": "date-time",
+            "title": "Last Detected At",
+            "type": "string"
+          },
+          "linked_breach_incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked Breach Incident Id"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "reason_message": {
+            "title": "Reason Message",
+            "type": "string"
+          },
+          "resolution_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Decision"
+          },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verification_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Id"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "first_failure_sequence",
+          "reason_code",
+          "reason_message",
+          "verification_id",
+          "linked_breach_incident_id",
+          "detected_at",
+          "last_detected_at",
+          "acknowledged_at",
+          "resolved_at",
+          "resolution_decision",
+          "resolution_note"
+        ],
+        "title": "IntegrityIncidentResponse",
         "type": "object"
       },
       "JobDetailResponse": {
@@ -2682,6 +4452,603 @@
         ]
       }
     },
+    "/api/v1/workspaces/{workspace_ref}/audit/checkpoints": {
+      "get": {
+        "operationId": "list_audit_checkpoints_api_v1_workspaces__workspace_ref__audit_checkpoints_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditCheckpointResponse"
+                  },
+                  "title": "Response List Audit Checkpoints Api V1 Workspaces  Workspace Ref  Audit Checkpoints Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Audit Checkpoints",
+        "tags": [
+          "audit"
+        ]
+      },
+      "post": {
+        "operationId": "create_audit_checkpoint_api_v1_workspaces__workspace_ref__audit_checkpoints_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditCheckpointCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditCheckpointResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Audit Checkpoint",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/checkpoints/{sequence}": {
+      "get": {
+        "operationId": "get_audit_checkpoint_api_v1_workspaces__workspace_ref__audit_checkpoints__sequence__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sequence",
+            "required": true,
+            "schema": {
+              "title": "Sequence",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditCheckpointResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Audit Checkpoint",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/events": {
+      "get": {
+        "operationId": "list_audit_events_api_v1_workspaces__workspace_ref__audit_events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from_sequence",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Sequence"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_sequence",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Sequence"
+            }
+          },
+          {
+            "in": "query",
+            "name": "trust_state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Trust State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Audit Events",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/events/{event_id}": {
+      "get": {
+        "operationId": "get_audit_event_api_v1_workspaces__workspace_ref__audit_events__event_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Audit Event",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/integrity-incidents": {
+      "get": {
+        "operationId": "list_integrity_incidents_api_v1_workspaces__workspace_ref__audit_integrity_incidents_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrityIncidentResponse"
+                  },
+                  "title": "Response List Integrity Incidents Api V1 Workspaces  Workspace Ref  Audit Integrity Incidents Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Integrity Incidents",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/integrity-incidents/{incident_id}": {
+      "get": {
+        "operationId": "get_integrity_incident_api_v1_workspaces__workspace_ref__audit_integrity_incidents__incident_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrityIncidentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Integrity Incident",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/integrity-incidents/{incident_id}/resolve": {
+      "post": {
+        "operationId": "resolve_incident_api_v1_workspaces__workspace_ref__audit_integrity_incidents__incident_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "incident_id",
+            "required": true,
+            "schema": {
+              "title": "Incident Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrityIncidentResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrityIncidentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Incident",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/status": {
+      "get": {
+        "operationId": "get_audit_status_api_v1_workspaces__workspace_ref__audit_status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Audit Status",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/audit/verify": {
+      "post": {
+        "operationId": "verify_audit_chain_api_v1_workspaces__workspace_ref__audit_verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditVerifyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Audit Chain",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
     "/api/v1/workspaces/{workspace_ref}/authorizations": {
       "get": {
         "operationId": "list_authorizations_api_v1_workspaces__workspace_ref__authorizations_get",
@@ -2900,6 +5267,470 @@
         "summary": "Withdraw Authorization",
         "tags": [
           "policy"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/breaches": {
+      "get": {
+        "operationId": "list_breaches_api_v1_workspaces__workspace_ref__breaches_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_ref",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Ref"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "overdue",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Overdue",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Breaches",
+        "tags": [
+          "breach"
+        ]
+      },
+      "post": {
+        "operationId": "create_breach_api_v1_workspaces__workspace_ref__breaches_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BreachCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Breach",
+        "tags": [
+          "breach"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/breaches/{breach_id}": {
+      "get": {
+        "operationId": "get_breach_api_v1_workspaces__workspace_ref__breaches__breach_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Breach",
+        "tags": [
+          "breach"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/breaches/{breach_id}/affected": {
+      "get": {
+        "operationId": "get_breach_affected_api_v1_workspaces__workspace_ref__breaches__breach_id__affected_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachAffectedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Breach Affected",
+        "tags": [
+          "breach"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/breaches/{breach_id}/assessment": {
+      "post": {
+        "operationId": "assess_breach_route_api_v1_workspaces__workspace_ref__breaches__breach_id__assessment_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BreachAssessmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assess Breach Route",
+        "tags": [
+          "breach"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/breaches/{breach_id}/close": {
+      "post": {
+        "operationId": "close_breach_route_api_v1_workspaces__workspace_ref__breaches__breach_id__close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BreachCloseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Breach Route",
+        "tags": [
+          "breach"
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_ref}/breaches/{breach_id}/notification-draft": {
+      "post": {
+        "operationId": "draft_breach_notification_api_v1_workspaces__workspace_ref__breaches__breach_id__notification_draft_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_ref",
+            "required": true,
+            "schema": {
+              "title": "Workspace Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "breach_id",
+            "required": true,
+            "schema": {
+              "title": "Breach Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BreachDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft Breach Notification",
+        "tags": [
+          "breach"
         ]
       }
     },
