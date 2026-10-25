@@ -1,10 +1,11 @@
 ﻿import type { RightsRequestType } from '@/domain/types'
-import type { WithdrawalTierKey } from '@/domain/messaging'
+import type { BizConversationDraft, WithdrawalTierKey } from '@/domain/messaging'
 import type { UserRightsRequest, UserWorkspace } from '@/domain/user'
 import { apiBaseUrl } from './config'
 import type { CorrectionPayload } from './repository'
 import {
   LOCAL_DEMO_SUBJECT,
+  localCreateBizConversation,
   localMarkRead,
   localMessagingSnapshot,
   localSendMessage,
@@ -133,6 +134,15 @@ export class LocalUserService implements UserRepository {
         this.appendActivity(`Retry queued for ${request.reference}`, 'request', 'warning')
       }
     }
+    return this.settle()
+  }
+
+  async createBizConversation(draft: BizConversationDraft): Promise<UserWorkspace> {
+    const conversation = localCreateBizConversation(draft)
+    this.appendActivity(
+      `Conversation started with ${conversation.businessName ?? 'a business'}`,
+      'system',
+    )
     return this.settle()
   }
 

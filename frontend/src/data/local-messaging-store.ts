@@ -1,5 +1,6 @@
 ﻿import type { DemoData } from '@/domain/types'
 import type {
+  BizConversationDraft,
   Conversation,
   ConversationDraft,
   ConversationMessage,
@@ -16,11 +17,14 @@ import type {
   WithdrawalTierKey,
 } from '@/domain/messaging'
 import { GENESIS_HASH, simulatedHash, simulatedMessageHash } from '@/lib/integrity'
+import { ARANYA_BUSINESS, resolveBizCode } from './business-directory'
 
-export const LOCAL_BUSINESS_LABEL = 'Aranya Coaching Centre'
+export const LOCAL_BUSINESS_LABEL = ARANYA_BUSINESS.name
 export const LOCAL_DEMO_SUBJECT = 'usr-rowan'
+export const LOCAL_CUSTOMER_NAME = 'Rowan Ellis'
 export const LOCAL_SECONDARY_SUBJECT = 'SUBJ-DEMO-UNHELD'
 const LOCAL_WORKSPACE_ID = 'local-workspace'
+const SYNC_CHANNEL = 'dvault-biz-messaging-v1'
 
 interface LocalMessagingState {
   conversations: Conversation[]
@@ -30,6 +34,7 @@ interface LocalMessagingState {
 }
 
 let idCounter = 0
+const TAB_ID = Math.random().toString(36).slice(2, 7)
 
 const DAY = 86_400_000
 
@@ -125,6 +130,9 @@ function createState(): LocalMessagingState {
       messageCount: 0,
       lastActivityAt: ago(0),
       createdAt: ago(Math.max(...messages.map((entry) => entry.days))),
+      businessCode: ARANYA_BUSINESS.code,
+      businessName: ARANYA_BUSINESS.name,
+      messageType: 'GENERAL_ENQUIRY',
       messages: [],
     }
     state.conversations.push(conversation)
@@ -222,14 +230,73 @@ function createState(): LocalMessagingState {
 
 let state: LocalMessagingState = createState()
 
+export interface LocalMessagingSnapshot {
+  conversations: Conversation[]
+  retentionPolicy: RetentionPolicy
+  retentionRuns: RetentionRun[]
+  withdrawalTiers: WithdrawalTier[]
+  messageIntegrity: MessageIntegrity
+}
+
+type SyncMessage =
+  | { kind: 'hello' }
+  | { kind: 'snapshot'; revision: number; state: LocalMessagingState }
+
+const listeners = new Set<() => void>()
+let revision = 0
+let syncChannel: BroadcastChannel | null = null
+
+function notifyListeners(): void {
+  for (const listener of listeners) listener()
+}
+
+function postSnapshot(): void {
+  if (!syncChannel) return
+  syncChannel.postMessage({ kind: 'snapshot', revision, state } satisfies SyncMessage)
+}
+
+function emitLocalChange(): void {
+  revision = Math.max(Date.now(), revision + 1)
+  postSnapshot()
+  notifyListeners()
+}
+
+function ensureSyncChannel(): void {
+  if (syncChannel || import.meta.env.MODE === 'test') return
+  if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return
+  syncChannel = new BroadcastChannel(SYNC_CHANNEL)
+  syncChannel.onmessage = (event: MessageEvent<SyncMessage>) => {
+    const message = event.data
+    if (!message) return
+    if (message.kind === 'hello') {
+      postSnapshot()
+      return
+    }
+    if (message.revision < revision) return
+    revision = message.revision
+    state = message.state
+    notifyListeners()
+  }
+  syncChannel.postMessage({ kind: 'hello' } satisfies SyncMessage)
+}
+
+export function subscribeMessaging(listener: () => void): () => void {
+  ensureSyncChannel()
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
 export function resetLocalMessagingStore(): void {
   idCounter = 0
   state = createState()
+  emitLocalChange()
 }
 
 function nextId(prefix: string): string {
   idCounter += 1
-  return `${prefix}-${idCounter}`
+  return `${prefix}-${TAB_ID}-${idCounter}`
 }
 
 function appendMessage(
@@ -254,7 +321,7 @@ function appendMessage(
     sender,
     authorLabel:
       sender === 'BUSINESS'
-        ? LOCAL_BUSINESS_LABEL
+        ? (conversation.businessName ?? LOCAL_BUSINESS_LABEL)
         : sender === 'CUSTOMER'
           ? conversation.customerName
           : 'DVault',
@@ -327,13 +394,7 @@ function clone<T>(value: T): T {
   return structuredClone(value)
 }
 
-export function localMessagingSnapshot(subjectRef?: string): {
-  conversations: Conversation[]
-  retentionPolicy: RetentionPolicy
-  retentionRuns: RetentionRun[]
-  withdrawalTiers: WithdrawalTier[]
-  messageIntegrity: MessageIntegrity
-} {
+export function localMessagingSnapshot(subjectRef?: string): LocalMessagingSnapshot {
   const conversations = state.conversations
     .filter((conversation) => !subjectRef || conversation.subjectRef === subjectRef)
     .map((conversation) => clone(conversation))
@@ -377,6 +438,7 @@ export function applyLocalMessaging(data: DemoData): DemoData {
 export function localCreateConversation(payload: ConversationDraft): void {
   const channel = payload.channel === 'email' ? 'email' : 'chat'
   const subject = payload.subject?.trim() || (channel === 'chat' ? 'Direct chat' : 'Email thread')
+  const business = resolveBizCode(payload.businessCode) ?? ARANYA_BUSINESS
   const conversation: Conversation = {
     id: nextId('conv-live'),
     subjectRef: payload.subjectRef,
@@ -393,10 +455,61 @@ export function localCreateConversation(payload: ConversationDraft): void {
     messageCount: 0,
     lastActivityAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    businessCode: business.code,
+    businessName: payload.businessName?.trim() || business.name,
+    messageType: payload.messageType ?? 'GENERAL_ENQUIRY',
     messages: [],
   }
   state.conversations.push(conversation)
   appendMessage(conversation, 'BUSINESS', payload.body, 0, subject)
+  refreshMetrics(conversation, state.policy)
+  emitLocalChange()
+}
+
+export function localCreateBizConversation(payload: BizConversationDraft): Conversation {
+  const business = resolveBizCode(payload.bizCode)
+  if (!business) throw new Error('That business code was not found.')
+  const channel = payload.channel === 'email' ? 'email' : 'chat'
+  const subject = payload.subject?.trim() || (channel === 'chat' ? 'Direct chat' : 'Email thread')
+  const existing = state.conversations.find(
+    (conversation) =>
+      conversation.subjectRef === LOCAL_DEMO_SUBJECT &&
+      conversation.channel === channel &&
+      conversation.businessCode === business.code,
+  )
+  const conversation =
+    existing ??
+    (() => {
+      const created: Conversation = {
+        id: nextId('conv-biz'),
+        subjectRef: LOCAL_DEMO_SUBJECT,
+        customerName: LOCAL_CUSTOMER_NAME,
+        channel,
+        subject,
+        status: 'OPEN',
+        interactionLevel: 'HIGH',
+        retentionClass: 'FULL',
+        integrityState: 'VERIFIED',
+        holdActive: false,
+        unreadForBusiness: 0,
+        unreadForCustomer: 0,
+        messageCount: 0,
+        lastActivityAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        businessCode: business.code,
+        businessName: business.name,
+        messageType: payload.messageType,
+        messages: [],
+      }
+      state.conversations.push(created)
+      return created
+    })()
+  conversation.status = 'OPEN'
+  conversation.messageType = payload.messageType
+  appendMessage(conversation, 'CUSTOMER', payload.body, 0, subject)
+  refreshMetrics(conversation, state.policy)
+  emitLocalChange()
+  return clone(conversation)
 }
 
 export function localSendMessage(
@@ -409,101 +522,37 @@ export function localSendMessage(
   appendMessage(conversation, sender, body, 0)
   conversation.status = 'OPEN'
   refreshMetrics(conversation, state.policy)
-
-  // Queue a simulated auto-reply from the other side so the demo feels alive.
-  const replySender: MessageSender = sender === 'BUSINESS' ? 'CUSTOMER' : 'BUSINESS'
-  scheduleAutoReply(conversationId, replySender)
-}
-
-// ---------------------------------------------------------------------------
-//  Simulated auto-reply (demo only)
-// ---------------------------------------------------------------------------
-const CUSTOMER_REPLIES = [
-  'Thank you, I will review this shortly.',
-  'Got it. Let me know if there is anything else I need to do.',
-  'Sure, that works for me.',
-  'Thanks for the update!',
-  'Could you share more details on this?',
-  'Perfect, I appreciate the quick response.',
-  'Noted, I will get back to you by tomorrow.',
-]
-
-const BUSINESS_REPLIES = [
-  'Thank you for reaching out. We will look into this right away.',
-  'We have noted your message and will follow up shortly.',
-  'Sure thing — our team is reviewing your request now.',
-  'Thanks for letting us know. We will update you within 24 hours.',
-  'Absolutely. I have forwarded this to the relevant team.',
-  'Thanks! Your query has been logged and assigned.',
-]
-
-let autoReplyTimer: ReturnType<typeof setTimeout> | null = null
-let autoReplyListeners: Array<() => void> = []
-
-function pickReply(sender: MessageSender): string {
-  const pool = sender === 'CUSTOMER' ? CUSTOMER_REPLIES : BUSINESS_REPLIES
-  return pool[Math.floor(Math.random() * pool.length)]!
-}
-
-function scheduleAutoReply(conversationId: string, replySender: MessageSender): void {
-  // Clear any existing timer so we don't pile up replies.
-  if (autoReplyTimer) clearTimeout(autoReplyTimer)
-
-  const delay = 1200 + Math.random() * 1800 // 1.2–3 s
-  autoReplyTimer = setTimeout(() => {
-    autoReplyTimer = null
-    const conversation = state.conversations.find((entry) => entry.id === conversationId)
-    if (!conversation || conversation.status === 'ARCHIVED') return
-
-    appendMessage(conversation, replySender, pickReply(replySender), 0)
-    refreshMetrics(conversation, state.policy)
-    // Bump unread counters so the UI notices.
-    if (replySender === 'CUSTOMER') {
-      conversation.unreadForBusiness += 1
-    } else {
-      conversation.unreadForCustomer += 1
-    }
-
-    // Notify listeners (DemoProvider / UserProvider) to re-render.
-    for (const listener of autoReplyListeners) listener()
-  }, delay)
-}
-
-/**
- * Register a callback that fires whenever an auto-reply lands.
- * Returns an unsubscribe function.
- */
-export function onAutoReply(listener: () => void): () => void {
-  autoReplyListeners.push(listener)
-  return () => {
-    autoReplyListeners = autoReplyListeners.filter((entry) => entry !== listener)
-  }
+  emitLocalChange()
 }
 
 export function localMarkRead(conversationId: string, side: 'business' | 'customer'): void {
   const conversation = state.conversations.find((entry) => entry.id === conversationId)
   if (!conversation) throw new Error('The conversation could not be found.')
   const now = new Date().toISOString()
+  let changed = false
   for (const message of conversation.messages) {
     if (side === 'business' && message.sender === 'CUSTOMER' && !message.readByBusinessAt) {
       message.readByBusinessAt = now
+      changed = true
     }
     if (side === 'customer' && message.sender === 'BUSINESS' && !message.readByCustomerAt) {
       message.readByCustomerAt = now
+      changed = true
     }
   }
+  if (!changed) return
   refreshMetrics(conversation, state.policy)
+  emitLocalChange()
 }
 
 export function localArchiveConversation(conversationId: string): void {
   const conversation = state.conversations.find((entry) => entry.id === conversationId)
   if (!conversation) throw new Error('The conversation could not be found.')
   conversation.status = conversation.status === 'ARCHIVED' ? 'OPEN' : 'ARCHIVED'
+  emitLocalChange()
 }
 
-export function localVerifyConversation(conversationId: string): void {
-  const conversation = state.conversations.find((entry) => entry.id === conversationId)
-  if (!conversation) throw new Error('The conversation could not be found.')
+function verifyConversation(conversation: Conversation): void {
   let previous: ConversationMessage | undefined
   for (const message of conversation.messages) {
     const expected = simulatedMessageHash({
@@ -524,8 +573,16 @@ export function localVerifyConversation(conversationId: string): void {
   refreshMetrics(conversation, state.policy)
 }
 
+export function localVerifyConversation(conversationId: string): void {
+  const conversation = state.conversations.find((entry) => entry.id === conversationId)
+  if (!conversation) throw new Error('The conversation could not be found.')
+  verifyConversation(conversation)
+  emitLocalChange()
+}
+
 export function localVerifyAll(): void {
-  for (const conversation of state.conversations) localVerifyConversation(conversation.id)
+  for (const conversation of state.conversations) verifyConversation(conversation)
+  emitLocalChange()
 }
 
 export function localUpdatePolicy(payload: RetentionPolicyDraft): void {
@@ -554,6 +611,7 @@ export function localUpdatePolicy(payload: RetentionPolicyDraft): void {
     actions: { ...actions },
     updatedAt: new Date().toISOString(),
   }
+  emitLocalChange()
 }
 
 function rank(action: RetentionAction): number {
@@ -636,6 +694,7 @@ export function localRunRetention(
   }
   state.runs.unshift(run)
   state.runs = state.runs.slice(0, 12)
+  emitLocalChange()
   return clone(run)
 }
 
@@ -670,6 +729,7 @@ export function localUpdateTier(
   }
   tier.version += 1
   tier.updatedAt = new Date().toISOString()
+  emitLocalChange()
 }
 
 export function localWithdraw(
@@ -680,5 +740,6 @@ export function localWithdraw(
   if (!tier) throw new Error('The withdrawal tier was not found.')
   if (!tier.active) throw new Error('The selected withdrawal tier is not active.')
   if (tier.effect !== 'KEEP_ALL') localRunRetention(tier.effect, subjectRef)
+  else emitLocalChange()
   return clone(tier)
 }

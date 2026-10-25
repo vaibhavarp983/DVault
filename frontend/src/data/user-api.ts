@@ -1,5 +1,5 @@
 import type { RightsRequestType } from '@/domain/types'
-import type { WithdrawalTierKey } from '@/domain/messaging'
+import type { BizConversationDraft, WithdrawalTierKey } from '@/domain/messaging'
 import type { UserWorkspace } from '@/domain/user'
 import { demoApiPrefix } from './config'
 import { requestJson, type RequestOptions } from './http'
@@ -48,6 +48,12 @@ export class HttpUserRepository implements UserRepository {
 
   reset(): Promise<UserWorkspace> {
     return this.request('/user/reset', { method: 'POST', timeoutMs: 60_000 })
+  }
+
+  createBizConversation(_draft: BizConversationDraft): Promise<UserWorkspace> {
+    return Promise.reject(
+      new Error('Biz code messaging is available in the local in-memory demo.'),
+    )
   }
 
   sendMessage(conversationId: string, body: string): Promise<UserWorkspace> {

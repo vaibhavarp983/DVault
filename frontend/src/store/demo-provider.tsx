@@ -29,6 +29,11 @@ import type {
   RightsDraftPayload,
 } from '@/data/repository'
 import type { WithdrawalTierKey } from '@/domain/messaging'
+import {
+  localMessagingSnapshot,
+  subscribeMessaging,
+  type LocalMessagingSnapshot,
+} from '@/data/local-messaging-store'
 import { demoRepository } from '@/data/service'
 import type { AppNotification, DemoData } from '@/domain/types'
 
@@ -46,6 +51,7 @@ type DemoAction =
   | { type: 'ready'; data: DemoData }
   | { type: 'error'; error: string }
   | { type: 'refreshing'; refreshing: boolean }
+  | { type: 'sync-messaging'; snapshot: LocalMessagingSnapshot }
 
 function reducer(state: DemoState, action: DemoAction): DemoState {
   switch (action.type) {
@@ -57,6 +63,20 @@ function reducer(state: DemoState, action: DemoAction): DemoState {
       return { ...state, status: 'error', error: action.error, refreshing: false }
     case 'refreshing':
       return { ...state, refreshing: action.refreshing }
+    case 'sync-messaging':
+      return state.data
+        ? {
+            ...state,
+            data: {
+              ...state.data,
+              conversations: action.snapshot.conversations,
+              retentionPolicy: action.snapshot.retentionPolicy,
+              retentionRuns: action.snapshot.retentionRuns,
+              withdrawalTiers: action.snapshot.withdrawalTiers,
+              messageIntegrity: action.snapshot.messageIntegrity,
+            },
+          }
+        : state
   }
 }
 
@@ -222,6 +242,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    if (dataMode !== 'local') return
+    return subscribeMessaging(() => {
+      dispatch({ type: 'sync-messaging', snapshot: localMessagingSnapshot() })
+    })
   }, [])
 
   const refresh = useCallback(async () => {

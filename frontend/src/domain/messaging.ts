@@ -6,6 +6,12 @@ export type InteractionLevel = 'HIGH' | 'MEDIUM' | 'LOW'
 export type RetentionAction = 'FULL' | 'METADATA' | 'PURGED'
 export type WithdrawalEffect = 'KEEP_ALL' | 'REDUCE_LOW' | 'PURGE_LOW_MEDIUM'
 export type WithdrawalTierKey = 'marketing-only' | 'all-optional' | 'full-withdrawal' | string
+export type BizMessageType =
+  | 'GENERAL_ENQUIRY'
+  | 'QUOTE_REQUEST'
+  | 'PURCHASE_ORDER'
+  | 'INVOICE'
+  | 'SUPPORT'
 
 export interface ConversationMessage {
   id: string
@@ -45,6 +51,9 @@ export interface Conversation {
   messageCount: number
   lastActivityAt: string
   createdAt: string
+  businessCode?: string
+  businessName?: string
+  messageType?: BizMessageType
   messages: ConversationMessage[]
 }
 
@@ -101,6 +110,17 @@ export interface MessageIntegrity {
 export interface ConversationDraft {
   subjectRef: string
   channel: MessageChannel
+  subject?: string
+  body: string
+  businessCode?: string
+  businessName?: string
+  messageType?: BizMessageType
+}
+
+export interface BizConversationDraft {
+  bizCode: string
+  channel: MessageChannel
+  messageType: BizMessageType
   subject?: string
   body: string
 }

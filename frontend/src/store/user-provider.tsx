@@ -9,8 +9,15 @@ import {
   type ReactNode,
 } from 'react'
 import { apiBaseUrl, dataMode } from '@/data/config'
+import { resolveBizCode } from '@/data/business-directory'
+import {
+  LOCAL_DEMO_SUBJECT,
+  localMessagingSnapshot,
+  subscribeMessaging,
+} from '@/data/local-messaging-store'
 import type { CorrectionPayload, DataMode } from '@/data/repository'
 import { userRepository } from '@/data/user-service'
+import type { BizConversationDraft } from '@/domain/messaging'
 import type { AppNotification, NotificationTone, RightsRequestType } from '@/domain/types'
 import type { UserWorkspace } from '@/domain/user'
 
@@ -28,6 +35,7 @@ interface UserContextValue {
   setConsent: (consentId: string, granted: boolean) => Promise<boolean>
   createRequest: (type: RightsRequestType, correction?: CorrectionPayload) => Promise<boolean>
   retryRequest: (requestId: string) => Promise<boolean>
+  addBizConversation: (draft: BizConversationDraft) => Promise<string | null>
   sendMessage: (conversationId: string, body: string) => Promise<boolean>
   markConversationRead: (conversationId: string) => Promise<void>
   verifyConversation: (conversationId: string) => Promise<void>
@@ -104,6 +112,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    if (dataMode !== 'local') return
+    return subscribeMessaging(() => {
+      const snapshot = localMessagingSnapshot(LOCAL_DEMO_SUBJECT)
+      setData((current) =>
+        current
+          ? {
+              ...current,
+              conversations: snapshot.conversations,
+              retentionPolicy: snapshot.retentionPolicy,
+              withdrawalTiers: snapshot.withdrawalTiers,
+              messageIntegrity: snapshot.messageIntegrity,
+            }
+          : current,
+      )
+    })
   }, [])
 
   const refresh = useCallback(async () => {
@@ -185,6 +211,37 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } catch (caught) {
         handleError(caught)
         return false
+      }
+    },
+    [handleError, notify],
+  )
+
+  const addBizConversation = useCallback(
+    async (draft: BizConversationDraft): Promise<string | null> => {
+      const business = resolveBizCode(draft.bizCode)
+      if (!business) {
+        handleError(new Error('That business code was not found.'))
+        return null
+      }
+      try {
+        const workspace = await userRepository.createBizConversation({
+          ...draft,
+          bizCode: business.code,
+        })
+        setData(workspace)
+        setStatus('ready')
+        const conversation = workspace.conversations?.find(
+          (entry) => entry.businessCode === business.code && entry.channel === draft.channel,
+        )
+        notify(
+          draft.channel === 'email' ? 'Mail sent' : 'Chat started',
+          `${business.name} will see your message in the business portal.`,
+          'success',
+        )
+        return conversation?.id ?? null
+      } catch (caught) {
+        handleError(caught)
+        return null
       }
     },
     [handleError, notify],
@@ -280,6 +337,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setConsent,
       createRequest,
       retryRequest,
+      addBizConversation,
       sendMessage,
       markConversationRead,
       verifyConversation,
@@ -298,6 +356,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setConsent,
       createRequest,
       retryRequest,
+      addBizConversation,
       sendMessage,
       markConversationRead,
       verifyConversation,

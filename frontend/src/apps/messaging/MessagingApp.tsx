@@ -13,6 +13,12 @@
   Trash2,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import {
+  ARANYA_BUSINESS,
+  BIZ_MESSAGE_TEMPLATES,
+  BUSINESS_ACCOUNTS,
+  resolveBizCode,
+} from '@/data/business-directory'
 import type {
   Conversation,
   MessageChannel,
@@ -63,9 +69,30 @@ export function MessagingApp({
   } = useDemo()
   const farFuture = useMemo(() => new Date(Date.now() + 86_400_000), [])
   void farFuture
+  const [actingAsCode, setActingAsCode] = useState(ARANYA_BUSINESS.code)
+  const actingAs = resolveBizCode(actingAsCode) ?? ARANYA_BUSINESS
   const conversations = useMemo(
-    () => (data?.conversations ?? []).filter((entry) => entry.channel === channel),
-    [data?.conversations, channel],
+    () =>
+      (data?.conversations ?? []).filter(
+        (entry) =>
+          entry.channel === channel &&
+          (entry.businessCode ?? ARANYA_BUSINESS.code) === actingAsCode,
+      ),
+    [data?.conversations, channel, actingAsCode],
+  )
+  const unreadByBusiness = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const entry of data?.conversations ?? []) {
+      if (entry.channel !== channel) continue
+      const code = entry.businessCode ?? ARANYA_BUSINESS.code
+      counts.set(code, (counts.get(code) ?? 0) + entry.unreadForBusiness)
+    }
+    return counts
+  }, [data?.conversations, channel])
+  const businessUnread = unreadByBusiness.get(actingAsCode) ?? 0
+  const totalUnread = Array.from(unreadByBusiness.values()).reduce(
+    (total, count) => total + count,
+    0,
   )
   const [selectedId, setSelectedId] = useState<string | null>(payload?.conversationId ?? null)
   const [panel, setPanel] = useState<'threads' | 'controls'>(
@@ -97,7 +124,7 @@ export function MessagingApp({
     if (!selected) return
     if (selected.unreadForBusiness > 0) void markConversationRead(selected.id)
     setSelectedId(selected.id)
-  }, [selected?.id])
+  }, [selected?.id, selected?.unreadForBusiness])
 
   useEffect(() => {
     setDraft('')
@@ -141,6 +168,8 @@ export function MessagingApp({
       channel,
       subject: newSubject.trim(),
       body: newBody.trim(),
+      businessCode: actingAsCode,
+      businessName: actingAs.name,
     })
     setComposing(false)
     setNewCustomer('')
@@ -171,6 +200,44 @@ export function MessagingApp({
           <Button variant="gold" size="sm" onClick={() => setComposing((current) => !current)}>
             <PenLine className="size-3.5" /> New
           </Button>
+        </div>
+
+        <div className="flex items-center gap-2 border-b border-line bg-panel/60 px-3 py-2">
+          <span
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-[9px] font-semibold text-white"
+            style={{
+              backgroundImage: `linear-gradient(140deg, ${actingAs.accentFrom}, ${actingAs.accentTo})`,
+            }}
+          >
+            {actingAs.initials}
+          </span>
+          <label className="min-w-0 flex-1">
+            <span className="block text-[8px] uppercase tracking-[0.14em] text-ink-faint">
+              Acting as
+            </span>
+            <select
+              value={actingAsCode}
+              onChange={(event) => setActingAsCode(event.target.value)}
+              className="mt-0.5 w-full truncate border-0 bg-transparent p-0 text-[10.5px] font-semibold text-ink outline-none"
+            >
+              {BUSINESS_ACCOUNTS.map((business) => {
+                const unread = unreadByBusiness.get(business.code) ?? 0
+                return (
+                  <option key={business.code} value={business.code}>
+                    {business.name}
+                    {unread > 0 ? ` · ${unread} unread` : ''}
+                  </option>
+                )
+              })}
+            </select>
+          </label>
+          <span className="shrink-0 text-[9px] text-ink-faint">
+            {businessUnread > 0
+              ? `${businessUnread} unread`
+              : totalUnread > 0
+                ? `${totalUnread} unread elsewhere`
+                : 'All read'}
+          </span>
         </div>
 
         <div className="flex items-center gap-1 border-b border-line px-2 py-1.5">
@@ -262,6 +329,9 @@ export function MessagingApp({
                   <Badge tone={retentionTone[conversation.retentionClass] ?? 'neutral'}>
                     {conversation.retentionClass}
                   </Badge>
+                  {conversation.messageType && (
+                    <Badge tone="gold">{BIZ_MESSAGE_TEMPLATES[conversation.messageType].label}</Badge>
+                  )}
                   {conversation.holdActive && <Badge tone="gold">Hold</Badge>}
                   {conversation.unreadForBusiness > 0 && (
                     <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[9px] font-semibold text-white">
@@ -272,7 +342,9 @@ export function MessagingApp({
               </button>
             ))}
           {panel === 'threads' && conversations.length === 0 && (
-            <p className="p-4 text-center text-[11px] text-ink-faint">No threads yet.</p>
+            <p className="p-4 text-center text-[11px] text-ink-faint">
+              No {channel === 'email' ? 'mail' : 'chat'} threads for {actingAs.name} yet.
+            </p>
           )}
           {panel === 'controls' && (
             <RetentionControls
@@ -301,6 +373,9 @@ export function MessagingApp({
                   <Badge tone={selected.integrityState === 'FLAGGED' ? 'danger' : 'success'} dot>
                     {selected.integrityState === 'FLAGGED' ? 'Tamper flag' : 'Verified chain'}
                   </Badge>
+                  {selected.messageType && (
+                    <Badge tone="gold">{BIZ_MESSAGE_TEMPLATES[selected.messageType].label}</Badge>
+                  )}
                   {selected.holdActive && <Badge tone="gold">Retention hold</Badge>}
                 </div>
                 <p className="mt-0.5 truncate text-[10px] text-ink-faint">

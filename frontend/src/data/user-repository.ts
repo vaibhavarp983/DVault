@@ -1,5 +1,5 @@
 import type { RightsRequestType } from '@/domain/types'
-import type { WithdrawalTierKey } from '@/domain/messaging'
+import type { BizConversationDraft, WithdrawalTierKey } from '@/domain/messaging'
 import type { UserWorkspace } from '@/domain/user'
 import type { CorrectionPayload } from './repository'
 
@@ -10,6 +10,7 @@ export interface UserRepository {
   createRequest(type: RightsRequestType, correction?: CorrectionPayload): Promise<UserWorkspace>
   retryRequest(requestId: string): Promise<UserWorkspace>
   reset(): Promise<UserWorkspace>
+  createBizConversation(draft: BizConversationDraft): Promise<UserWorkspace>
   sendMessage(conversationId: string, body: string): Promise<UserWorkspace>
   markConversationRead(conversationId: string): Promise<UserWorkspace>
   verifyConversation(conversationId: string): Promise<UserWorkspace>

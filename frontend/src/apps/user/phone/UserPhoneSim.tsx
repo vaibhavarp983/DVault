@@ -4,8 +4,9 @@
   Sparkles,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { selectConsentHealth, selectUserSummary } from '@/data/user-selectors'
+import type { BizMessageType } from '@/domain/messaging'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { useUser } from '@/store/user-provider'
@@ -40,7 +41,13 @@ export function UserPhoneSim() {
     dismissNotification,
     refresh,
   } = useUser()
-  const [app, setApp] = useState<PhoneApp>('home')
+  const [searchParams] = useSearchParams()
+  const [app, setApp] = useState<PhoneApp>(() =>
+    phoneAppFromQuery(searchParams.get('app'), searchParams.get('biz')),
+  )
+  const [bizIntent, setBizIntent] = useState<PhoneBizIntent | null>(() =>
+    parseBizIntent(searchParams),
+  )
   const [locked, setLocked] = useState(false)
   const [now, setNow] = useState(() => new Date())
 
@@ -66,7 +73,10 @@ export function UserPhoneSim() {
 
   const toggleLock = () => {
     setLocked((current) => {
-      if (!current) setApp('home')
+      if (!current) {
+        setApp('home')
+        setBizIntent(null)
+      }
       return !current
     })
   }
@@ -76,7 +86,10 @@ export function UserPhoneSim() {
     setLocked(false)
   }
 
-  const goHome = () => setApp('home')
+  const goHome = () => {
+    setApp('home')
+    setBizIntent(null)
+  }
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-canvas text-ink">
@@ -174,8 +187,22 @@ export function UserPhoneSim() {
             />
           ) : (
             <>
-              {app === 'mail' && <PhoneMailApp workspace={data} onBack={goHome} />}
-              {app === 'messages' && <PhoneMessagesApp workspace={data} onBack={goHome} />}
+              {app === 'mail' && (
+                <PhoneMailApp
+                  workspace={data}
+                  onBack={goHome}
+                  initialBizCode={bizIntent?.code}
+                  initialMessageType={bizIntent?.type}
+                />
+              )}
+              {app === 'messages' && (
+                <PhoneMessagesApp
+                  workspace={data}
+                  onBack={goHome}
+                  initialBizCode={bizIntent?.code}
+                  initialMessageType={bizIntent?.type}
+                />
+              )}
               {app === 'data' && <PhoneDataApp workspace={data} onBack={goHome} />}
               {app === 'consent' && <PhoneConsentApp workspace={data} onBack={goHome} />}
               {app === 'requests' && <PhoneRequestsApp workspace={data} onBack={goHome} />}
@@ -209,4 +236,39 @@ export function UserPhoneSim() {
       </footer>
     </div>
   )
+}
+
+interface PhoneBizIntent {
+  code: string
+  type?: BizMessageType
+}
+
+const BIZ_TYPE_BY_QUERY: Record<string, BizMessageType> = {
+  enquiry: 'GENERAL_ENQUIRY',
+  general: 'GENERAL_ENQUIRY',
+  general_enquiry: 'GENERAL_ENQUIRY',
+  quote: 'QUOTE_REQUEST',
+  quote_request: 'QUOTE_REQUEST',
+  purchase: 'PURCHASE_ORDER',
+  po: 'PURCHASE_ORDER',
+  purchase_order: 'PURCHASE_ORDER',
+  invoice: 'INVOICE',
+  support: 'SUPPORT',
+}
+
+function parseBizIntent(params: URLSearchParams): PhoneBizIntent | null {
+  const code = params.get('biz')?.trim()
+  if (!code) return null
+  const raw = params.get('type')?.trim().toLowerCase().replace(/[-\s]/g, '_')
+  return {
+    code,
+    type: raw ? BIZ_TYPE_BY_QUERY[raw] : undefined,
+  }
+}
+
+function phoneAppFromQuery(value: string | null, bizCode: string | null): PhoneApp {
+  const app = value?.trim().toLowerCase()
+  if (app === 'mail') return 'mail'
+  if (app === 'chat' || app === 'message' || app === 'messages' || bizCode) return 'messages'
+  return 'home'
 }
